@@ -1,0 +1,423 @@
+================================================================================
+  MAPPING DO PROJETO — TypeScriptLab (RPG Reviewer)
+================================================================================
+
+  Stack: Express 5 + TypeScript + EJS + Tailwind CSS (CDN)
+  Inicio: npm start → http://localhost:3000
+
+================================================================================
+  ESTRUTURA DE DIRETORIOS
+================================================================================
+
+  TypeScriptLab/
+  ├── src/
+  │   ├── index.ts              # Entry point do servidor
+  │   ├── types.ts              # Interfaces compartilhadas
+  │   ├── data.ts               # Banco de dados em memoria + auth helpers
+  │   ├── routes/
+  │   │   ├── public.ts         # Rota que renderiza a pagina principal
+  │   │   ├── api.ts            # API de reviews (GET/POST)
+  │   │   └── auth.ts           # API de autenticacao (register/login/logout/me)
+  │   ├── views/
+  │   │   └── public.ejs        # Template unico (HTML + CSS + JS)
+  │   └── public/               # Arquivos estaticos
+  ├── mapping.txt               # Este arquivo
+  ├── .env.example              # Modelo das variaveis de ambiente
+  ├── .env                      # Variaveis de ambiente (ignorado pelo git)
+  ├── .gitignore
+  ├── package.json
+  ├── tsconfig.json
+  └── README.md
+
+================================================================================
+  ARQUIVO: src/index.ts
+================================================================================
+
+  Carrega dotenv no topo (import 'dotenv/config').
+  Configura o SDK do Cloudinary com as variaveis de ambiente.
+  Importa e monta os 3 roteadores:
+    - /public   → publicRouter   (renderiza a view)
+    - /api      → apiRouter      (endpoints de reviews)
+    - /api/auth → authRouter     (endpoints de autenticacao)
+
+  Configura:
+    - view engine = EJS
+    - diretorio de views = ./src/views
+    - static = ./src/public
+    - parser JSON para requisicoes POST
+
+  Redireciona / → /public
+
+================================================================================
+  ARQUIVO: src/types.ts
+================================================================================
+
+  Interfaces exportadas:
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │ RPG { name, owner, genre, image, banner, description, year }        │
+  │   → Representa um sistema de RPG (ex: Dungeons & Dragons)           │
+  │     banner: imagem grande p/ hero do catalogo Netflix                │
+  │     description: texto de apresentacao do sistema                    │
+  │     year: ano de publicacao                                          │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ Review { id, rpg: RPG, username, rating, comment, timeAgo }         │
+  │   → Uma avaliacao publicada por um usuario                          │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ ReviewInput { rpgName, rating, comment }                            │
+  │   → Dados enviados no corpo do POST /api/reviews                    │
+  │   (sem username, pois o username vem do token de autenticacao)      │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ User { id, username, passwordHash }                                 │
+  │   → Usuario registrado no sistema                                   │
+  └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+  ARQUIVO: src/data.ts
+================================================================================
+
+  Camada de dados em memoria (tudo some quando o servidor reinicia).
+
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │ DADOS                                                               │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ rpgs: RPG[] (exportado)                                             │
+  │   8 RPGs com nome, editora, genero, imagem, banner, descricao, ano  │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ reviews: Review[] (privado)                                         │
+  │   2 avaliacoes iniciais (Cyberpunk Red e D&D)                       │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ users: User[] (privado)                                             │
+  │   Usuarios registrados (inicia vazio)                               │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ sessions: Map<token, userId> (privado)                              │
+  │   Mapa de tokens ativos para usuarios                               │
+  └─────────────────────────────────────────────────────────────────────┘
+
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │ FUNCOES EXPORTADAS                                                  │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ getReviews() → Review[]                                             │
+  │   Retorna copia do array de reviews                                 │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ addReview(input: ReviewInput, username: string) → Review            │
+  │   Cria nova review, insere no inicio do array, retorna ela          │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ getRpgByName(name: string) → RPG | undefined                        │
+  │   Busca RPG pelo nome                                               │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ registerUser(username, password) → { user, token } | { error }      │
+  │   Valida se usuario ja existe, hasheia senha, gera token, salva     │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ loginUser(username, password) → { user, token } | { error }         │
+  │   Verifica se usuario existe e senha corresponde, gera novo token   │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ getUserByToken(token) → User | undefined                            │
+  │   Busca usuario ativo pelo token de sessao                          │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ logoutUser(token): void                                             │
+  │   Remove o token do mapa de sessoes                                 │
+  └─────────────────────────────────────────────────────────────────────┘
+
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │ FUNCOES INTERNAS (PRIVADAS)                                         │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ hashPassword(password) → string                                     │
+  │   Gera salt aleatorio (16 bytes) + hash scryptSync (64 bytes)       │
+  │   Retorna no formato "salt:hash"                                    │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ verifyPassword(password, stored) → boolean                          │
+  │   Extrai salt do formato "salt:hash", recalcula hash, compara       │
+  └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+  ARQUIVO: src/routes/public.ts
+================================================================================
+
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │ GET /public                                                         │
+  │   Renderiza a view "public.ejs" passando:                          │
+  │     - rpgs: array completo de RPGs                                  │
+  │     - reviews: array de reviews (do mais novo ao mais antigo)       │
+  └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+  ARQUIVO: src/routes/api.ts
+================================================================================
+
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │ GET /api/reviews?rpg=Nome                                           │
+  │   Retorna JSON com todas as reviews. Se ?rpg= for passado, filtra   │
+  │   por nome do RPG.                                                  │
+  │   Resposta: Review[]                                                │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ POST /api/reviews                                                   │
+  │   Cria nova review. Requer Header: Authorization: Bearer <token>    │
+  │   Formato: multipart/form-data (FormData)                            │
+  │   Campos: rpgName (text), rating (text), comment (text),            │
+  │           image (file, opcional - jpg/png/webp/gif, max 5MB)        │
+  │   - Usa multer.memoryStorage() (buffer em RAM)                     │
+  │   - Valida token → extrai username                                  │
+  │   - Valida campos obrigatorios                                      │
+  │   - Valida se RPG existe                                            │
+  │   - Se image enviada → uploadToCloudinary()                         │
+  │       → stream do buffer para cloudinary.uploader.upload_stream()  │
+  │       → pasta "rpg-reviewer", retorna secure_url                    │
+  │   - Chama addReview() passando customImage (URL do Cloudinary)      │
+  │   Resposta 201: Review criada (customImage ou rpg.image)            │
+  │   Resposta 401: token ausente ou invalido                           │
+  └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+  ARQUIVO: src/routes/auth.ts
+================================================================================
+
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │ POST /api/auth/register                                             │
+  │   Corpo: { username, password }                                     │
+  │   - Valida username (min 3 chars) e password (min 4 chars)          │
+  │   - Chama registerUser()                                            │
+  │   Resposta 201: { user: { id, username }, token }                   │
+  │   Resposta 400: erro (usuario existe, campos invalidos)             │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ POST /api/auth/login                                                │
+  │   Corpo: { username, password }                                     │
+  │   - Chama loginUser()                                               │
+  │   Resposta 200: { user: { id, username }, token }                   │
+  │   Resposta 401: erro (nao encontrado ou senha incorreta)            │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ POST /api/auth/logout                                               │
+  │   Header: Authorization: Bearer <token>                             │
+  │   - Chama logoutUser() → remove token do mapa                       │
+  │   Resposta 200: { message }                                         │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ GET /api/auth/me                                                    │
+  │   Header: Authorization: Bearer <token>                             │
+  │   - Verifica se token e valido                                      │
+  │   Resposta 200: { user: { id, username } }                          │
+  │   Resposta 401: token invalido                                      │
+  └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+  ARQUIVO: src/views/public.ejs
+================================================================================
+
+  Template unico de pagina inteira (~684 linhas). EJS renderiza dados
+  do servidor + JavaScript client-side para interatividade.
+
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │ SECOES DO HTML                                                      │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ <head>                                                              │
+  │   Google Fonts (Plus Jakarta Sans + Space Grotesk)                 │
+  │   Tailwind CSS (CDN) + config custom de fontes                      │
+  │   FontAwesome 6.4 (CDN)                                             │
+  │   CSS custom: .no-scrollbar, .glassmorphism                         │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ Header                                                              │
+  │   Logo "Critique.rpg" com icone de dado                             │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ Stories (Em Destaque)                                               │
+  │   Loop EJS: <% rpgs.forEach(rpg => { %>                             │
+  │   Botoes circulares com foto do RPG, ao clicar → filtrarRPG()       │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ Busca                                                               │
+  │   Input de texto, toggle visivel via toggleSearch()                 │
+  │   Ao digitar → buscarNoFeed() (filtra cards pelo texto)            │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ Feed de Avaliacoes                                                  │
+  │   Loop EJS: <% reviews.forEach(review => { %>                       │
+  │   Cada card mostra:                                                 │
+  │     - Bloco do RPG (capa, nome, genero, editora)                    │
+  │     - Badge do usuario (letra inicial) + nome + tempo               │
+  │     - Estrelas (renderizadas com EJS, suporta meia-estrela)         │
+  │     - Comentario                                                    │
+  │   Atributo data-rpg usado para filtro                               │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ Navbar Inferior                                                     │
+  │   Inicio → limparFiltros()                                          │
+  │   Buscar → toggleSearch()                                           │
+  │   Avaliar (botao central destacado) → abrirModalAvaliacao()         │
+  │   Ranking → placeholder alert()                                     │
+  │   Entrar/Perfil → condicional conforme getUser():                   │
+  │     - Deslogado: mostra "Entrar" → abrirModalLogin()                │
+  │     - Logado: mostra avatar com inicial + nome, clique → logout    │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ Modal de Avaliacao (Aconchegante)                                   │
+  │   Fundo gradiente escuro, card largo (max-w-lg) com bordas suaves   │
+  │   Header decorativo com icone de pena + descricao                   │
+  │   Badge do usuario logado (nome + avatar)                           │
+  │   Select de RPG (loop EJS)                                          │
+  │   Input de capa personalizada (file input, opcional)                │
+  │     - Aceita jpg, png, webp, gif (ate 5MB)                          │
+  │     - Preview do nome do arquivo via atualizarNomeArquivo()         │
+  │   Seletor de estrelas interativo (5 icones clicaveis)               │
+  │     - hidden input #form-rating guarda o valor (0-5)                │
+  │     - Label muda: "Selecione" / "Pessimo" / "Ruim" / etc           │
+  │   Textarea com 5 linhas, placeholder convidativo                    │
+  │   Botao "Publicar Critica" com efeitos hover/active                 │
+  │   Se usuario nao estiver logado → redireciona para modal login      │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ Modal de Login                                                      │
+  │   Formulario com usuario + senha                                    │
+  │   Div #login-error para mensagens (hidden por padrao)               │
+  │   Link "Cadastre-se" → fecha login, abre registro                   │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ Modal de Registro                                                   │
+  │   Formulario com usuario (min 3) + senha (min 4)                    │
+  │   Div #reg-error para mensagens (hidden por padrao)                 │
+  │   Link "Faca login" → fecha registro, abre login                    │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ Modal de Configuracoes                                              │
+  │   Placeholder com 2 checkboxes (Filtro de Conteudo, Portugues)      │
+  └─────────────────────────────────────────────────────────────────────┘
+
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │ FUNCOES JAVASCRIPT (CLIENT-SIDE)                                    │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ getToken() → string | null                                          │
+  │   Le o token do localStorage                                        │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ getUser() → { id, username } | null                                 │
+  │   Le e faz parse do usuario salvo no localStorage                   │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ saveSession(token, user): void                                      │
+  │   Salva token e usuario no localStorage                             │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ clearSession(): void                                                │
+  │   Remove token e usuario do localStorage                            │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ atualizarNavbar(): void                                             │
+  │   Alterna visibilidade entre "Entrar" e avatar do usuario           │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ abrirPerfil(): void                                                 │
+  │   Confirm dialog "Deseja sair?" → fazerLogout()                     │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ fazerLogout(): async void                                           │
+  │   Chama POST /api/auth/logout, limpa sessao, atualiza navbar        │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ verificarSessao(): async void                                       │
+  │   Chama GET /api/auth/me para validar token salvo                   │
+  │   Se invalido, limpa sessao. Executado ao carregar a pagina.        │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ mostrarErro(id, msg): void                                          │
+  │   Preenche e exibe div de erro no modal                             │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ esconderErro(id): void                                              │
+  │   Esconde div de erro                                               │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ fazerLogin(event): async void                                       │
+  │   Envia POST /api/auth/login, salva sessao, atualiza navbar         │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ fazerRegistro(event): async void                                    │
+  │   Envia POST /api/auth/register, salva sessao, atualiza navbar      │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ toggleSearch(): void                                                │
+  │   Abre/fecha barra de busca, foca no input                          │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ buscarNoFeed(): void                                                │
+  │   Filtra cards exibidos conforme texto digitado                     │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ filtrarRPG(rpgNome): void                                           │
+  │   Filtra cards pelo atributo data-rpg                               │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ limparFiltros(): void                                               │
+  │   Mostra todos os cards, limpa busca, esconde barra                 │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ abrirModalAvaliacao(): void                                         │
+  │   Se nao logado → abrirModalLogin()                                 │
+  │   Senao: preenche badge do usuario, reseta estrelas, abre modal     │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ fecharModalAvaliacao(): void                                        │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ abrirModalLogin() / fecharModalLogin()                              │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ abrirModalRegistro() / fecharModalRegistro()                        │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ abrirConfiguracoes() / fecharConfiguracoes()                        │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ atualizarNomeArquivo(input): void                                   │
+  │   Atualiza o texto #file-name com o nome do arquivo selecionado     │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ [Evento] clique nas estrelas (#star-rating i)                       │
+  │   Atualiza #form-rating (hidden) com valor 1-5                      │
+  │   Muda classe de todas as estrelas (solid vs regular)              │
+  │   Atualiza label: Selecione/Pessimo/Ruim/Regular/Bom/Excelente      │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ postarAvaliacao(event): async void                                  │
+  │   Envia POST /api/reviews via FormData (multipart, com ou sem foto) │
+  │   Header: Authorization: Bearer <token> (sem Content-Type,          │
+  │     o browser seta multipart/form-data automaticamente)             │
+  │   Cria card HTML da nova review e insere no topo do feed            │
+  │   Se 401 → limpa sessao, redireciona para login                     │
+  └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+  ARQUIVO: package.json
+================================================================================
+
+  Dependencies (producao):
+    cloudinary ^2.x    → Upload e CDN de imagens
+    dotenv ^16.x       → Carrega .env em process.env
+    ejs ^6.0.1         → Template engine
+    express ^5.2.1     → Framework web
+    multer ^2.0.0      → Parse de multipart/form-data (memoryStorage)
+
+  DevDependencies:
+    @types/express     → Tipos do Express para TypeScript
+    @types/multer      → Tipos do multer para TypeScript
+    @types/node        → Tipos do Node para TypeScript
+    tsx                → Executa TypeScript diretamente (sem compilar)
+    typescript         → Compilador TypeScript
+
+  Scripts:
+    npm start → tsx watch src/index.ts (modo watch, reinicia automatico)
+
+================================================================================
+  ARQUIVO: tsconfig.json
+================================================================================
+
+  Opcoes principais:
+    target: ES2022
+    module: NodeNext
+    moduleResolution: NodeNext
+    strict: true
+    rootDir: ./src
+    outDir: ./dist (nao usado em dev, so com tsc)
+
+================================================================================
+  FLUXO DA APLICACAO
+================================================================================
+
+  1. Usuario acessa http://localhost:3000
+  2. Servidor redireciona / → /public
+  3. Rota /public renderiza public.ejs com rpgs[] e reviews[]
+  4. Pagina carrega, JS executa verificarSessao() (valida token)
+  5. Usuario navega:
+     - Stories: clica em RPG → filtrarRPG() (filtro local)
+     - Busca: digita → buscarNoFeed() (filtro por texto)
+     - Avaliar (sem login) → modal login
+     - Avaliar (logado) → modal com estrelas + upload de capa + form
+       → imagem enviada ao Cloudinary via memoryStorage + upload_stream
+       → secure_url salva como customImage na review
+     - Catalogo (substitui Ranking) → overlay Netflix-style:
+       banner hero com descricao, grid de todos os RPGs, click muda o hero
+     - Entrar → modal login → cadastro se necessario
+     - Perfil (logado) → confirm → logout
+   6. Tema Netflix (vermelho #e50914) configurável via painel no desktop:
+      - Botao "Tema" fixo na lateral direita (só aparece em telas > 1024px)
+      - Color pickers para bg, cards, destaque, texto, estrelas
+      - Tema salvo no localStorage
+      - Botao "Exportar" copia as cores em texto (formato --var: valor)
+
+================================================================================
+  POSSIVEIS MELHORIAS FUTURAS
+================================================================================
+
+  - Persistencia (SQLite, PostgreSQL, etc.)
+  - Editar/Excluir reviews (so o autor)
+  - Pagina de perfil do usuario com historico
+  - Pagina de detalhes do RPG com nota media
+  - Paginacao do feed
+  - Testes automatizados
+
+================================================================================

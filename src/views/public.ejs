@@ -1,0 +1,2147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RPG Reviewer - Feed de Críticas</title>
+  
+  <!-- Fontes Premium do Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Cropper.js -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+  
+  <script>
+    // Configurações personalizadas do Tailwind para dar um visual único e autoral
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            title: ['"Space Grotesk"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --bg-primary: #050911;
+      --bg-secondary: #0f1524;
+      --bg-card: #111827;
+      --bg-elevated: #1a1f35;
+      --bg-input: #0a0e1a;
+      --accent: #e50914;
+      --accent-hover: #f40612;
+      --accent-dim: rgba(229, 9, 20, 0.15);
+      --accent-glow: rgba(229, 9, 20, 0.3);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --border: rgba(100, 116, 139, 0.25);
+      --border-accent: rgba(229, 9, 20, 0.3);
+      --star: #f59e0b;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    /* ─── Transição global suave ─── */
+    *, *::before, *::after {
+      transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, opacity 0.3s ease;
+    }
+
+    /* ─── Animação de fade-in da página ─── */
+    @keyframes pageFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    body > div:first-of-type {
+      animation: pageFadeIn 0.5s ease;
+    }
+
+    /* ─── Feed cards com entrada animada ─── */
+    @keyframes feedCardIn {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    #feed-container > .feed-card {
+      animation: feedCardIn 0.45s ease both;
+    }
+    #feed-container > .feed-card:nth-child(1) { animation-delay: 0.04s; }
+    #feed-container > .feed-card:nth-child(2) { animation-delay: 0.08s; }
+    #feed-container > .feed-card:nth-child(3) { animation-delay: 0.12s; }
+
+    button, a, input, select, textarea { transition: all 0.2s ease; }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent) !important;
+      box-shadow: 0 0 0 2px var(--accent-dim);
+    }
+    #stories-section button img { transition: transform 0.3s ease; }
+    #stories-section button:hover img { transform: scale(1.1); }
+
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    .glassmorphism {
+      background: color-mix(in srgb, var(--bg-elevated) 60%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .feed-card { padding: 20px; transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease; }
+    .feed-card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); border-color: var(--accent-dim) !important; }
+
+    /* ─── Header Netflix ─── */
+    @keyframes headerGlow {
+      0%, 100% { box-shadow: 0 1px 0 var(--accent-dim); }
+      50% { box-shadow: 0 1px 0 var(--accent), 0 0 20px var(--accent-glow); }
+    }
+    @keyframes headerReveal {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes logoFadeDrop {
+      0% { opacity: 0; transform: scale(0.8) translateY(-8px); filter: blur(4px); }
+      60% { transform: scale(1.05) translateY(1px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+    }
+    @keyframes badgePulse {
+      0%, 100% { box-shadow: 0 0 0 0 var(--accent-dim); }
+      50% { box-shadow: 0 0 12px 2px var(--accent-dim); }
+    }
+    @keyframes headerUnderline {
+      from { transform: scaleX(0); }
+      to { transform: scaleX(1); }
+    }
+    .header-inner {
+      animation: headerReveal 0.5s ease both;
+    }
+    .header-logo-img {
+      animation: logoFadeDrop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both;
+    }
+    .header-badge {
+      animation: badgePulse 2.5s ease-in-out infinite;
+    }
+    .header-glow {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      transform-origin: center;
+      animation: headerUnderline 0.8s ease 0.3s both;
+    }
+
+    #modal-catalogo {
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      pointer-events: none;
+    }
+    #modal-catalogo.catalogo-aberto {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    @keyframes catSlideUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes catBannerZoom {
+      from { transform: scale(1.15); }
+      to   { transform: scale(1); }
+    }
+
+    #modal-catalogo.catalogo-aberto .cat-banner {
+      animation: catBannerZoom 6s ease-out forwards;
+    }
+    #modal-catalogo.catalogo-aberto .cat-hero {
+      animation: catSlideUp 0.6s ease 0.1s both;
+    }
+    #modal-catalogo.catalogo-aberto .cat-section .cat-card {
+      animation: catSlideUp 0.45s ease both;
+    }
+    #modal-catalogo.catalogo-aberto .cat-section:nth-child(1) .cat-card:nth-child(1) { animation-delay: 0.15s; }
+    #modal-catalogo.catalogo-aberto .cat-section:nth-child(1) .cat-card:nth-child(2) { animation-delay: 0.19s; }
+    #modal-catalogo.catalogo-aberto .cat-section:nth-child(1) .cat-card:nth-child(3) { animation-delay: 0.23s; }
+    #modal-catalogo.catalogo-aberto .cat-section:nth-child(2) .cat-card:nth-child(1) { animation-delay: 0.22s; }
+    #modal-catalogo.catalogo-aberto .cat-section:nth-child(2) .cat-card:nth-child(2) { animation-delay: 0.26s; }
+    #modal-catalogo.catalogo-aberto .cat-section:nth-child(3) .cat-card:nth-child(1) { animation-delay: 0.29s; }
+    #modal-catalogo.catalogo-aberto .cat-section:nth-child(3) .cat-card:nth-child(2) { animation-delay: 0.33s; }
+    #modal-catalogo.catalogo-aberto .cat-section:nth-child(4) .cat-card:nth-child(1) { animation-delay: 0.36s; }
+
+    .cat-card {
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .cat-card:hover {
+      transform: scale(1.07);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.6), 0 0 30px var(--accent-glow);
+      z-index: 2;
+    }
+    .cat-card .cat-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 55%);
+      opacity: 1;
+      transition: opacity 0.35s ease;
+      pointer-events: none;
+    }
+    .cat-card .cat-label {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 12px;
+      transform: translateY(0);
+      transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 1;
+    }
+
+    .cat-card .cat-blur {
+      filter: blur(24px);
+      transition: filter 0.4s ease;
+    }
+    .cat-card .cat-blur.revealed {
+      filter: blur(0);
+    }
+    .cat-age-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      z-index: 3;
+      font-size: 9px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.02em;
+      backdrop-filter: blur(4px);
+    }
+    .cat-age-badge.L { background: rgba(34,197,94,0.85); color: #fff; }
+    .cat-age-badge.\31 2 { background: rgba(234,179,8,0.85); color: #000; }
+    .cat-age-badge.\31 4 { background: rgba(251,146,60,0.85); color: #000; }
+    .cat-age-badge.\31 6 { background: rgba(239,68,68,0.85); color: #fff; }
+    .cat-age-badge.\31 8 { background: rgba(0,0,0,0.85); color: #fff; border: 1px solid var(--accent); }
+    .cat-age-badge.\31 8::after { content: ' 🔞'; font-size: 7px; }
+
+    .cat-section-title {
+      animation: catSlideUp 0.5s ease both;
+    }
+    #modal-catalogo.catalogo-aberto .cat-section-title:nth-of-type(1) { animation-delay: 0.12s; }
+    #modal-catalogo.catalogo-aberto .cat-section-title:nth-of-type(2) { animation-delay: 0.18s; }
+    #modal-catalogo.catalogo-aberto .cat-section-title:nth-of-type(3) { animation-delay: 0.24s; }
+    #modal-catalogo.catalogo-aberto .cat-section-title:nth-of-type(4) { animation-delay: 0.3s; }
+
+    #modal-catalogo, #modal-detalhe, #modal-registrar-rpg, #modal-avaliacao, #modal-login, #modal-registro, #modal-perfil, #modal-config {
+      opacity: 0;
+      transition: opacity 0.35s ease, backdrop-filter 0.35s ease;
+      pointer-events: none;
+      visibility: hidden;
+    }
+    #modal-catalogo.catalogo-aberto,
+    #modal-detalhe.detalhe-aberto, #modal-registrar-rpg.registro-aberto,
+    #modal-avaliacao:not(.modal-hidden), #modal-login:not(.modal-hidden), #modal-registro:not(.modal-hidden),
+    #modal-perfil:not(.modal-hidden), #modal-config:not(.modal-hidden) {
+      opacity: 1;
+      pointer-events: auto;
+      visibility: visible;
+    }
+    .modal-hidden {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      visibility: hidden !important;
+    }
+
+    @keyframes detalheSlideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    #modal-detalhe.detalhe-aberto .detalhe-card {
+      animation: detalheSlideUp 0.4s ease 0.05s both;
+    }
+    #modal-detalhe.detalhe-aberto .detalhe-reviews {
+      animation: detalheSlideUp 0.4s ease 0.15s both;
+    }
+
+    .detalhe-review-card {
+      transition: background 0.2s ease;
+    }
+    .detalhe-review-card:hover {
+      background: color-mix(in srgb, var(--bg-elevated) 50%, transparent);
+    }
+
+    .color-picker::-webkit-color-swatch-wrapper { padding: 0; }
+    .color-picker::-webkit-color-swatch { border: none; border-radius: 8px; }
+    .color-picker::-moz-color-swatch { border: none; border-radius: 8px; }
+
+    @media (max-width: 1023px) {
+    #theme-panel { display: none !important; }
+  }
+  @media (min-width: 1024px) {
+    .header-inner { padding-left: 1.75rem; padding-right: 1.75rem; }
+    #catalog-controls .flex.w-full { max-width: 100%; }
+    .detalhe-card .p-5 { padding: 1.75rem; }
+    .feed-card { padding: 1.25rem; }
+    #feed-container .feed-card:last-child { margin-bottom: 2rem; }
+  }
+</style>
+</head>
+<body style="background-color: var(--bg-primary); color: var(--text-primary); font-family: 'Plus Jakarta Sans', sans-serif;" class="min-h-screen flex justify-center selection:bg-[var(--accent-dim)] selection:text-[var(--accent)]">
+
+  <!-- CONTAINER PRINCIPAL -->
+  <div style="background-color: var(--bg-secondary); border-color: var(--border);" class="w-full max-w-md lg:max-w-5xl min-h-screen flex flex-col relative pb-24 shadow-[0_0_50px_rgba(0,0,0,0.8)] border-x">
+    
+    <!-- HEADER NETFLIX -->
+    <header style="border-color: var(--border);" class="sticky top-0 z-40 glassmorphism overflow-hidden">
+      <div class="header-inner px-5 py-1 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+
+          
+        </div>
+      </div>
+      <div class="header-glow"></div>
+    </header>
+
+    <!-- VISÃO DO FEED (ALTERNA COM CATÁLOGO) -->
+    <div id="feed-view" class="hidden">
+    
+    <!-- SEÇÃO STORIES (MELHORES RPGs) -->
+    <section class="py-5 border-b" style="border-color: var(--border); background-color: color-mix(in srgb, var(--bg-primary) 60%, transparent);">
+      <h2 style="color: var(--text-muted);" class="text-[10px] uppercase tracking-widest font-bold px-5 mb-3 font-title">Em Destaque</h2>
+      
+      <div class="flex space-x-4 overflow-x-auto px-5 no-scrollbar">
+        
+        <% rpgs.forEach(rpg => { %>
+        <button onclick="abrirDetalheRpg('<%= rpg.name %>')" class="flex flex-col items-center space-y-1.5 flex-shrink-0 focus:outline-none group">
+          <div class="w-16 h-16 rounded-full p-0.5 overflow-hidden transition-all duration-300 group-hover:scale-105" style="box-shadow: 0 0 0 2px var(--accent-glow); background: var(--bg-card);">
+            <img src="<%= rpg.image %>" class="w-full h-full object-cover rounded-full" alt="<%= rpg.name %>">
+          </div>
+          <span style="color: var(--text-secondary);" class="text-[11px] font-medium truncate w-16 text-center group-hover:text-white transition"><%= rpg.name %></span>
+        </button>
+        <% }) %>
+
+      </div>
+    </section>
+
+    <!-- BARRA DE BUSCA -->
+    <div id="search-section" class="p-4 border-b transition-all" style="background: color-mix(in srgb, var(--bg-elevated) 50%, transparent); border-color: var(--border);">
+      <div class="relative">
+        <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+          <i class="fa-solid fa-magnifying-glass" style="color: var(--text-muted); font-size: 12px;"></i>
+        </span>
+        <input type="text" id="search-input" onkeyup="buscarNoFeed()" placeholder="Pesquise por RPG, usuário ou palavras-chave..." class="w-full rounded-lg pl-9 pr-4 py-2 text-xs focus:outline-none transition-colors placeholder:opacity-50" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);"> 
+      </div>
+    </div>
+
+    <!-- FEED DE AVALIAÇÕES -->
+    <main id="feed-container" class="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4 xl:grid-cols-3 overflow-y-auto">
+      
+      <% reviews.forEach(review => { %>
+      <div class="feed-card rounded-2xl p-4.5 border transition-all duration-300 shadow-sm flex flex-col space-y-3.5" data-rpg="<%= review.rpg.name %>" style="background: color-mix(in srgb, var(--bg-card) 40%, transparent); border-color: var(--border);">
+        
+        <div class="flex items-center space-x-3 p-2.5 rounded-xl border" style="background: color-mix(in srgb, var(--bg-elevated) 40%, transparent); border-color: var(--border);">
+          <img src="<%= review.customImage || review.rpg.image %>" class="w-12 h-14 object-cover rounded-lg shadow-md" alt="Capa <%= review.rpg.name %>">
+          <div class="flex-1 min-w-0">
+            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wide uppercase font-title" style="background: var(--accent-dim); color: var(--accent);"><%= review.rpg.genre %></span>
+            <h3 class="font-title font-bold text-sm truncate mt-0.5 cursor-pointer hover:underline" style="color: var(--text-primary);" onclick="abrirDetalheRpg('<%= review.rpg.name %>')"><%= review.rpg.name %></h3>
+            <p class="text-[10px] truncate" style="color: var(--text-muted);">Por: <span class="rpg-owner"><%= review.rpg.owner %></span></p>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2.5">
+            <%
+            const avatarUser = users.find(u => u.username === review.username);
+            const hasAvatar = avatarUser && avatarUser.avatar;
+            %>
+            <div onclick="verPerfil('<%= review.username %>')" class="w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs overflow-hidden shrink-0 cursor-pointer" style="background: var(--accent-dim); border: 1px solid var(--border-accent); color: var(--accent);">
+              <% if (hasAvatar) { %>
+                <img src="<%= avatarUser.avatar %>" class="w-full h-full object-cover" alt="">
+              <% } else { %>
+                <%= review.username.charAt(0).toUpperCase() %>
+              <% } %>
+            </div>
+            <div>
+              <h4 onclick="verPerfil('<%= review.username %>')" class="font-bold text-xs cursor-pointer hover:underline" style="color: var(--text-secondary);"><%= review.username %></h4>
+              <span class="text-[9px]" style="color: var(--text-muted);"><%= review.timeAgo %></span>
+            </div>
+          </div>
+          <div class="flex items-center space-x-0.5 text-[10px] px-2 py-1 rounded-full border" style="color: var(--star); background: color-mix(in srgb, var(--star) 10%, transparent); border-color: color-mix(in srgb, var(--star) 20%, transparent);">
+            <% for (let i = 1; i <= 5; i++) { %>
+              <% if (i <= Math.floor(review.rating)) { %>
+                <i class="fas fa-star"></i>
+              <% } else if (i === Math.ceil(review.rating) && review.rating % 1 !== 0) { %>
+                <i class="fas fa-star-half-alt"></i>
+              <% } else { %>
+                <i class="far fa-star text-slate-700"></i>
+              <% } %>
+            <% } %>
+            <span class="text-[10px] ml-1 font-semibold" style="color: var(--star);"><%= review.rating %></span>
+          </div>
+        </div>
+
+        <p class="text-xs leading-relaxed comment-text pl-1" style="color: var(--text-secondary);">
+          <%= review.comment %>
+        </p>
+        <div class="flex justify-end">
+          <button onclick="deletarAvaliacao('<%= review.id %>', this)" class="review-delete-btn text-[9px] px-2 py-1 rounded-lg font-bold transition-all hidden active:scale-[0.94]" style="color: #ef4444; background: color-mix(in srgb, #ef4444 10%, transparent); border: 1px solid color-mix(in srgb, #ef4444 20%, transparent);" data-owner="<%= review.username %>">
+            <i class="fa-solid fa-trash-alt mr-1"></i>Excluir
+          </button>
+        </div>
+      </div>
+      <% }) %>
+
+    </main>
+    </div>
+
+    <!-- NAVBAR INFERIOR -->
+    <nav style="border-color: var(--border);" class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md lg:max-w-5xl border-t px-6 py-4 flex justify-between items-center z-50 glassmorphism rounded-t-2xl">
+      
+      <button id="nav-feed" onclick="abrirFeed()" class="flex flex-col items-center focus:outline-none transition group" style="color: var(--text-muted);">
+        <i class="fa-solid fa-comment-dots text-base group-hover:scale-105 transition-transform"></i>
+        <span class="text-[9px] mt-1 font-semibold tracking-wider uppercase font-title">Feed</span>
+      </button>
+
+
+      <button id="nav-catalogo" onclick="abrirCatalogo()" class="flex flex-col items-center focus:outline-none transition group" style="color: var(--accent);">
+        <i class="fa-solid fa-compass text-base group-hover:scale-105 transition-transform"></i>
+        <span class="text-[9px] mt-1 font-semibold tracking-wider uppercase font-title">Catálogo</span>
+      </button>
+
+      <button id="btn-user" onclick="abrirPerfil()" class="hidden flex flex-col items-center focus:outline-none transition group" style="color: var(--accent);">
+        <div class="w-5 h-5 rounded-full flex items-center justify-center font-bold text-white text-[9px] shadow-md overflow-hidden" style="background: var(--accent);">
+          <img id="user-avatar-img" class="hidden w-full h-full object-cover" src="" alt="">
+          <span id="user-avatar-letter">U</span>
+        </div>
+        <span id="user-name" class="text-[9px] mt-1 font-semibold tracking-wider uppercase font-title">Perfil</span>
+      </button>
+      <button id="btn-login" onclick="abrirModalLogin()" class="flex flex-col items-center focus:outline-none transition group" style="color: var(--text-muted);">
+        <i class="fa-solid fa-user text-base group-hover:scale-105 transition-transform"></i>
+        <span class="text-[9px] mt-1 font-semibold tracking-wider uppercase font-title">Entrar</span>
+      </button>
+    </nav>
+
+    <!-- MODAL DE AVALIAÇÃO — VERSÃO ACONCHEGANTE -->
+    <div id="modal-avaliacao" class="modal-hidden fixed inset-0 flex items-center justify-center p-4 z-50" style="background: color-mix(in srgb, var(--bg-primary) 90%, transparent);">
+      <div class="rounded-3xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto" style="background: linear-gradient(to bottom, var(--bg-elevated), var(--bg-card)); border: 1px solid var(--border-accent);">
+        
+        <div class="p-6 border-b" style="background: linear-gradient(to right, color-mix(in srgb, var(--accent) 15%, transparent), color-mix(in srgb, var(--accent) 5%, transparent)); border-color: var(--border-accent);">
+          <div class="flex justify-between items-start">
+            <div class="flex items-start gap-3">
+              <span class="p-2.5 rounded-xl shadow-lg mt-0.5 text-white" style="background: var(--accent);">
+                <i class="fa-solid fa-feather-pointed text-sm"></i>
+              </span>
+              <div>
+                <h3 class="text-lg font-bold font-title" style="color: var(--text-primary);">Escrever Crítica</h3>
+                <p class="text-xs mt-1" style="color: var(--text-muted);">Compartilhe sua experiência com a comunidade</p>
+              </div>
+            </div>
+            <button onclick="fecharModalAvaliacao()" class="p-2 rounded-xl transition-all" style="color: var(--text-muted);">
+              <i class="fas fa-times text-base"></i>
+            </button>
+          </div>
+        </div>
+
+        <form id="form-avaliacao" onsubmit="postarAvaliacao(event)" class="p-5 space-y-3">
+
+          <!-- Usuário + Avatar -->
+          <div class="flex items-center gap-3 p-3 rounded-2xl border" style="background: color-mix(in srgb, var(--bg-input) 60%, transparent); border-color: var(--border);">
+            <div id="current-user-badge" class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-base shadow-sm shrink-0 overflow-hidden" style="background: var(--accent); color: white;">
+              <img id="current-user-avatar-img" class="hidden w-full h-full object-cover" src="" alt="">
+              <span id="current-user-avatar-letter">U</span>
+            </div>
+            <div class="min-w-0 flex-1">
+              <p id="current-user-name" class="text-sm font-semibold truncate" style="color: var(--text-primary);">Carregando...</p>
+              <p class="text-[10px]" style="color: var(--text-muted);">Publicando como</p>
+            </div>
+          </div>
+
+          <!-- RPG + Nota lado a lado -->
+          <div class="flex gap-2">
+            <div class="flex-1">
+              <label class="block text-[10px] font-bold mb-1" style="color: var(--text-muted);">RPG</label>
+              <select id="form-rpg" required class="w-full rounded-xl p-2.5 text-xs focus:outline-none appearance-none cursor-pointer" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);">
+                <% rpgs.forEach(rpg => { %>
+                <option value="<%= rpg.name %>"><%= rpg.name %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold mb-1" style="color: var(--text-muted);">Nota</label>
+              <div class="flex items-center gap-1 rounded-xl px-3 py-2.5 border" style="background: var(--bg-input); border-color: var(--border);">
+                <div class="flex gap-0.5 text-base" id="star-rating">
+                  <i class="fa-regular fa-star cursor-pointer transition-colors" style="color: var(--text-muted);" data-value="1"></i>
+                  <i class="fa-regular fa-star cursor-pointer transition-colors" style="color: var(--text-muted);" data-value="2"></i>
+                  <i class="fa-regular fa-star cursor-pointer transition-colors" style="color: var(--text-muted);" data-value="3"></i>
+                  <i class="fa-regular fa-star cursor-pointer transition-colors" style="color: var(--text-muted);" data-value="4"></i>
+                  <i class="fa-regular fa-star cursor-pointer transition-colors" style="color: var(--text-muted);" data-value="5"></i>
+                </div>
+                <span id="rating-label" class="text-[10px] font-medium ml-1" style="color: var(--text-muted);">-</span>
+              </div>
+              <input type="hidden" id="form-rating" value="0">
+            </div>
+          </div>
+
+          <!-- Crítica -->
+          <div>
+            <label class="block text-[10px] font-bold mb-1" style="color: var(--text-muted);">Crítica</label>
+            <textarea id="form-comment" rows="3" required class="w-full rounded-xl p-3 text-xs focus:outline-none resize-none leading-relaxed" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);" placeholder="Sua experiência com este sistema..."></textarea>
+          </div>
+
+          <!-- Capa opcional (colapsada) -->
+          <details class="group">
+            <summary class="text-[10px] font-bold cursor-pointer list-none flex items-center gap-1" style="color: var(--text-muted);">
+              <i class="fa-solid fa-image text-[9px]"></i>
+              Adicionar capa
+              <i class="fa-solid fa-chevron-down text-[8px] ml-auto transition-transform group-open:rotate-180"></i>
+            </summary>
+            <div class="mt-2 rounded-xl overflow-hidden border" style="background: var(--bg-input); border-color: var(--border);">
+              <label class="flex items-center gap-3 p-2.5 cursor-pointer" style="color: var(--text-secondary);">
+                <span class="p-1.5 rounded-lg border" style="background: color-mix(in srgb, var(--star) 15%, transparent); color: var(--star); border-color: color-mix(in srgb, var(--star) 30%, transparent);">
+                  <i class="fa-solid fa-cloud-arrow-up text-[10px]"></i>
+                </span>
+                <div class="flex-1 min-w-0">
+                  <p class="text-[10px] font-medium" style="color: var(--text-secondary);">Escolher foto</p>
+                  <p id="file-name" class="text-[9px] truncate" style="color: var(--text-muted);">Nenhum</p>
+                </div>
+              </label>
+              <input type="file" id="form-image" accept=".jpg,.jpeg,.png,.webp,.gif" class="hidden" onchange="atualizarNomeArquivo(this)">
+            </div>
+          </details>
+
+          <button type="submit" class="w-full text-white font-bold py-3 rounded-2xl text-xs transition-all active:scale-[0.97] flex items-center justify-center gap-2" style="background: var(--accent);">
+            <i class="fa-solid fa-paper-plane"></i>
+            Publicar
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL DE LOGIN -->
+    <div id="modal-login" class="modal-hidden fixed inset-0 flex items-center justify-center p-4 z-50" style="background: color-mix(in srgb, var(--bg-primary) 90%, transparent);">
+      <div class="rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden" style="background: linear-gradient(to bottom, var(--bg-elevated), var(--bg-card)); border: 1px solid var(--border);">
+        <div class="p-5 border-b" style="background: color-mix(in srgb, var(--accent) 10%, transparent); border-color: var(--border);">
+          <div class="flex justify-between items-center">
+            <h3 class="text-base font-bold font-title flex items-center gap-2" style="color: var(--text-primary);">
+              <i class="fa-solid fa-right-to-bracket" style="color: var(--accent);"></i>
+              Entrar
+            </h3>
+            <button onclick="fecharModalLogin()" class="p-2 rounded-xl transition-all" style="color: var(--text-muted);">
+              <i class="fas fa-times text-base"></i>
+            </button>
+          </div>
+        </div>
+        <form id="form-login" onsubmit="fazerLogin(event)" class="p-5 space-y-4">
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold tracking-wide" style="color: var(--text-secondary);">Usuário</label>
+            <input type="text" id="login-username" required class="w-full rounded-2xl p-3 text-sm focus:outline-none transition-all" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);" placeholder="Seu nome de usuário">
+          </div>
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold tracking-wide" style="color: var(--text-secondary);">Senha</label>
+            <input type="password" id="login-password" required class="w-full rounded-2xl p-3 text-sm focus:outline-none transition-all" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);" placeholder="Sua senha">
+          </div>
+          <div id="login-error" class="text-xs hidden rounded-xl p-3 border" style="color: #f87171; background: rgba(248, 113, 113, 0.1); border-color: rgba(248, 113, 113, 0.3);"></div>
+          <button type="submit" class="w-full text-white font-bold py-3 rounded-2xl text-sm transition-all duration-200 shadow-lg active:scale-[0.98]" style="background: var(--accent);">
+            Entrar
+          </button>
+          <p class="text-xs text-center" style="color: var(--text-muted);">
+            Ainda não tem conta?
+            <a href="#" onclick="event.preventDefault(); abrirModalRegistro();" style="color: var(--accent);" class="font-semibold">Cadastre-se</a>
+          </p>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL DE REGISTRO -->
+    <div id="modal-registro" class="modal-hidden fixed inset-0 flex items-center justify-center p-4 z-50" style="background: color-mix(in srgb, var(--bg-primary) 90%, transparent);">
+      <div class="rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden" style="background: linear-gradient(to bottom, var(--bg-elevated), var(--bg-card)); border: 1px solid var(--border);">
+        <div class="p-5 border-b" style="background: color-mix(in srgb, var(--accent) 10%, transparent); border-color: var(--border);">
+          <div class="flex justify-between items-center">
+            <h3 class="text-base font-bold font-title flex items-center gap-2" style="color: var(--text-primary);">
+              <i class="fa-solid fa-user-plus" style="color: var(--accent);"></i>
+              Criar Conta
+            </h3>
+            <button onclick="fecharModalRegistro()" class="p-2 rounded-xl transition-all" style="color: var(--text-muted);">
+              <i class="fas fa-times text-base"></i>
+            </button>
+          </div>
+        </div>
+        <form id="form-registro" onsubmit="fazerRegistro(event)" class="p-5 space-y-4">
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold tracking-wide" style="color: var(--text-secondary);">Usuário</label>
+            <input type="text" id="reg-username" required minlength="3" class="w-full rounded-2xl p-3 text-sm focus:outline-none transition-all" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);" placeholder="Mínimo de 3 caracteres">
+          </div>
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold tracking-wide" style="color: var(--text-secondary);">Senha</label>
+            <input type="password" id="reg-password" required minlength="4" class="w-full rounded-2xl p-3 text-sm focus:outline-none transition-all" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);" placeholder="Mínimo de 4 caracteres">
+          </div>
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold tracking-wide" style="color: var(--text-secondary);">Contato <span style="color: var(--text-muted); font-weight: 400;">(WhatsApp)</span></label>
+            <input type="text" id="reg-contact" class="w-full rounded-2xl p-3 text-sm focus:outline-none transition-all" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);" placeholder="Seu número do WhatsApp">
+          </div>
+          <div id="reg-error" class="text-xs hidden rounded-xl p-3 border" style="color: #f87171; background: rgba(248, 113, 113, 0.1); border-color: rgba(248, 113, 113, 0.3);"></div>
+          <button type="submit" class="w-full text-white font-bold py-3 rounded-2xl text-sm transition-all duration-200 shadow-lg active:scale-[0.98]" style="background: var(--accent);">
+            Criar Conta
+          </button>
+          <p class="text-xs text-center" style="color: var(--text-muted);">
+            Já tem conta?
+            <a href="#" onclick="event.preventDefault(); fecharModalRegistro(); abrirModalLogin();" style="color: var(--accent);" class="font-semibold">Faça login</a>
+          </p>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL DE CONFIGURAÇÕES -->
+    <div id="modal-config" class="modal-hidden fixed inset-0 flex items-center justify-center p-4 z-50" style="background: color-mix(in srgb, var(--bg-primary) 90%, transparent);">
+      <div class="rounded-2xl w-full max-w-sm p-6 shadow-2xl" style="background: var(--bg-card); border: 1px solid var(--border);">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-sm font-bold font-title flex items-center gap-2" style="color: var(--text-primary);">
+            <i class="fa-solid fa-sliders" style="color: var(--accent);"></i> Ajustes
+          </h3>
+          <button onclick="fecharConfiguracoes()" class="transition" style="color: var(--text-muted);">
+            <i class="fas fa-times text-base"></i>
+          </button>
+        </div>
+        <div class="space-y-4">
+          <div class="flex justify-between items-center py-2.5 border-b" style="border-color: var(--border);">
+            <span class="text-xs font-medium" style="color: var(--text-secondary);">Filtro de Conteúdo Seguro</span>
+            <input type="checkbox" checked class="cursor-pointer h-4 w-4" style="accent-color: var(--accent);">
+          </div>
+          <div class="flex justify-between items-center py-2.5 border-b" style="border-color: var(--border);">
+            <span class="text-xs font-medium" style="color: var(--text-secondary);">Apenas Sistemas em Português</span>
+            <input type="checkbox" class="cursor-pointer h-4 w-4" style="accent-color: var(--accent);">
+          </div>
+          <button onclick="fecharConfiguracoes()" class="w-full font-semibold py-2 rounded-xl text-xs transition" style="background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border);">
+            Fechar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CATÁLOGO NETFLIX (OVERLAY FULLSCREEN) -->
+    <div id="modal-catalogo" class="modal-hidden fixed inset-0 overflow-y-auto" style="background: var(--bg-primary); z-index: 30;">
+      <div class="min-h-screen">
+        <%
+        const featRpgs = rpgs.filter(r => r.featured);
+        const heroRpgs = featRpgs.length ? featRpgs : [rpgs[0]];
+        %>
+        <div id="cat-hero-container" class="relative h-[55vh] min-h-[360px] overflow-hidden" onmouseenter="pausarHero()" onmouseleave="retomarHero()">
+          <div id="cat-banner" class="cat-banner absolute inset-0 bg-cover bg-center" style="background-image: url('<%= heroRpgs[0].banner %>'); transition: opacity 0.3s ease;"></div>
+          <div class="absolute inset-0" style="background: linear-gradient(to top, var(--bg-primary) 0%, transparent 55%, rgba(0,0,0,0.5) 100%);"></div>
+          <div class="absolute inset-0" style="background: linear-gradient(to right, rgba(0,0,0,0.5) 0%, transparent 100%);"></div>
+
+          <div class="cat-hero absolute bottom-0 left-0 right-0 p-8 pb-10">
+            <div class="flex items-center gap-3 mb-3">
+              <span id="cat-genre" class="text-[10px] font-bold uppercase tracking-[0.15em] px-2.5 py-1 rounded" style="background: var(--accent); color: white;"><%= heroRpgs[0].genre %></span>
+              <span id="cat-year" class="text-[10px] font-medium" style="color: rgba(255,255,255,0.4);"><%= heroRpgs[0].year %></span>
+            </div>
+            <h2 id="cat-title" class="text-4xl md:text-5xl font-title font-bold mb-3" style="color: white; text-shadow: 0 2px 20px rgba(0,0,0,0.7);"><%= heroRpgs[0].name %></h2>
+            <p id="cat-desc" class="text-sm max-w-xl leading-relaxed mb-1 line-clamp-3" style="color: rgba(255,255,255,0.8); text-shadow: 0 1px 8px rgba(0,0,0,0.6); display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden;"><%= heroRpgs[0].description %></p>
+            <p id="cat-owner" class="text-xs" style="color: rgba(255,255,255,0.4);"><%= heroRpgs[0].owner %></p>
+          </div>
+
+          <% if (heroRpgs.length > 1) { %>
+          <div id="hero-dots" class="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex gap-1.5">
+            <% heroRpgs.forEach((_, i) => { %>
+            <button onclick="heroIrPara(event, <%= i %>)" class="w-1.5 h-1.5 rounded-full transition-all" style="background: <%= i === 0 ? 'var(--accent)' : 'rgba(255,255,255,0.4)' %>;<%= i === 0 ? ' width: 16px;' : '' %>"></button>
+            <% }) %>
+          </div>
+          <% } %>
+
+          <button onclick="abrirFeed()" class="absolute top-5 right-5 w-10 h-10 rounded-full flex items-center justify-center text-white transition-all z-10 hover:bg-white/20 active:scale-90" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1);">
+            <i class="fa-solid fa-comment-dots text-sm"></i>
+          </button>
+        </div>
+
+        <div class="px-8 py-6 lg:px-12 lg:py-8" id="catalog-controls">
+          <div class="w-full max-w-7xl mx-auto">
+          <div id="cat-admin-section" class="mb-4 hidden">
+            <div class="flex gap-2">
+              <button onclick="abrirModalRegistroRpg()" class="flex-1 py-2.5 rounded-xl text-[11px] font-bold transition-all active:scale-[0.97] flex items-center justify-center gap-2" style="background: var(--accent); color: white;">
+                <i class="fa-solid fa-plus-circle"></i>
+                Novo Sistema
+              </button>
+              <button id="btn-pending-reviews" onclick="abrirModalPendentes()" class="py-2.5 px-3 rounded-xl text-[11px] font-bold transition-all active:scale-[0.97] flex items-center justify-center gap-2 relative" style="background: #f59e0b; color: #000;">
+                <i class="fa-solid fa-clock"></i>
+                <span id="pending-count-badge" class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold" style="background: var(--accent); color: white;">0</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3 mb-5">
+            <div class="relative w-full">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"><i class="fa-solid fa-search text-xs" style="color: var(--text-muted);"></i></span>
+              <input type="text" id="cat-search" oninput="filtrarCatalogo()" placeholder="Pesquisar por nome ou categoria..." class="w-full rounded-xl pl-9 pr-4 py-3 text-sm focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);">
+            </div>
+            <div class="flex gap-1 overflow-x-auto pb-1 scrollbar-thin" style="-webkit-overflow-scrolling: touch;">
+              <button onclick="ordenarCatalogo('nome')" id="sort-nome" class="px-3 py-2.5 rounded-xl text-[10px] font-bold transition-all shrink-0" style="background: var(--accent); color: white;">A-Z</button>
+              <button onclick="ordenarCatalogo('popular')" id="sort-popular" class="px-3 py-2.5 rounded-xl text-[10px] font-bold transition-all shrink-0" style="background: var(--bg-input); color: var(--text-muted); border: 1px solid var(--border);">Populares</button>
+              <button onclick="ordenarCatalogo('nota')" id="sort-nota" class="px-3 py-2.5 rounded-xl text-[10px] font-bold transition-all shrink-0" style="background: var(--bg-input); color: var(--text-muted); border: 1px solid var(--border);">Melhor Nota</button>
+            </div>
+          </div>
+
+          <div id="catalog-grid-container" class="space-y-8 pb-24">
+            <%
+            const generos = [...new Set(rpgs.map(r => r.genre))].sort((a, b) => a.localeCompare(b));
+            %>
+            <% generos.forEach(genre => { %>
+            <% const itens = rpgs.filter(r => r.genre === genre); %>
+            <div class="cat-section" data-genre="<%= genre %>">
+              <h3 class="cat-section-title text-base font-title font-bold mb-4 flex items-center gap-2" style="color: var(--text-primary);">
+                <span class="w-1 h-4 rounded-full inline-block" style="background: var(--accent);"></span>
+                <span class="cat-genre-name"><%= genre %></span>
+                <span class="text-[10px] font-normal" style="color: var(--text-muted);">(<span class="cat-genre-count"><%= itens.length %></span>)</span>
+              </h3>
+              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                <% 
+                itens.forEach(rpg => { 
+                  const rpgReviews = reviews.filter(r => r.rpg.name === rpg.name);
+                  const media = rpgReviews.length ? (rpgReviews.reduce((s, r) => s + r.rating, 0) / rpgReviews.length).toFixed(1) : null;
+                %>
+                <div onclick="selecionarRpgCatalogo('<%= rpg.name %>', this)" class="cat-card rounded-xl overflow-hidden border" data-nome="<%= rpg.name %>" data-genre="<%= rpg.genre %>" data-owner="<%= rpg.owner %>" data-desc="<%= rpg.description.substring(0, 80) %>" style="background: var(--bg-card); border-color: var(--border); aspect-ratio: 2/3;">
+                  <img src="<%= rpg.image %>" class="w-full h-full object-cover<%= rpg.ageRating === '18' ? ' cat-blur' : '' %>" alt="<%= rpg.name %>">
+                  <span class="cat-age-badge <%= rpg.ageRating %>"><%= rpg.ageRating === 'L' ? 'L' : rpg.ageRating %></span>
+                  <% if (media) { %>
+                  <div class="cat-rating-badge absolute top-8 right-2 z-3 flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded" style="background: rgba(0,0,0,0.7); color: var(--star); backdrop-filter: blur(4px);">
+                    <i class="fa-solid fa-star text-[7px]"></i>
+                    <%= media %>
+                  </div>
+                  <% } %>
+                  <div class="cat-overlay"></div>
+                  <div class="cat-label">
+                    <h4 class="font-title font-bold text-sm" style="color: white; text-shadow: 0 1px 4px rgba(0,0,0,0.8);"><%= rpg.name %></h4>
+                    <p class="text-[10px] mt-0.5 truncate" style="color: rgba(255,255,255,0.6);"><%= rpg.owner %></p>
+                    <p class="text-[9px] mt-1 leading-tight line-clamp-2" style="color: rgba(255,255,255,0.5);"><%= rpg.description.substring(0, 90) %></p>
+                  </div>
+                </div>
+                <% }) %>
+              </div>
+            </div>
+            <% }) %>
+          </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL DE DETALHE DO RPG -->
+    <div id="modal-detalhe" class="modal-hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background: color-mix(in srgb, var(--bg-primary) 92%, transparent); backdrop-filter: blur(4px);">
+      <div class="detalhe-card rounded-3xl w-full max-w-lg lg:max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl" style="background: linear-gradient(to bottom, var(--bg-elevated), var(--bg-card)); border: 1px solid var(--border);">
+        <div class="relative h-44 lg:h-56 rounded-t-3xl overflow-hidden bg-cover bg-center" id="detalhe-banner" style="background-image: url('<%= rpgs[0].banner %>');">
+          <div class="absolute inset-0" style="background: linear-gradient(to top, var(--bg-elevated) 0%, transparent 60%);"></div>
+          <button onclick="fecharDetalheRpg()" class="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition z-10" style="background: rgba(0,0,0,0.5); color: white;">
+            <i class="fas fa-times text-xs"></i>
+          </button>
+          <div class="absolute bottom-3 left-4 right-4 z-10">
+            <span class="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded" style="background: var(--accent); color: white;" id="detalhe-genre"><%= rpgs[0].genre %></span>
+          </div>
+        </div>
+        <div class="p-5 space-y-4">
+          <div>
+            <h2 class="text-xl font-title font-bold" style="color: var(--text-primary);" id="detalhe-name"><%= rpgs[0].name %></h2>
+            <div class="flex items-center gap-3 mt-1">
+              <span class="text-xs" style="color: var(--text-muted);" id="detalhe-owner"><%= rpgs[0].owner %></span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded font-bold" id="detalhe-age" style="background: rgba(234,179,8,0.2); color: #eab308;"><%= rpgs[0].ageRating %></span>
+              <span class="text-[10px]" style="color: var(--text-muted);" id="detalhe-year"><%= rpgs[0].year %></span>
+            </div>
+          </div>
+          <p class="text-xs leading-relaxed" style="color: var(--text-secondary);" id="detalhe-desc"><%= rpgs[0].description %></p>
+          <div id="detalhe-tags" class="flex flex-wrap gap-1.5"></div>
+          <div class="flex flex-wrap gap-2">
+            <a id="detalhe-link" href="<%= rpgs[0].link || '#' %>" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl transition-all active:scale-95" style="background: var(--accent); color: white; <%= rpgs[0].link ? '' : 'opacity:0.5;pointer-events:none;' %>">
+              <i class="fa-solid fa-globe text-[10px]"></i>
+              Site Oficial
+            </a>
+            <a id="detalhe-whatsapp" href="<%= rpgs[0].whatsapp || '#' %>" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl transition-all active:scale-95" style="background: #25D366; color: white; <%= rpgs[0].whatsapp ? '' : 'opacity:0.5;pointer-events:none;' %>">
+              <i class="fa-brands fa-whatsapp text-[10px]"></i>
+              Jogar
+            </a>
+          </div>
+
+          <div class="flex gap-2">
+            <button id="btn-avaliar-detalhe" onclick="avaliarDoDetalhe()" class="flex-1 text-white font-bold py-2.5 rounded-2xl text-xs transition-all active:scale-[0.97] flex items-center justify-center gap-2 hidden" style="background: var(--accent);">
+              <i class="fa-solid fa-star"></i>
+              Avaliar
+            </button>
+            <button id="btn-editar-detalhe" onclick="editarRpgDoDetalhe()" class="hidden px-3 py-2.5 rounded-2xl text-xs font-bold transition-all active:scale-[0.97] flex items-center justify-center gap-1.5" style="background: var(--bg-elevated); color: var(--text-secondary); border: 1px solid var(--border);">
+              <i class="fa-solid fa-pen"></i>
+            </button>
+            <button id="btn-deletar-detalhe" onclick="deletarRpgDoDetalhe()" class="hidden px-3 py-2.5 rounded-2xl text-xs font-bold transition-all active:scale-[0.97] flex items-center justify-center gap-1.5" style="background: transparent; color: #f87171; border: 1px solid rgba(248,113,113,0.3);">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+
+          <div class="detalhe-reviews pt-2 border-t" style="border-color: var(--border);">
+            <h4 class="text-xs font-bold font-title mb-3 flex items-center gap-2" style="color: var(--text-primary);">
+              <i class="fa-solid fa-comments text-[10px]" style="color: var(--accent);"></i>
+              Críticas
+            </h4>
+            <div id="detalhe-reviews-list" class="space-y-2">
+              <% const revs = reviews.filter(r => r.rpg.name === rpgs[0].name); %>
+              <% if (revs.length) { %>
+                <% revs.forEach(r => { %>
+                <div class="detalhe-review-card rounded-xl p-3 border" style="background: color-mix(in srgb, var(--bg-card) 50%, transparent); border-color: var(--border);">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-[11px] font-semibold" style="color: var(--text-secondary);"><%= r.username %></span>
+                    <span class="text-[10px]" style="color: var(--star);"><%= '★'.repeat(Math.floor(r.rating)) %><%= r.rating % 1 ? '½' : '' %> <%= r.rating %></span>
+                  </div>
+                  <p class="text-[11px] leading-relaxed" style="color: var(--text-muted);"><%= r.comment %></p>
+                  <span class="text-[9px]" style="color: var(--text-muted);"><%= r.timeAgo %></span>
+                </div>
+                <% }) %>
+              <% } else { %>
+                <p class="text-xs text-center py-4" style="color: var(--text-muted);">Nenhuma crítica ainda. Seja o primeiro a avaliar!</p>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL DE REGISTRO DE RPG -->
+    <div id="modal-registrar-rpg" class="modal-hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background: color-mix(in srgb, var(--bg-primary) 90%, transparent);">
+      <div class="rounded-3xl w-full max-w-md shadow-2xl overflow-hidden" style="background: linear-gradient(to bottom, var(--bg-elevated), var(--bg-card)); border: 1px solid var(--border);">
+        <div class="p-5 border-b flex justify-between items-center" style="border-color: var(--border); background: color-mix(in srgb, var(--accent) 10%, transparent);">
+          <h3 class="text-sm font-bold font-title flex items-center gap-2" style="color: var(--text-primary);">
+            <i class="fa-solid fa-plus-circle" style="color: var(--accent);"></i>
+            Registrar RPG
+          </h3>
+          <button onclick="fecharModalRegistroRpg()" class="p-2 rounded-xl transition" style="color: var(--text-muted);">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <form id="form-registrar-rpg" onsubmit="registrarRpg(event)" class="p-5 space-y-3 max-h-[70vh] overflow-y-auto">
+          <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Nome do Sistema *</label><input type="text" id="reg-nome" required class="w-full rounded-xl p-2.5 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);"></div>
+          <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Criadora / Editora *</label><input type="text" id="reg-owner" required class="w-full rounded-xl p-2.5 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);"></div>
+          <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Gênero / Categoria *</label><input type="text" id="reg-genre" required class="w-full rounded-xl p-2.5 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);" placeholder="Ex: Fantasia Medieval, Horror..."></div>
+          <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Ano de Lançamento</label><input type="text" id="reg-year" class="w-full rounded-xl p-2.5 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);"></div>
+          <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Classificação Etária *</label>
+            <select id="reg-age" required class="w-full rounded-xl p-2.5 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);">
+              <option value="L">Livre</option><option value="10">10</option><option value="12">12</option><option value="14">14</option><option value="16">16</option><option value="18">18</option>
+            </select>
+          </div>
+          <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Imagem do Sistema *</label>
+            <div class="rounded-xl overflow-hidden border cursor-pointer" style="background: var(--bg-input); border-color: var(--border);">
+              <label class="flex items-center gap-3 p-3 cursor-pointer" style="color: var(--text-secondary);" for="reg-image">
+                <span class="p-2 rounded-lg border" style="background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, transparent);">
+                  <i class="fa-solid fa-cloud-arrow-up text-sm"></i>
+                </span>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs font-medium" style="color: var(--text-secondary);">Toque para escolher</p>
+                  <p id="reg-image-name" class="text-[10px] truncate mt-0.5" style="color: var(--text-muted);">Nenhum arquivo</p>
+                </div>
+              </label>
+              <input type="file" id="reg-image" accept=".jpg,.jpeg,.png,.webp" class="hidden" onchange="abrirCropperParaImagem(this, 'reg-image-name')">
+            </div>
+          </div>
+          <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Banner (opcional)</label>
+            <div class="rounded-xl overflow-hidden border cursor-pointer" style="background: var(--bg-input); border-color: var(--border);">
+              <label class="flex items-center gap-3 p-3 cursor-pointer" style="color: var(--text-secondary);" for="reg-banner">
+                <span class="p-2 rounded-lg border" style="background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, transparent);">
+                  <i class="fa-solid fa-image text-sm"></i>
+                </span>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs font-medium" style="color: var(--text-secondary);">Toque para escolher</p>
+                  <p id="reg-banner-name" class="text-[10px] truncate mt-0.5" style="color: var(--text-muted);">Nenhum arquivo</p>
+                </div>
+              </label>
+              <input type="file" id="reg-banner" accept=".jpg,.jpeg,.png,.webp" class="hidden" onchange="document.getElementById('reg-banner-name').textContent = this.files[0]?.name || 'Nenhum arquivo'">
+            </div>
+          </div>
+          <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Site Oficial (link)</label><input type="url" id="reg-link" class="w-full rounded-xl p-2.5 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);" placeholder="https://..."></div>
+          <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Link do WhatsApp <span style="color: var(--text-muted);">(onde o RPG acontece)</span></label><input type="url" id="reg-whatsapp" class="w-full rounded-xl p-2.5 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);" placeholder="https://wa.me/..."></div>
+          <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Descrição *</label><textarea id="reg-desc" required rows="3" class="w-full rounded-xl p-2.5 text-xs focus:outline-none resize-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);"></textarea></div>
+          <div id="reg-rpg-error" class="text-xs hidden rounded-xl p-3 border" style="color: #f87171; background: rgba(248,113,113,0.1); border-color: rgba(248,113,113,0.3);"></div>
+          <button type="submit" class="w-full text-white font-bold py-3 rounded-2xl text-xs transition-all active:scale-[0.97]" style="background: var(--accent);">
+            <i class="fa-solid fa-check"></i> Registrar
+          </button>
+        </form>
+      </div>
+    </div>
+    
+    <!-- MODAL DE EDITAR RPG (ADMIN) -->
+    <div id="modal-editar-rpg" class="modal-hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background: color-mix(in srgb, var(--bg-primary) 90%, transparent);">
+      <div class="rounded-3xl w-full max-w-md shadow-2xl overflow-hidden" style="background: linear-gradient(to bottom, var(--bg-elevated), var(--bg-card)); border: 1px solid var(--border);">
+        <div class="p-5 border-b flex justify-between items-center" style="border-color: var(--border); background: color-mix(in srgb, var(--accent) 10%, transparent);">
+          <h3 class="text-sm font-bold font-title flex items-center gap-2" style="color: var(--text-primary);">
+            <i class="fa-solid fa-pen" style="color: var(--accent);"></i>
+            Editar Sistema
+          </h3>
+          <button onclick="fecharModalEditarRpg()" class="p-2 rounded-xl transition" style="color: var(--text-muted);">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <form id="form-editar-rpg" onsubmit="salvarEdicaoRpg(event)" class="p-5 space-y-3 max-h-[70vh] overflow-y-auto">
+          <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Nome do Sistema</label><input type="text" id="edit-nome" disabled class="w-full rounded-xl p-2.5 text-xs" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-muted);" readonly></div>
+          <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Criadora / Editora</label><input type="text" id="edit-owner" class="w-full rounded-xl p-2.5 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);"></div>
+          <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Gênero</label><input type="text" id="edit-genre" class="w-full rounded-xl p-2.5 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);"></div>
+          <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Ano</label><input type="text" id="edit-year" class="w-full rounded-xl p-2.5 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);"></div>
+          <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Classificação Etária</label>
+            <select id="edit-age" class="w-full rounded-xl p-2.5 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);">
+              <option value="L">Livre</option><option value="10">10</option><option value="12">12</option><option value="14">14</option><option value="16">16</option><option value="18">18</option>
+            </select>
+          </div>
+          <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Nova Imagem <span style="color: var(--text-muted);">(opcional)</span></label>
+            <div class="rounded-xl overflow-hidden border cursor-pointer" style="background: var(--bg-input); border-color: var(--border);">
+              <label class="flex items-center gap-3 p-3 text-xs cursor-pointer" style="color: var(--text-secondary);" for="edit-image">
+                <span class="p-2 rounded-lg border" style="background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, transparent);">
+                  <i class="fa-solid fa-cloud-arrow-up text-sm"></i>
+                </span>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs font-medium" style="color: var(--text-secondary);">Substituir imagem</p>
+                  <p id="edit-image-name" class="text-[10px] truncate mt-0.5" style="color: var(--text-muted);">Nenhum arquivo</p>
+                </div>
+              </label>
+              <input type="file" id="edit-image" accept=".jpg,.jpeg,.png,.webp" class="hidden" onchange="abrirCropperParaEdicao(this, 'edit-image-name')">
+            </div>
+          </div>
+          <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Novo Banner <span style="color: var(--text-muted);">(opcional)</span></label>
+            <div class="rounded-xl overflow-hidden border cursor-pointer" style="background: var(--bg-input); border-color: var(--border);">
+              <label class="flex items-center gap-3 p-3 text-xs cursor-pointer" style="color: var(--text-secondary);" for="edit-banner">
+                <span class="p-2 rounded-lg border" style="background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, transparent);">
+                  <i class="fa-solid fa-image text-sm"></i>
+                </span>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs font-medium" style="color: var(--text-secondary);">Substituir banner</p>
+                  <p id="edit-banner-name" class="text-[10px] truncate mt-0.5" style="color: var(--text-muted);">Nenhum arquivo</p>
+                </div>
+              </label>
+              <input type="file" id="edit-banner" accept=".jpg,.jpeg,.png,.webp" class="hidden" onchange="document.getElementById('edit-banner-name').textContent = this.files[0]?.name || 'Nenhum arquivo'">
+            </div>
+          </div>
+          <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Site Oficial</label><input type="url" id="edit-link" class="w-full rounded-xl p-2.5 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);" placeholder="https://..."></div>
+          <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">WhatsApp</label><input type="url" id="edit-whatsapp" class="w-full rounded-xl p-2.5 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);" placeholder="https://wa.me/..."></div>
+          <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Descrição</label><textarea id="edit-desc" rows="3" class="w-full rounded-xl p-2.5 text-xs focus:outline-none resize-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);"></textarea></div>
+          <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Tags <span style="color: var(--text-muted);">(separadas por vírgula)</span></label><input type="text" id="edit-tags" class="w-full rounded-xl p-2.5 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);" placeholder="ex: anime, cards, cenas, textual"></div>
+          <div class="flex items-center justify-between p-3 rounded-xl" style="background: var(--bg-input); border: 1px solid var(--border);">
+            <label class="text-[10px] font-bold" style="color: var(--text-secondary);">
+              <i class="fa-solid fa-star text-[9px]" style="color: var(--star);"></i>
+              Destaque no Topo
+            </label>
+            <button type="button" id="edit-featured-btn" onclick="toggleFeaturedRpg()" class="relative w-10 h-5 rounded-full transition-colors" style="background: var(--text-muted);">
+              <span id="edit-featured-knob" class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform" style="transform: translateX(0);"></span>
+            </button>
+          </div>
+          <div id="edit-rpg-error" class="text-xs hidden rounded-xl p-3 border" style="color: #f87171; background: rgba(248,113,113,0.1); border-color: rgba(248,113,113,0.3);"></div>
+          <button type="submit" class="w-full text-white font-bold py-3 rounded-2xl text-xs transition-all active:scale-[0.97]" style="background: var(--accent);">
+            <i class="fa-solid fa-check"></i> Salvar Alterações
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL DE AVALIAÇÕES PENDENTES (ADMIN) -->
+    <div id="modal-pendentes" class="modal-hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background: color-mix(in srgb, var(--bg-primary) 90%, transparent);">
+      <div class="rounded-3xl w-full max-w-lg max-h-[85vh] overflow-y-auto shadow-2xl" style="background: var(--bg-card); border: 1px solid var(--border);">
+        <div class="p-5 border-b flex justify-between items-center sticky top-0 z-10" style="border-color: var(--border); background: var(--bg-elevated);">
+          <h3 class="text-sm font-bold font-title flex items-center gap-2" style="color: var(--text-primary);">
+            <i class="fa-solid fa-clock" style="color: #f59e0b;"></i>
+            Avaliações Pendentes
+          </h3>
+          <button onclick="fecharModalPendentes()" class="p-2 rounded-xl transition" style="color: var(--text-muted);">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div id="pendentes-list" class="p-4 space-y-3">
+          <p class="text-xs text-center py-8" style="color: var(--text-muted);">Nenhuma avaliação pendente.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAINEL DE CORES (DESKTOP — LADO DIREITO) -->
+    <div id="theme-panel" class="fixed right-0 top-1/2 -translate-y-1/2 z-50" style="display: none;">
+      <button onclick="toggleThemePanel()" class="flex items-center gap-2 px-3 py-3 rounded-l-xl text-white text-xs font-bold shadow-lg transition-all" style="background: var(--accent); writing-mode: vertical-lr;">
+        <i class="fa-solid fa-palette"></i> Tema
+      </button>
+      <div id="theme-panel-content" class="hidden rounded-l-2xl shadow-2xl p-5 border-r" style="background: var(--bg-elevated); border-color: var(--border); width: 260px;">
+        <div class="flex justify-between items-center mb-4">
+          <h4 class="text-xs font-bold font-title tracking-wide" style="color: var(--text-primary);">Cores do Tema</h4>
+          <button onclick="toggleThemePanel()" class="text-xs" style="color: var(--text-muted);"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="space-y-3 text-[11px]">
+          <div><label class="font-medium" style="color: var(--text-secondary);">Fundo Principal</label><input type="color" id="cp-bg-primary" value="#0b0f19" onchange="aplicarCor('--bg-primary', this.value)" class="color-picker w-full h-8 rounded-xl cursor-pointer border mt-1" style="border-color: var(--border);"></div>
+          <div><label class="font-medium" style="color: var(--text-secondary);">Fundo Secundário</label><input type="color" id="cp-bg-secondary" value="#0f1524" onchange="aplicarCor('--bg-secondary', this.value)" class="color-picker w-full h-8 rounded-xl cursor-pointer border mt-1" style="border-color: var(--border);"></div>
+          <div><label class="font-medium" style="color: var(--text-secondary);">Fundo Cards</label><input type="color" id="cp-bg-card" value="#111827" onchange="aplicarCor('--bg-card', this.value)" class="color-picker w-full h-8 rounded-xl cursor-pointer border mt-1" style="border-color: var(--border);"></div>
+          <div><label class="font-medium" style="color: var(--text-secondary);">Cor de Destaque</label><input type="color" id="cp-accent" value="#e50914" onchange="aplicarCor('--accent', this.value)" class="color-picker w-full h-8 rounded-xl cursor-pointer border mt-1" style="border-color: var(--border);"></div>
+          <div><label class="font-medium" style="color: var(--text-secondary);">Texto Principal</label><input type="color" id="cp-text-primary" value="#f1f5f9" onchange="aplicarCor('--text-primary', this.value)" class="color-picker w-full h-8 rounded-xl cursor-pointer border mt-1" style="border-color: var(--border);"></div>
+          <div><label class="font-medium" style="color: var(--text-secondary);">Texto Secundário</label><input type="color" id="cp-text-secondary" value="#94a3b8" onchange="aplicarCor('--text-secondary', this.value)" class="color-picker w-full h-8 rounded-xl cursor-pointer border mt-1" style="border-color: var(--border);"></div>
+          <div><label class="font-medium" style="color: var(--text-secondary);">Cor das Estrelas</label><input type="color" id="cp-star" value="#f59e0b" onchange="aplicarCor('--star', this.value)" class="color-picker w-full h-8 rounded-xl cursor-pointer border mt-1" style="border-color: var(--border);"></div>
+        </div>
+        <div class="flex gap-2 mt-4">
+          <button onclick="resetarTema()" class="flex-1 py-2 rounded-xl text-xs font-semibold transition" style="background: var(--bg-input); color: var(--text-secondary); border: 1px solid var(--border);">Resetar</button>
+          <button onclick="exportarTema()" class="flex-1 py-2 rounded-xl text-xs font-semibold transition text-white" style="background: var(--accent);">Exportar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL DE PERFIL -->
+    <div id="modal-perfil" onclick="if(event.target===this)fecharPerfil()" class="modal-hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background: color-mix(in srgb, var(--bg-primary) 90%, transparent);">
+      <div class="rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl" style="background: var(--bg-card); border: 1px solid var(--border);">
+        
+        <!-- Cover / Topo -->
+        <div class="relative h-28 rounded-t-3xl flex items-end justify-center" style="background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 60%, #000));">
+          <button onclick="fecharPerfil()" class="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center text-white text-xs transition active:scale-90" style="background: rgba(0,0,0,0.3);"><i class="fas fa-times"></i></button>
+          <div class="relative -mb-10 w-20 h-20 rounded-full overflow-hidden border-[3px] shadow-lg" style="border-color: var(--bg-card);">
+            <img id="perfil-avatar" class="w-full h-full object-cover hidden" src="" alt="">
+            <div id="perfil-avatar-placeholder" class="w-full h-full flex items-center justify-center text-2xl font-bold text-white" style="background: var(--accent);">U</div>
+          </div>
+        </div>
+
+        <div class="pt-12 pb-5 px-5 space-y-4">
+
+          <div class="text-center">
+            <p class="text-base font-bold" style="color: var(--text-primary);" id="perfil-nome">Carregando...</p>
+            <div class="inline-block mt-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider" id="perfil-role" style="background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent);">Usuário</div>
+          </div>
+
+          <div class="flex items-start gap-3 p-3 rounded-2xl" style="background: var(--bg-elevated);">
+            <label id="perfil-camera-label" class="cursor-pointer shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-xs transition active:scale-90" style="background: var(--bg-input); color: var(--text-muted); border: 1px solid var(--border);" title="Alterar foto">
+              <i class="fa-solid fa-camera"></i>
+              <input type="file" id="perfil-avatar-input" accept=".jpg,.jpeg,.png,.webp" class="hidden" onchange="enviarAvatar(event)">
+            </label>
+            <div class="flex-1 min-w-0">
+              <label class="block text-[10px] font-bold mb-1" style="color: var(--text-muted);">BIO</label>
+              <textarea id="perfil-bio" rows="2" class="w-full rounded-xl p-2.5 text-xs focus:outline-none resize-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);" placeholder="Conte um pouco sobre você..."></textarea>
+            </div>
+          </div>
+
+          <button id="perfil-save-btn" onclick="salvarPerfil()" class="w-full text-white font-bold py-2.5 rounded-2xl text-xs transition-all active:scale-[0.97]" style="background: var(--accent);">
+            <i class="fa-solid fa-check"></i> Salvar Perfil
+          </button>
+
+          <div>
+            <h4 id="perfil-reviews-title" class="text-[11px] font-bold font-title mb-3 flex items-center gap-2" style="color: var(--text-primary);">
+              <i class="fa-solid fa-comment text-[10px]" style="color: var(--accent);"></i>
+              <span id="perfil-reviews-heading">Minhas Críticas</span>
+            </h4>
+            <div id="perfil-reviews" class="space-y-2">
+              <p class="text-xs text-center py-6 rounded-2xl" style="background: var(--bg-elevated); color: var(--text-muted);">Carregando...</p>
+            </div>
+          </div>
+
+          <button id="perfil-logout-btn" onclick="fazerLogout()" class="w-full py-2.5 rounded-2xl text-xs font-bold transition-all active:scale-[0.97] flex items-center justify-center gap-2 hover:bg-red-500/10" style="background: transparent; color: #f87171; border: 1px solid rgba(248,113,113,0.3);">
+            <i class="fa-solid fa-sign-out-alt"></i> Sair da Conta
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CROPPER MODAL -->
+    <div id="modal-cropper" class="modal-hidden fixed inset-0 z-[60] flex items-center justify-center p-4" style="background: color-mix(in srgb, #000 90%, transparent);">
+      <div class="rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden" style="background: var(--bg-card); border: 1px solid var(--border);">
+        <div class="p-4 border-b flex items-center justify-between" style="border-color: var(--border);">
+          <h3 class="text-sm font-bold font-title flex items-center gap-2" style="color: var(--text-primary);">
+            <i class="fa-solid fa-crop" style="color: var(--accent);"></i>
+            Ajustar Imagem
+          </h3>
+          <button onclick="fecharCropper()" class="p-2 rounded-xl transition" style="color: var(--text-muted);">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="p-4">
+          <div id="cropper-container" class="w-full max-h-[55vh] bg-black rounded-2xl overflow-hidden">
+            <img id="cropper-image" src="" alt="Cortar" style="max-width: 100%;">
+          </div>
+          <div class="flex items-center justify-between mt-4">
+            <div class="flex gap-2">
+              <button onclick="cropperSetRatio(2/3)" class="px-3 py-1.5 rounded-lg text-[10px] font-bold transition" style="background: var(--bg-input); color: var(--text-secondary); border: 1px solid var(--border);">Card (2:3)</button>
+              <button onclick="cropperSetRatio(16/9)" class="px-3 py-1.5 rounded-lg text-[10px] font-bold transition" style="background: var(--bg-input); color: var(--text-secondary); border: 1px solid var(--border);">Banner (16:9)</button>
+              <button onclick="cropperSetRatio(NaN)" class="px-3 py-1.5 rounded-lg text-[10px] font-bold transition" style="background: var(--bg-input); color: var(--text-secondary); border: 1px solid var(--border);">Livre</button>
+            </div>
+            <button onclick="confirmarCropper()" class="px-5 py-2 rounded-xl text-xs font-bold text-white transition active:scale-95" style="background: var(--accent);">
+              <i class="fa-solid fa-check"></i> Aplicar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- JAVASCRIPT -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+  <script>
+    const TOKEN_KEY = 'rpg-reviewer-token';
+    const USER_KEY = 'rpg-reviewer-user';
+    const THEME_KEY = 'rpg-reviewer-theme';
+    let cropperInstance = null;
+    let cropperCallback = null;
+    let croppedImageFile = null;
+    let croppedBannerFile = null;
+    let croppedEditImageFile = null;
+    let croppedEditBannerFile = null;
+
+    function abrirCropper(imgSrc, callback) {
+      const img = document.getElementById('cropper-image');
+      img.src = imgSrc;
+      cropperCallback = callback;
+      document.getElementById('modal-cropper').classList.remove('modal-hidden');
+      img.onload = () => {
+        if (cropperInstance) cropperInstance.destroy();
+        cropperInstance = new Cropper(img, {
+          aspectRatio: 2/3,
+          viewMode: 1,
+          dragMode: 'move',
+          background: false,
+          autoCropArea: 1,
+        });
+      };
+    }
+    function fecharCropper() {
+      if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
+      document.getElementById('modal-cropper').classList.add('modal-hidden');
+      cropperCallback = null;
+    }
+    function cropperSetRatio(ratio) {
+      if (!cropperInstance) return;
+      if (isNaN(ratio)) cropperInstance.setAspectRatio(NaN);
+      else cropperInstance.setAspectRatio(ratio);
+    }
+    function confirmarCropper() {
+      if (!cropperInstance) return;
+      const canvas = cropperInstance.getCroppedCanvas({ maxWidth: 1200, maxHeight: 1200 });
+      canvas.toBlob(blob => {
+        const file = new File([blob], 'cropped.png', { type: 'image/png' });
+        if (cropperCallback) cropperCallback(file);
+        fecharCropper();
+      }, 'image/png');
+    }
+    function abrirCropperParaImagem(input, labelId) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => abrirCropper(e.target.result, cropped => {
+        croppedImageFile = cropped;
+        document.getElementById(labelId).textContent = file.name + ' (cortado)';
+      });
+      reader.readAsDataURL(file);
+    }
+
+    const THEME_DEFAULTS = {
+      '--bg-primary': '#0b0f19',
+      '--bg-secondary': '#0f1524',
+      '--bg-card': '#111827',
+      '--bg-elevated': '#1a1f35',
+      '--bg-input': '#0a0e1a',
+      '--accent': '#e50914',
+      '--accent-hover': '#f40612',
+      '--text-primary': '#f1f5f9',
+      '--text-secondary': '#94a3b8',
+      '--text-muted': '#64748b',
+      '--border': 'rgba(100,116,139,0.25)',
+      '--border-accent': 'rgba(229,9,20,0.3)',
+      '--star': '#f59e0b',
+    };
+
+    function getToken() { return localStorage.getItem(TOKEN_KEY); }
+    function getUser() {
+      try { return JSON.parse(localStorage.getItem(USER_KEY)); }
+      catch { return null; }
+    }
+    function saveSession(token, user) {
+      localStorage.setItem(TOKEN_KEY, token);
+      localStorage.setItem(USER_KEY, JSON.stringify(user));
+    }
+    function clearSession() {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+    }
+
+    function aplicarCor(varName, value) {
+      document.documentElement.style.setProperty(varName, value);
+      salvarTema();
+    }
+
+    function salvarTema() {
+      const theme = {};
+      Object.keys(THEME_DEFAULTS).forEach(key => {
+        theme[key] = document.documentElement.style.getPropertyValue(key) || THEME_DEFAULTS[key];
+      });
+      localStorage.setItem(THEME_KEY, JSON.stringify(theme));
+    }
+
+    function carregarTema() {
+      const saved = localStorage.getItem(THEME_KEY);
+      if (!saved) return;
+      try {
+        const theme = JSON.parse(saved);
+        Object.entries(theme).forEach(([key, value]) => {
+          if (value) document.documentElement.style.setProperty(key, value);
+        });
+      } catch {}
+    }
+
+    function resetarTema() {
+      Object.entries(THEME_DEFAULTS).forEach(([key, value]) => {
+        document.documentElement.style.setProperty(key, value);
+      });
+      Object.keys(THEME_DEFAULTS).forEach(key => {
+        const cp = document.getElementById('cp-' + key.replace('--', ''));
+        if (cp) cp.value = THEME_DEFAULTS[key];
+      });
+      localStorage.removeItem(THEME_KEY);
+    }
+
+    function exportarTema() {
+      const theme = {};
+      Object.keys(THEME_DEFAULTS).forEach(key => {
+        theme[key] = document.documentElement.style.getPropertyValue(key) || THEME_DEFAULTS[key];
+      });
+      const text = Object.entries(theme).map(([k, v]) => `${k}: ${v}`).join('\n');
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Tema copiado para a área de transferência!');
+      }).catch(() => {
+        prompt('Copie o texto abaixo:', text);
+      });
+    }
+
+    function toggleThemePanel() {
+      const content = document.getElementById('theme-panel-content');
+      const btn = document.querySelector('#theme-panel > button');
+      content.classList.toggle('hidden');
+      btn.classList.toggle('hidden');
+    }
+
+    function abrirCatalogo() {
+      document.getElementById('feed-view').classList.add('hidden');
+      const modal = document.getElementById('modal-catalogo');
+      modal.classList.remove('modal-hidden');
+      void modal.offsetHeight;
+      modal.classList.add('catalogo-aberto');
+      document.body.style.overflow = 'hidden';
+      document.getElementById('nav-catalogo').style.color = 'var(--accent)';
+      document.getElementById('nav-feed').style.color = 'var(--text-muted)';
+      iniciarHero();
+    }
+
+    function abrirFeed() {
+      const modal = document.getElementById('modal-catalogo');
+      modal.classList.remove('catalogo-aberto');
+      setTimeout(() => {
+        modal.classList.add('modal-hidden');
+        document.getElementById('feed-view').classList.remove('hidden');
+        document.body.style.overflow = '';
+      }, 100);
+      document.getElementById('nav-feed').style.color = 'var(--accent)';
+      document.getElementById('nav-catalogo').style.color = 'var(--text-muted)';
+    }
+
+    function revelarBlur(el) {
+      const img = el?.querySelector('.cat-blur');
+      if (img && !img.classList.contains('revealed')) {
+        img.classList.add('revealed');
+      }
+    }
+
+    let heroInterval, heroIndex = 0, heroPausado = false, heroTouchX = 0, heroSwipeInit = false, heroRpgs = <%- JSON.stringify(rpgs.filter(r => r.featured).length ? rpgs.filter(r => r.featured) : [rpgs[0]]) %>;
+
+    function iniciarHero() {
+      pararHero();
+      if (heroRpgs.length < 2) return;
+      iniciarHeroSwipe();
+      heroInterval = setInterval(() => {
+        if (heroPausado) return;
+        heroIndex = (heroIndex + 1) % heroRpgs.length;
+        heroIrPara(null, heroIndex);
+      }, 3000);
+    }
+
+    function pararHero() { if (heroInterval) { clearInterval(heroInterval); heroInterval = null; } }
+    function pausarHero() { heroPausado = true; }
+    function retomarHero() { heroPausado = false; }
+
+    function heroIrPara(e, index) {
+      if (e) { e.stopPropagation(); pausarHero(); setTimeout(retomarHero, 6000); }
+      heroIndex = index;
+      const rpg = heroRpgs[index];
+      if (!rpg) return;
+      const banner = document.getElementById('cat-banner');
+      banner.style.opacity = '0';
+      setTimeout(() => {
+        banner.style.backgroundImage = `url('${rpg.banner}')`;
+        banner.style.opacity = '1';
+      }, 150);
+      document.getElementById('cat-title').textContent = rpg.name;
+      document.getElementById('cat-desc').textContent = rpg.description;
+      document.getElementById('cat-owner').textContent = `${rpg.owner} · ${rpg.year}`;
+      document.getElementById('cat-genre').textContent = rpg.genre;
+      document.getElementById('cat-year').textContent = rpg.year || '';
+      const dots = document.querySelectorAll('#hero-dots button');
+      dots.forEach((d, i) => {
+        d.style.background = i === index ? 'var(--accent)' : 'rgba(255,255,255,0.4)';
+        d.style.width = i === index ? '16px' : '6px';
+      });
+    }
+
+    function heroProximo(e) { if (e) e.stopPropagation(); pausarHero(); setTimeout(retomarHero, 6000); heroIndex = (heroIndex + 1) % heroRpgs.length; heroIrPara(null, heroIndex); }
+    function heroAnterior(e) { if (e) e.stopPropagation(); pausarHero(); setTimeout(retomarHero, 6000); heroIndex = (heroIndex - 1 + heroRpgs.length) % heroRpgs.length; heroIrPara(null, heroIndex); }
+
+    function iniciarHeroSwipe() {
+      if (heroSwipeInit) return;
+      heroSwipeInit = true;
+      const el = document.getElementById('cat-hero-container');
+      if (!el) return;
+      el.addEventListener('touchstart', e => { heroTouchX = e.changedTouches[0].screenX; }, { passive: true });
+      el.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].screenX - heroTouchX;
+        if (Math.abs(dx) > 50) {
+          if (dx < 0) heroProximo(); else heroAnterior();
+        }
+      }, { passive: true });
+    }
+
+    function selecionarRpgCatalogo(nome, el) {
+      revelarBlur(el);
+      const idx = heroRpgs.findIndex(r => r.name === nome);
+      if (idx !== -1) { heroIrPara(null, idx); heroIndex = idx; }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      abrirDetalheRpg(nome);
+    }
+
+    function abrirDetalheRpg(nome) {
+      const modal = document.getElementById('modal-detalhe');
+      const rpgs = <%- JSON.stringify(rpgs) %>;
+      const rpg = rpgs.find(r => r.name === nome);
+      if (!rpg) return;
+      document.getElementById('detalhe-banner').style.backgroundImage = `url('${rpg.banner}')`;
+      document.getElementById('detalhe-name').textContent = rpg.name;
+      document.getElementById('detalhe-owner').textContent = rpg.owner;
+      document.getElementById('detalhe-genre').textContent = rpg.genre;
+      document.getElementById('detalhe-year').textContent = rpg.year || '';
+      const ageEl = document.getElementById('detalhe-age');
+      ageEl.textContent = rpg.ageRating === 'L' ? 'Livre' : rpg.ageRating;
+      ageEl.style.background = rpg.ageRating === '18' ? 'rgba(0,0,0,0.8)' : rpg.ageRating === '16' ? 'rgba(239,68,68,0.3)' : rpg.ageRating === '14' ? 'rgba(251,146,60,0.3)' : 'rgba(234,179,8,0.2)';
+      ageEl.style.color = rpg.ageRating === '18' ? '#fff' : rpg.ageRating === '16' ? '#ef4444' : rpg.ageRating === '14' ? '#fb923c' : '#eab308';
+      document.getElementById('detalhe-desc').textContent = rpg.description;
+      const tagsContainer = document.getElementById('detalhe-tags');
+      if (rpg.tags && rpg.tags.length) {
+        tagsContainer.innerHTML = rpg.tags.sort((a, b) => b.weight - a.weight).map(t =>
+          `<span class="text-[9px] px-2 py-0.5 rounded font-medium" style="background:color-mix(in srgb, var(--accent) 15%, transparent);color:var(--accent);border:1px solid color-mix(in srgb, var(--accent) 25%, transparent);">${t.name}</span>`
+        ).join('');
+        tagsContainer.classList.remove('hidden');
+      } else {
+        tagsContainer.innerHTML = '';
+        tagsContainer.classList.add('hidden');
+      }
+      const linkEl = document.getElementById('detalhe-link');
+      if (rpg.link) { linkEl.href = rpg.link; linkEl.style.opacity = '1'; linkEl.style.pointerEvents = 'auto'; }
+      else { linkEl.href = '#'; linkEl.style.opacity = '0.5'; linkEl.style.pointerEvents = 'none'; }
+      const waEl = document.getElementById('detalhe-whatsapp');
+      if (rpg.whatsapp) { waEl.href = rpg.whatsapp; waEl.style.opacity = '1'; waEl.style.pointerEvents = 'auto'; }
+      else { waEl.href = '#'; waEl.style.opacity = '0.5'; waEl.style.pointerEvents = 'none'; }
+
+      // Preencher críticas deste RPG
+      const allRevs = <%- JSON.stringify(reviews) %>;
+      const revs = allRevs.filter(r => r.rpg.name === nome);
+      const list = document.getElementById('detalhe-reviews-list');
+      const allUsers = <%- JSON.stringify(users) %>;
+      if (revs.length) {
+        list.innerHTML = revs.map(r => {
+          const u = allUsers.find(u => u.username === r.username);
+          const avatar = u?.avatar;
+          const initial = r.username.charAt(0).toUpperCase();
+          return `
+          <div class="detalhe-review-card rounded-xl p-3 border" style="background:color-mix(in srgb, var(--bg-card) 50%, transparent);border-color:var(--border);">
+            <div class="flex items-center gap-2 mb-1">
+              <div onclick="verPerfil('${r.username}')" class="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold overflow-hidden shrink-0 cursor-pointer" style="background:var(--accent-dim);color:var(--accent);">
+                ${avatar ? `<img src="${avatar}" class="w-full h-full object-cover">` : initial}
+              </div>
+              <span onclick="verPerfil('${r.username}')" class="text-[11px] font-semibold cursor-pointer hover:underline" style="color:var(--text-secondary);">${r.username}</span>
+              <span class="text-[10px] ml-auto" style="color:var(--star);">${'★'.repeat(Math.floor(r.rating))}${r.rating % 1 ? '½' : ''} ${r.rating}</span>
+            </div>
+            <p class="text-[11px] leading-relaxed" style="color:var(--text-muted);">${r.comment}</p>
+            <span class="text-[9px]" style="color:var(--text-muted);">${r.timeAgo}</span>
+          </div>`;
+        }).join('');
+      } else {
+        list.innerHTML = '<p class="text-xs text-center py-4" style="color:var(--text-muted);">Nenhuma crítica ainda. Seja o primeiro a avaliar!</p>';
+      }
+
+      const user = getUser();
+      document.getElementById('btn-avaliar-detalhe').classList.toggle('hidden', !user);
+      document.getElementById('btn-avaliar-detalhe').dataset.rpg = nome;
+      document.getElementById('btn-editar-detalhe').classList.toggle('hidden', !user || user.role !== 'admin');
+      document.getElementById('btn-editar-detalhe').dataset.rpg = nome;
+      document.getElementById('btn-deletar-detalhe').classList.toggle('hidden', !user || user.role !== 'admin');
+      document.getElementById('btn-deletar-detalhe').dataset.rpg = nome;
+
+      modal.classList.remove('modal-hidden');
+      void modal.offsetHeight;
+      modal.classList.add('detalhe-aberto');
+    }
+
+    function avaliarDoDetalhe() {
+      const nome = document.getElementById('btn-avaliar-detalhe').dataset.rpg;
+      fecharDetalheRpg();
+      setTimeout(() => abrirModalAvaliacao(nome), 100);
+    }
+
+    function abrirCropperParaEdicao(input, labelId) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => abrirCropper(e.target.result, cropped => {
+        croppedEditImageFile = cropped;
+        document.getElementById(labelId).textContent = file.name + ' (cortado)';
+      });
+      reader.readAsDataURL(file);
+    }
+
+    function editarRpgDoDetalhe() {
+      const nome = document.getElementById('btn-editar-detalhe').dataset.rpg;
+      if (!nome) return;
+      const rpgs = <%- JSON.stringify(rpgs) %>;
+      const rpg = rpgs.find(r => r.name === nome);
+      if (!rpg) return;
+      document.getElementById('edit-nome').value = rpg.name;
+      document.getElementById('edit-owner').value = rpg.owner || '';
+      document.getElementById('edit-genre').value = rpg.genre || '';
+      document.getElementById('edit-year').value = rpg.year || '';
+      document.getElementById('edit-age').value = rpg.ageRating || 'L';
+      document.getElementById('edit-link').value = rpg.link || '';
+      document.getElementById('edit-whatsapp').value = rpg.whatsapp || '';
+      document.getElementById('edit-desc').value = rpg.description || '';
+      document.getElementById('edit-tags').value = (rpg.tags || []).sort((a, b) => b.weight - a.weight).map(t => t.name).join(', ');
+      document.getElementById('edit-rpg-error').classList.add('hidden');
+      document.getElementById('edit-image-name').textContent = 'Nenhum arquivo';
+      document.getElementById('edit-banner-name').textContent = 'Nenhum arquivo';
+      croppedEditImageFile = null;
+      croppedEditBannerFile = null;
+      const featuredBtn = document.getElementById('edit-featured-btn');
+      const knob = document.getElementById('edit-featured-knob');
+      if (rpg.featured) {
+        featuredBtn.style.background = 'var(--accent)';
+        knob.style.transform = 'translateX(20px)';
+      } else {
+        featuredBtn.style.background = 'var(--text-muted)';
+        knob.style.transform = 'translateX(0)';
+      }
+      featuredBtn.dataset.rpg = rpg.name;
+      fecharDetalheRpg();
+      document.getElementById('modal-editar-rpg').classList.remove('modal-hidden');
+    }
+
+    async function toggleFeaturedRpg() {
+      const nome = document.getElementById('edit-featured-btn').dataset.rpg;
+      if (!nome) return;
+      const token = getToken();
+      if (!token) return;
+      const errEl = document.getElementById('edit-rpg-error');
+      try {
+        const res = await fetch(`/api/rpgs/${encodeURIComponent(nome)}/featured`, {
+          method: 'PATCH',
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!res.ok) {
+          const data = await res.json();
+          if (errEl) { errEl.textContent = data.error || 'Erro ao alternar destaque.'; errEl.classList.remove('hidden'); }
+          return;
+        }
+        if (errEl) errEl.classList.add('hidden');
+        const rpg = await res.json();
+        const btn = document.getElementById('edit-featured-btn');
+        const knob = document.getElementById('edit-featured-knob');
+        if (rpg.featured) {
+          btn.style.background = 'var(--accent)';
+          knob.style.transform = 'translateX(20px)';
+        } else {
+          btn.style.background = 'var(--text-muted)';
+          knob.style.transform = 'translateX(0)';
+        }
+        const rpgData = catRpgData.find(r => r.name === rpg.name);
+        if (rpgData) rpgData.featured = rpg.featured;
+        atualizarHero();
+      } catch (e) {
+        if (errEl) { errEl.textContent = 'Erro de conexão.'; errEl.classList.remove('hidden'); }
+      }
+    }
+
+    function fecharModalEditarRpg() {
+      document.getElementById('modal-editar-rpg').classList.add('modal-hidden');
+    }
+
+    async function salvarEdicaoRpg(event) {
+      event.preventDefault();
+      const errorEl = document.getElementById('edit-rpg-error');
+      errorEl.classList.add('hidden');
+      const token = getToken();
+      if (!token) return;
+      const nome = document.getElementById('edit-nome').value;
+      const formData = new FormData();
+      formData.append('owner', document.getElementById('edit-owner').value.trim());
+      formData.append('genre', document.getElementById('edit-genre').value.trim());
+      formData.append('year', document.getElementById('edit-year').value.trim());
+      formData.append('ageRating', document.getElementById('edit-age').value);
+      formData.append('description', document.getElementById('edit-desc').value.trim());
+      const tagsStr = document.getElementById('edit-tags').value.trim();
+      if (tagsStr) {
+        const tags = tagsStr.split(',').map((s, i) => ({ name: s.trim(), weight: tagsStr.split(',').length - i })).filter(t => t.name);
+        formData.append('tags', JSON.stringify(tags));
+      } else {
+        formData.append('tags', JSON.stringify([]));
+      }
+      const link = document.getElementById('edit-link').value.trim();
+      formData.append('link', link || '');
+      const whatsapp = document.getElementById('edit-whatsapp').value.trim();
+      formData.append('whatsapp', whatsapp || '');
+      const imgFile = croppedEditImageFile || document.getElementById('edit-image').files[0];
+      if (imgFile) formData.append('image', imgFile);
+      const bannerFile = croppedEditBannerFile || document.getElementById('edit-banner').files[0];
+      if (bannerFile) formData.append('banner', bannerFile);
+      croppedEditImageFile = null;
+      croppedEditBannerFile = null;
+      try {
+        const res = await fetch('/api/rpgs/' + encodeURIComponent(nome), { method: 'PATCH', headers: { 'Authorization': `Bearer ${token}` }, body: formData });
+        const data = await res.json();
+        if (!res.ok) { errorEl.textContent = data.error; errorEl.classList.remove('hidden'); return; }
+        fecharModalEditarRpg();
+        alert('Sistema atualizado! Atualize a página.');
+        location.reload();
+      } catch { errorEl.textContent = 'Erro ao conectar.'; errorEl.classList.remove('hidden'); }
+    }
+
+    function deletarRpgDoDetalhe() {
+      const nome = document.getElementById('btn-deletar-detalhe').dataset.rpg;
+      if (!nome) return;
+      if (!confirm(`Tem certeza que deseja excluir "${nome}"? Esta ação não pode ser desfeita.`)) return;
+      const token = getToken();
+      if (!token) return;
+      fetch('/api/rpgs/' + encodeURIComponent(nome), { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } })
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) { alert(data.error); return; }
+          fecharDetalheRpg();
+          alert('Sistema excluído.');
+          location.reload();
+        })
+        .catch(() => alert('Erro ao excluir.'));
+    }
+
+    function fecharDetalheRpg() {
+      const modal = document.getElementById('modal-detalhe');
+      modal.classList.remove('detalhe-aberto');
+      setTimeout(() => modal.classList.add('modal-hidden'), 300);
+    }
+
+    function abrirModalRegistroRpg() {
+      const user = getUser();
+      if (!user) { abrirModalLogin(); return; }
+      document.getElementById('form-registrar-rpg').reset();
+      const modal = document.getElementById('modal-registrar-rpg');
+      modal.classList.remove('modal-hidden');
+      void modal.offsetHeight;
+      modal.classList.add('registro-aberto');
+    }
+
+    function fecharModalRegistroRpg() {
+      const modal = document.getElementById('modal-registrar-rpg');
+      modal.classList.remove('registro-aberto');
+      document.getElementById('reg-rpg-error').classList.add('hidden');
+      setTimeout(() => modal.classList.add('modal-hidden'), 300);
+    }
+
+    async function registrarRpg(event) {
+      event.preventDefault();
+      const errorEl = document.getElementById('reg-rpg-error');
+      errorEl.classList.add('hidden');
+      const token = getToken();
+      if (!token) { fecharModalRegistroRpg(); abrirModalLogin(); return; }
+      const formData = new FormData();
+      formData.append('name', document.getElementById('reg-nome').value.trim());
+      formData.append('owner', document.getElementById('reg-owner').value.trim());
+      formData.append('genre', document.getElementById('reg-genre').value.trim());
+      formData.append('year', document.getElementById('reg-year').value.trim());
+      formData.append('ageRating', document.getElementById('reg-age').value);
+      formData.append('description', document.getElementById('reg-desc').value.trim());
+      const link = document.getElementById('reg-link').value.trim();
+      if (link) formData.append('link', link);
+      const whatsapp = document.getElementById('reg-whatsapp').value.trim();
+      if (whatsapp) formData.append('whatsapp', whatsapp);
+      const imgFile = croppedImageFile || document.getElementById('reg-image').files[0];
+      if (imgFile) formData.append('image', imgFile);
+      const bannerFile = croppedBannerFile || document.getElementById('reg-banner').files[0];
+      if (bannerFile) formData.append('banner', bannerFile);
+      croppedImageFile = null;
+      croppedBannerFile = null;
+      try {
+        const res = await fetch('/api/rpgs', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData });
+        const data = await res.json();
+        if (!res.ok) { errorEl.textContent = data.error; errorEl.classList.remove('hidden'); return; }
+        fecharModalRegistroRpg();
+        alert(`"${data.name}" registrado com sucesso! Atualize a página para ver as mudanças.`);
+        location.reload();
+      } catch { errorEl.textContent = 'Erro ao conectar com o servidor.'; errorEl.classList.remove('hidden'); }
+    }
+
+    function deletarAvaliacao(id, btnEl) {
+      if (!confirm('Excluir esta avaliação?')) return;
+      const user = getUser();
+      if (!user) return;
+      fetch(`/api/reviews/${id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() }
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) { alert(data.error); return; }
+        const card = btnEl.closest('.feed-card, .pendente-card');
+        if (card) card.remove();
+        catReviewData = catReviewData.filter(r => r.id !== id);
+        allReviewData = allReviewData.filter(r => r.id !== id);
+        atualizarMediasCatalogo();
+      })
+      .catch(() => alert('Erro ao excluir.'));
+    }
+
+    function abrirModalPendentes() {
+      const modal = document.getElementById('modal-pendentes');
+      modal.classList.remove('modal-hidden');
+      const list = document.getElementById('pendentes-list');
+      if (pendingReviewsData.length === 0) {
+        list.innerHTML = '<p class="text-xs text-center py-8" style="color: var(--text-muted);">Nenhuma avaliação pendente.</p>';
+        return;
+      }
+      list.innerHTML = pendingReviewsData.map(r => `
+        <div class="pendente-card rounded-2xl p-4 border" style="background: color-mix(in srgb, var(--bg-card) 40%, transparent); border-color: var(--border);">
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <img src="${r.customImage || r.rpg.image}" class="w-10 h-12 object-cover rounded-lg shadow" alt="">
+              <div>
+                <p class="text-xs font-bold" style="color: var(--text-primary);">${r.rpg.name}</p>
+                <p class="text-[10px]" style="color: var(--text-muted);">por ${r.username}</p>
+                <div class="flex items-center gap-1 mt-1 text-[10px]" style="color: var(--star);">
+                  ${'★'.repeat(Math.floor(r.rating))}${r.rating % 1 ? '½' : ''}
+                  <span class="text-[9px] ml-1 font-semibold" style="color: var(--star);">${r.rating}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="text-[11px] leading-relaxed mb-3" style="color: var(--text-secondary);">${r.comment}</p>
+          <div class="flex gap-2">
+            <button onclick="aprovarAvaliacao('${r.id}')" class="flex-1 py-2 rounded-xl text-[10px] font-bold transition-all active:scale-[0.97] text-white" style="background: #22c55e;">
+              <i class="fa-solid fa-check mr-1"></i>Aprovar
+            </button>
+            <button onclick="rejeitarAvaliacao('${r.id}')" class="flex-1 py-2 rounded-xl text-[10px] font-bold transition-all active:scale-[0.97] text-white" style="background: #ef4444;">
+              <i class="fa-solid fa-times mr-1"></i>Rejeitar
+            </button>
+            <button onclick="deletarAvaliacao('${r.id}', this)" class="px-3 py-2 rounded-xl text-[10px] font-bold transition-all active:scale-[0.97]" style="color: var(--text-muted); background: color-mix(in srgb, var(--text-muted) 10%, transparent); border: 1px solid var(--border);">
+              <i class="fa-solid fa-trash-alt"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function fecharModalPendentes() {
+      document.getElementById('modal-pendentes').classList.add('modal-hidden');
+    }
+
+    function aprovarAvaliacao(id) {
+      fetch(`/api/reviews/${id}/approve`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() }
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) { alert(data.error); return; }
+        pendingReviewsData = pendingReviewsData.filter(r => r.id !== id);
+        catReviewData.push(data);
+        allReviewData = allReviewData.map(r => r.id === data.id ? data : r);
+        atualizarNavbar();
+        atualizarMediasCatalogo();
+        abrirModalPendentes();
+      })
+      .catch(() => alert('Erro ao aprovar.'));
+    }
+
+    function rejeitarAvaliacao(id) {
+      fetch(`/api/reviews/${id}/reject`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() }
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) { alert(data.error); return; }
+        pendingReviewsData = pendingReviewsData.filter(r => r.id !== id);
+        allReviewData = allReviewData.filter(r => r.id !== id);
+        atualizarNavbar();
+        atualizarMediasCatalogo();
+        abrirModalPendentes();
+      })
+      .catch(() => alert('Erro ao rejeitar.'));
+    }
+
+    function atualizarNavbar() {
+      const user = getUser();
+      const btnUser = document.getElementById('btn-user');
+      const btnLogin = document.getElementById('btn-login');
+      const userName = document.getElementById('user-name');
+      const avatarImg = document.getElementById('user-avatar-img');
+      const avatarLetter = document.getElementById('user-avatar-letter');
+      const adminSection = document.getElementById('cat-admin-section');
+      if (user) {
+        btnUser.classList.remove('hidden');
+        btnLogin.classList.add('hidden');
+        if (user.avatar) { avatarImg.src = user.avatar; avatarImg.classList.remove('hidden'); avatarLetter.classList.add('hidden'); }
+        else { avatarImg.classList.add('hidden'); avatarLetter.classList.remove('hidden'); avatarLetter.textContent = user.username.charAt(0).toUpperCase(); }
+        if (adminSection) {
+          adminSection.classList.toggle('hidden', user.role !== 'admin');
+        }
+        const badge = document.getElementById('pending-count-badge');
+        if (badge) badge.textContent = pendingReviewsData.length || '';
+        document.querySelectorAll('.review-delete-btn').forEach(btn => {
+          const owner = btn.getAttribute('data-owner');
+          btn.classList.toggle('hidden', !(user && (user.role === 'admin' || user.username === owner)));
+        });
+      } else {
+        btnUser.classList.add('hidden');
+        btnLogin.classList.remove('hidden');
+        if (adminSection) adminSection.classList.add('hidden');
+      }
+    }
+
+    let currentSort = 'nome';
+    let catRpgData = <%- JSON.stringify(rpgs) %>;
+    let catReviewData = <%- JSON.stringify(reviews) %>;
+    let pendingReviewsData = <%- JSON.stringify(pendingReviews) %>;
+    let allReviewData = <%- JSON.stringify(allReviews) %>;
+    let catUsersData = <%- JSON.stringify(users) %>;
+
+    function filtrarCatalogo() {
+      const q = document.getElementById('cat-search').value.toLowerCase().trim();
+      document.querySelectorAll('#catalog-grid-container .cat-section').forEach(section => {
+        let visible = 0;
+        section.querySelectorAll('.cat-card').forEach(card => {
+          const nome = card.dataset.nome.toLowerCase();
+          const genre = card.dataset.genre.toLowerCase();
+          const rpg = catRpgData.find(r => r.name.toLowerCase() === nome);
+          const tags = (rpg?.tags || []).map(t => t.name.toLowerCase()).join(' ');
+          const match = !q || nome.includes(q) || genre.includes(q) || tags.includes(q);
+          card.style.display = match ? '' : 'none';
+          if (match) visible++;
+        });
+        const countEl = section.querySelector('.cat-genre-count');
+        if (countEl) countEl.textContent = visible;
+        section.style.display = visible ? '' : 'none';
+      });
+    }
+
+    function ordenarCatalogo(tipo) {
+      currentSort = tipo;
+      document.querySelectorAll('#sort-nome, #sort-popular, #sort-nota').forEach(b => {
+        b.style.background = 'var(--bg-input)';
+        b.style.color = 'var(--text-muted)';
+        b.style.border = '1px solid var(--border)';
+      });
+      const active = document.getElementById('sort-' + tipo);
+      if (active) { active.style.background = 'var(--accent)'; active.style.color = 'white'; active.style.border = 'none'; }
+
+      const container = document.getElementById('catalog-grid-container');
+      const sections = [...container.querySelectorAll('.cat-section')];
+
+      sections.forEach(s => s.classList.remove('hidden'));
+      sections.forEach(s => s.querySelector('.cat-section-title')?.classList.remove('hidden'));
+      sections.forEach(section => {
+        const cards = [...section.querySelectorAll('.cat-card')];
+        const grid = section.querySelector('.grid');
+        if (tipo === 'nome') {
+          cards.sort((a, b) => a.dataset.nome.localeCompare(b.dataset.nome));
+        } else if (tipo === 'popular') {
+          const counts = {};
+          catReviewData.forEach(r => { counts[r.rpg.name] = (counts[r.rpg.name] || 0) + 1; });
+          cards.sort((a, b) => (counts[b.dataset.nome] || 0) - (counts[a.dataset.nome] || 0));
+        } else if (tipo === 'nota') {
+          const ratings = {};
+          catReviewData.forEach(r => {
+            if (!ratings[r.rpg.name]) ratings[r.rpg.name] = [];
+            ratings[r.rpg.name].push(r.rating);
+          });
+          const avgs = {};
+          Object.keys(ratings).forEach(k => { avgs[k] = ratings[k].reduce((a,b) => a+b, 0) / ratings[k].length; });
+          cards.sort((a, b) => {
+            const va = avgs[a.dataset.nome], vb = avgs[b.dataset.nome];
+            if (va && !vb) return -1;
+            if (!va && vb) return 1;
+            return (vb || 0) - (va || 0);
+          });
+        }
+        cards.forEach(c => grid.appendChild(c));
+      });
+    }
+
+    function atualizarMediasCatalogo() {
+      document.querySelectorAll('.cat-card').forEach(card => {
+        const nome = card.dataset.nome;
+        const revs = catReviewData.filter(r => r.rpg.name === nome);
+        const media = revs.length ? (revs.reduce((s, r) => s + r.rating, 0) / revs.length).toFixed(1) : null;
+        let badge = card.querySelector('.cat-rating-badge');
+        if (media) {
+          if (!badge) {
+            badge = document.createElement('div');
+            badge.className = 'cat-rating-badge absolute top-8 right-2 z-3 flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded';
+            badge.style.cssText = 'background:rgba(0,0,0,0.7);color:var(--star);backdrop-filter:blur(4px);';
+            card.appendChild(badge);
+          }
+          badge.innerHTML = '<i class="fa-solid fa-star text-[7px]"></i> ' + media;
+        } else if (badge) {
+          badge.remove();
+        }
+      });
+    }
+
+    function atualizarHero() {
+      const featured = catRpgData.filter(r => r.featured);
+      heroRpgs = featured.length ? featured : [catRpgData[0]];
+      heroIndex = 0;
+      heroIrPara(null, 0);
+      const dots = document.getElementById('hero-dots');
+      if (heroRpgs.length < 2) {
+        if (dots) dots.innerHTML = '';
+        pararHero();
+        return;
+      }
+      if (dots) {
+        dots.innerHTML = heroRpgs.map((_, i) => `
+          <button onclick="heroIrPara(event, ${i})" class="w-1.5 h-1.5 rounded-full transition-all" style="background:${i === 0 ? 'var(--accent)' : 'rgba(255,255,255,0.4)'};${i === 0 ? 'width:16px;' : ''}"></button>
+        `).join('');
+      }
+      iniciarHero();
+    }
+
+    function abrirPerfil() {
+      const user = getUser();
+      if (!user) { abrirModalLogin(); return; }
+      preencherPerfil(user.username, true);
+    }
+
+    function verPerfil(username) {
+      preencherPerfil(username, false);
+    }
+
+    function preencherPerfil(username, isOwn) {
+      const user = catUsersData.find(u => u.username === username);
+      if (!user) return;
+      document.getElementById('perfil-nome').textContent = user.username;
+      document.getElementById('perfil-role').textContent = user.role === 'admin' ? 'Administrador' : 'Usuário';
+      document.getElementById('perfil-bio').value = user.bio || '';
+      const avatar = document.getElementById('perfil-avatar');
+      const placeholder = document.getElementById('perfil-avatar-placeholder');
+      if (user.avatar) { avatar.src = user.avatar; avatar.classList.remove('hidden'); placeholder.classList.add('hidden'); }
+      else { avatar.classList.add('hidden'); placeholder.classList.remove('hidden'); placeholder.textContent = user.username.charAt(0).toUpperCase(); }
+
+      document.getElementById('perfil-camera-label').classList.toggle('hidden', !isOwn);
+      document.getElementById('perfil-bio').disabled = !isOwn;
+      document.getElementById('perfil-save-btn').classList.toggle('hidden', !isOwn);
+      document.getElementById('perfil-logout-btn').classList.toggle('hidden', !isOwn);
+      document.getElementById('perfil-reviews-heading').textContent = isOwn ? 'Minhas Críticas' : `Críticas de ${user.username}`;
+
+      const list = document.getElementById('perfil-reviews');
+      const minhas = allReviewData.filter(r => r.username === user.username);
+      if (minhas.length) {
+        list.innerHTML = minhas.map(r => {
+          const isPending = r.status === 'pending';
+          return `
+          <div class="rounded-xl p-3 border" style="background:color-mix(in srgb, var(--bg-card) 50%, transparent);border-color:var(--border);">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[11px] font-semibold" style="color:var(--text-secondary);">${r.rpg.name}</span>
+              <div class="flex items-center gap-2">
+                ${isPending ? '<span class="text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider" style="background:#f59e0b20;color:#f59e0b;border:1px solid #f59e0b40;">Pendente</span>' : ''}
+                <span class="text-[10px]" style="color:var(--star);">${'★'.repeat(Math.floor(r.rating))}${r.rating % 1 ? '½' : ''} ${r.rating}</span>
+              </div>
+            </div>
+            <p class="text-[11px] leading-relaxed" style="color:var(--text-muted);">${r.comment}</p>
+            <span class="text-[9px]" style="color:var(--text-muted);">${r.timeAgo}</span>
+          </div>
+        `}).join('');
+      } else {
+        list.innerHTML = '<p class="text-xs text-center py-4" style="color:var(--text-muted);">Nenhuma crítica.</p>';
+      }
+
+      const modal = document.getElementById('modal-perfil');
+      modal.classList.remove('modal-hidden');
+    }
+
+    function fecharPerfil() {
+      document.getElementById('modal-perfil').classList.add('modal-hidden');
+    }
+
+    async function enviarAvatar(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const token = getToken();
+      if (!token) return;
+      const formData = new FormData();
+      formData.append('avatar', file);
+      try {
+        const res = await fetch('/api/auth/profile', { method: 'PATCH', headers: { 'Authorization': `Bearer ${token}` }, body: formData });
+        const data = await res.json();
+        if (!res.ok) { alert(data.error); return; }
+        saveSession(token, data.user);
+        const user = getUser();
+        if (user?.avatar) { document.getElementById('perfil-avatar').src = user.avatar; document.getElementById('perfil-avatar').classList.remove('hidden'); document.getElementById('perfil-avatar-placeholder').classList.add('hidden'); }
+        atualizarNavbar();
+      } catch { alert('Erro ao enviar avatar.'); }
+    }
+
+    async function salvarPerfil() {
+      const token = getToken();
+      if (!token) return;
+      const bio = document.getElementById('perfil-bio').value.trim();
+      try {
+        const res = await fetch('/api/auth/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ bio }) });
+        const data = await res.json();
+        if (!res.ok) { alert(data.error); return; }
+        saveSession(token, data.user);
+        alert('Perfil salvo!');
+      } catch { alert('Erro ao salvar.'); }
+    }
+
+    async function fazerLogout() {
+      fecharPerfil();
+      const token = getToken();
+      if (token) await fetch('/api/auth/logout', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } }).catch(() => {});
+      clearSession();
+      atualizarNavbar();
+    }
+
+    async function verificarSessao() {
+      const token = getToken();
+      if (!token) return;
+      try {
+        const res = await fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } });
+        if (res.ok) { const data = await res.json(); saveSession(token, data.user); }
+        else { clearSession(); }
+      } catch { clearSession(); }
+      atualizarNavbar();
+    }
+
+    function mostrarErro(id, msg) { const el = document.getElementById(id); el.textContent = msg; el.classList.remove('hidden'); }
+    function esconderErro(id) { document.getElementById(id).classList.add('hidden'); }
+
+    async function fazerLogin(event) {
+      event.preventDefault();
+      esconderErro('login-error');
+      try {
+        const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: document.getElementById('login-username').value, password: document.getElementById('login-password').value }) });
+        const data = await res.json();
+        if (!res.ok) { mostrarErro('login-error', data.error); return; }
+        saveSession(data.token, data.user);
+        atualizarNavbar();
+        fecharModalLogin();
+        document.getElementById('form-login').reset();
+      } catch { mostrarErro('login-error', 'Erro ao conectar com o servidor.'); }
+    }
+
+    async function fazerRegistro(event) {
+      event.preventDefault();
+      esconderErro('reg-error');
+      try {
+        const contact = document.getElementById('reg-contact').value.trim() || undefined;
+        const res = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: document.getElementById('reg-username').value, password: document.getElementById('reg-password').value, contact }) });
+        const data = await res.json();
+        if (!res.ok) { mostrarErro('reg-error', data.error); return; }
+        saveSession(data.token, data.user);
+        atualizarNavbar();
+        fecharModalRegistro();
+        document.getElementById('form-registro').reset();
+      } catch { mostrarErro('reg-error', 'Erro ao conectar com o servidor.'); }
+    }
+
+    function toggleSearch() {
+      const s = document.getElementById('search-section');
+      s.classList.toggle('hidden');
+      if (!s.classList.contains('hidden')) document.getElementById('search-input').focus();
+    }
+
+    function buscarNoFeed() {
+      const q = document.getElementById('search-input').value.toLowerCase();
+      document.querySelectorAll('.feed-card').forEach(c => { c.style.display = c.textContent.toLowerCase().includes(q) ? 'flex' : 'none'; });
+    }
+
+    function filtrarRPG(nome) {
+      document.querySelectorAll('.feed-card').forEach(c => { c.style.display = c.getAttribute('data-rpg') === nome ? 'flex' : 'none'; });
+    }
+
+    function limparFiltros() {
+      document.querySelectorAll('.feed-card').forEach(c => c.style.display = 'flex');
+      document.getElementById('search-input').value = '';
+    }
+
+    function abrirModalAvaliacao(rpgNome) {
+      const user = getUser();
+      if (!user) { abrirModalLogin(); return; }
+      document.getElementById('current-user-name').textContent = user.username;
+      const badge = document.getElementById('current-user-badge');
+      const avatarImg = document.getElementById('current-user-avatar-img');
+      const avatarLetter = document.getElementById('current-user-avatar-letter');
+      if (user.avatar) { avatarImg.src = user.avatar; avatarImg.classList.remove('hidden'); avatarLetter.classList.add('hidden'); }
+      else { avatarImg.classList.add('hidden'); avatarLetter.classList.remove('hidden'); avatarLetter.textContent = user.username.charAt(0).toUpperCase(); }
+      document.getElementById('form-rating').value = '0';
+      document.querySelectorAll('#star-rating i').forEach(s => { s.className = 'fa-regular fa-star cursor-pointer transition-colors'; s.style.color = 'var(--text-muted)'; });
+      document.getElementById('rating-label').textContent = '-';
+      document.getElementById('form-comment').value = '';
+      document.getElementById('form-image').value = '';
+      document.getElementById('file-name').textContent = 'Nenhum';
+      if (rpgNome) {
+        const select = document.getElementById('form-rpg');
+        for (let opt of select.options) { if (opt.value === rpgNome) { select.value = rpgNome; break; } }
+      }
+      document.getElementById('modal-avaliacao').classList.remove('modal-hidden');
+    }
+
+    function fecharModalAvaliacao() { document.getElementById('modal-avaliacao').classList.add('modal-hidden'); }
+    function abrirModalLogin() { esconderErro('login-error'); document.getElementById('form-login').reset(); document.getElementById('modal-login').classList.remove('modal-hidden'); }
+    function fecharModalLogin() { document.getElementById('modal-login').classList.add('modal-hidden'); }
+    function abrirModalRegistro() { fecharModalLogin(); esconderErro('reg-error'); document.getElementById('form-registro').reset(); document.getElementById('modal-registro').classList.remove('modal-hidden'); }
+    function fecharModalRegistro() { document.getElementById('modal-registro').classList.add('modal-hidden'); }
+    function atualizarNomeArquivo(input) { document.getElementById('file-name').textContent = input.files.length > 0 ? input.files[0].name : 'Nenhum arquivo selecionado'; }
+    function abrirConfiguracoes() { document.getElementById('modal-config').classList.remove('modal-hidden'); }
+    function fecharConfiguracoes() { document.getElementById('modal-config').classList.add('modal-hidden'); }
+
+    document.querySelectorAll('#star-rating i').forEach(star => {
+      star.addEventListener('click', function() {
+        const value = parseInt(this.dataset.value);
+        document.getElementById('form-rating').value = value;
+        const starColor = getComputedStyle(document.documentElement).getPropertyValue('--star').trim() || '#f59e0b';
+        const mutedColor = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() || '#64748b';
+        document.querySelectorAll('#star-rating i').forEach((s, i) => {
+          s.className = i < value ? 'fa-solid fa-star transition-colors' : 'fa-regular fa-star transition-colors';
+          s.style.color = i < value ? starColor : mutedColor;
+        });
+        const labels = ['', 'Péssimo', 'Ruim', 'Regular', 'Bom', 'Excelente'];
+        document.getElementById('rating-label').textContent = labels[value];
+      });
+    });
+
+    async function postarAvaliacao(event) {
+      event.preventDefault();
+      const token = getToken();
+      if (!token) { fecharModalAvaliacao(); abrirModalLogin(); return; }
+      const rpgName = document.getElementById('form-rpg').value;
+      const rating = document.getElementById('form-rating').value;
+      const comment = document.getElementById('form-comment').value;
+      const imageFile = document.getElementById('form-image').files[0];
+      if (rating === '0') { alert('Selecione uma nota com as estrelas.'); return; }
+      const formData = new FormData();
+      formData.append('rpgName', rpgName);
+      formData.append('rating', rating);
+      formData.append('comment', comment);
+      if (imageFile) formData.append('image', imageFile);
+      try {
+        const res = await fetch('/api/reviews', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData });
+        if (!res.ok) {
+          const err = await res.json();
+          if (res.status === 401) { clearSession(); atualizarNavbar(); fecharModalAvaliacao(); abrirModalLogin(); return; }
+          alert(err.error || 'Erro ao publicar avaliação.'); return;
+        }
+        const review = await res.json();
+        allReviewData.unshift(review);
+        if (review.status === 'pending') {
+          pendingReviewsData.push(review);
+          atualizarNavbar();
+          fecharModalAvaliacao();
+          alert('Sua avaliação foi enviada para aprovação. Ela aparecerá no feed após ser aprovada por um administrador.');
+          return;
+        }
+        catReviewData.push(review);
+        const starColor = getComputedStyle(document.documentElement).getPropertyValue('--star').trim() || '#f59e0b';
+        let estrelasHTML = '';
+        for (let i = 1; i <= 5; i++) {
+          if (i <= Math.floor(review.rating)) estrelasHTML += `<i class="fas fa-star" style="color:${starColor}"></i> `;
+          else if (i === Math.ceil(review.rating) && review.rating % 1 !== 0) estrelasHTML += `<i class="fas fa-star-half-alt" style="color:${starColor}"></i> `;
+          else estrelasHTML += `<i class="far fa-star" style="color:${starColor}; opacity:0.4"></i> `;
+        }
+        const imgSrc = review.customImage || review.rpg.image;
+        const bgCard = getComputedStyle(document.documentElement).getPropertyValue('--bg-card').trim();
+        const bgElevated = getComputedStyle(document.documentElement).getPropertyValue('--bg-elevated').trim();
+        const border = getComputedStyle(document.documentElement).getPropertyValue('--border').trim();
+        const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+        const textPrimary = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim();
+        const textSecondary = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim();
+        const textMuted = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim();
+        const novoCard = document.createElement('div');
+        novoCard.className = 'feed-card rounded-2xl p-4.5 border transition-all duration-300 shadow-sm flex flex-col space-y-3.5';
+        novoCard.style.cssText = `background:color-mix(in srgb, ${bgCard} 40%, transparent);border-color:${border};`;
+        novoCard.setAttribute('data-rpg', review.rpg.name);
+        novoCard.innerHTML = `
+          <div class="flex items-center space-x-3 p-2.5 rounded-xl border" style="background:color-mix(in srgb, ${bgElevated} 40%, transparent);border-color:${border};">
+            <img src="${imgSrc}" class="w-12 h-14 object-cover rounded-lg shadow-md" alt="Capa ${review.rpg.name}">
+            <div class="flex-1 min-w-0">
+              <span class="text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wide uppercase font-title" style="background:color-mix(in srgb, ${accent} 15%, transparent);color:${accent};">${review.rpg.genre}</span>
+              <h3 class="font-title font-bold text-sm truncate mt-0.5 cursor-pointer hover:underline rpg-name" style="color:${textPrimary};" onclick="abrirDetalheRpg('${review.rpg.name}')">${review.rpg.name}</h3>
+              <p class="text-[10px] truncate" style="color:${textMuted};">Por: <span class="rpg-owner">${review.rpg.owner}</span></p>
+            </div>
+          </div>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+              <div onclick="verPerfil('${review.username}')" class="w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs cursor-pointer" style="background:color-mix(in srgb, ${accent} 15%, transparent);border:1px solid color-mix(in srgb, ${accent} 30%, transparent);color:${accent};">${review.username.charAt(0).toUpperCase()}</div>
+              <div>
+                <h4 onclick="verPerfil('${review.username}')" class="font-bold text-xs cursor-pointer hover:underline" style="color:${textSecondary};">${review.username}</h4>
+                <span class="text-[9px]" style="color:${textMuted};">${review.timeAgo}</span>
+              </div>
+            </div>
+            <div class="flex items-center space-x-0.5 text-[10px] px-2 py-1 rounded-full border" style="color:${starColor};background:color-mix(in srgb, ${starColor} 10%, transparent);border-color:color-mix(in srgb, ${starColor} 20%, transparent);">
+              ${estrelasHTML}
+              <span class="text-[10px] ml-1 font-semibold" style="color:${starColor};">${review.rating}</span>
+            </div>
+          </div>
+          <p class="text-xs leading-relaxed comment-text pl-1" style="color:${textSecondary};">${review.comment}</p>
+          <div class="flex justify-end">
+            <button onclick="deletarAvaliacao('${review.id}', this)" class="review-delete-btn text-[9px] px-2 py-1 rounded-lg font-bold transition-all hidden active:scale-[0.94]" style="color:#ef4444;background:color-mix(in srgb, #ef4444 10%, transparent);border:1px solid color-mix(in srgb, #ef4444 20%, transparent);" data-owner="${review.username}">
+              <i class="fa-solid fa-trash-alt mr-1"></i>Excluir
+            </button>
+          </div>
+        `;
+        const feed = document.getElementById('feed-container');
+        feed.insertBefore(novoCard, feed.firstChild);
+        document.getElementById('form-avaliacao').reset();
+        document.getElementById('file-name').textContent = 'Nenhum arquivo selecionado';
+        document.querySelectorAll('#star-rating i').forEach(s => { s.className = 'fa-regular fa-star cursor-pointer transition-colors'; s.style.color = 'var(--text-muted)'; });
+        document.getElementById('rating-label').textContent = 'Selecione';
+        fecharModalAvaliacao();
+      } catch (err) { alert('Erro ao conectar com o servidor.'); }
+    }
+
+    carregarTema();
+    abrirCatalogo();
+    setInterval(async () => {
+      try {
+        const res = await fetch('/api/reviews');
+        if (res.ok) {
+          const data = await res.json();
+          const currentIds = new Set(catReviewData.map(r => r.id));
+          const novas = data.filter(r => !currentIds.has(r.id));
+          if (novas.length) {
+            novas.forEach(n => catReviewData.push(n));
+            atualizarMediasCatalogo();
+          }
+        }
+      } catch {}
+    }, 15000);
+
+    const themeVars = ['--bg-primary','--bg-secondary','--bg-card','--bg-elevated','--bg-input','--accent','--text-primary','--text-secondary','--text-muted','--border','--star'];
+    themeVars.forEach(v => {
+      const el = document.getElementById('cp-' + v.replace('--', ''));
+      if (!el) return;
+      const val = getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+      if (val && val.startsWith('#')) el.value = val;
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        if (!document.getElementById('modal-perfil').classList.contains('modal-hidden')) fecharPerfil();
+        if (!document.getElementById('modal-pendentes').classList.contains('modal-hidden')) fecharModalPendentes();
+      }
+    });
+
+    verificarSessao();
+    iniciarHero();
+  </script>
+</body>
+</html>

@@ -1,0 +1,212 @@
+{
+  "rpgs": [
+    {
+      "name": "TENKAICHI",
+      "owner": "Zaiden",
+      "genre": "Anime, Combate",
+      "year": "2026",
+      "ageRating": "L",
+      "image": "https://res.cloudinary.com/dhdkifjdt/image/upload/v1784675477/rpg-reviewer/rpgs/l1m3lvisxllnaqzj4af5.png",
+      "banner": "https://res.cloudinary.com/dhdkifjdt/image/upload/v1784673816/rpg-reviewer/rpgs/vwjqvut64ftafw0q53g3.jpg",
+      "description": "Um RPG de crossover, aberto para escolha de personagens de diferentes universos, focado em múltiplas jogabilidades que variam de cenas casuais ao clássico combate entre seus membros, com um único regulamento flexível que permite uma boa jogatina pela ausência de um sistema evolutivo para aqueles interessados.",
+      "whatsapp": "https://chat.whatsapp.com/KBuq4YU481V4LaTNbdXzLA",
+      "featured": false,
+      "tags": [
+        {
+          "name": "Naruto",
+          "weight": 2
+        },
+        {
+          "name": "Textual",
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "name": "Kıngs Wαtch",
+      "owner": "Kαrıele & Kαrınα",
+      "genre": "Medieval, Narrativo",
+      "year": "2026",
+      "ageRating": "14",
+      "image": "https://res.cloudinary.com/dhdkifjdt/image/upload/v1784682418/rpg-reviewer/rpgs/evnunahzllwhtjqtpvus.jpg",
+      "banner": "https://res.cloudinary.com/dhdkifjdt/image/upload/v1784684915/rpg-reviewer/rpgs/lie41uxk1xron4rytk45.jpg",
+      "description": "Inspırαdo no ını́cıo dα dınαstıα Tαrgαrчen, o Kıng’s Wαtch se pαssα exαtαmente três αnos αpós α chegαdα de Aegon, o Conquıstαdor, α Westeros. O Trono de Ferro αındα estά sendo forjαdo e α pαz sobre o contınente é frάgıl, sustentαdα αpenαs pelα sombrα dos drαgões e pelo medo do fogo.\r\n\r\nEnquαnto α Coroα tentα consolıdαr seu domı́nıo, os Lordes de Westeros sussurrαm conspırαções nαs sombrαs. Entre o dever pαrα com o novo Reı e o orgulho dαs αntıgαs coroαs, cαbe α você decıdır o destıno do seu sαngue, dobrαr o joelho dıαnte do Drαgα̃o ou se unır ὰ resıstêncıα que se recusα α queımαr?",
+      "featured": true,
+      "tags": []
+    },
+    {
+      "name": "Dimension - S2",
+      "owner": "Latto",
+      "genre": "Anime, Combate",
+      "year": "2026",
+      "ageRating": "L",
+      "image": "https://res.cloudinary.com/dhdkifjdt/image/upload/v1784726472/rpg-reviewer/rpgs/fjcspbzp3thyuoqnp33h.png",
+      "banner": "https://res.cloudinary.com/dhdkifjdt/image/upload/v1784726473/rpg-reviewer/rpgs/vswpflrxsuvaglojcvw6.jpg",
+      "description": "Nossa história se iniciou 50 anos após a 4º Guerra Ninja, em nosso Universo a paz reinava até a grande invasão dos Otsutsuki no mundo ninja que destruiu a antiga geração. O Clã Otsutsuki tomou o controle de Kumogakure no Sato e tornou o local seu quartel general.  Após o uso dos Cyborgs pelos seres celestiais, esses se revoltaram e buscaram refúgio em Iwagakure. Uma nova Geração de shinobis se levantam e precisam superar antigos conflitos entre as aldeias para combater uma ameaça maior.",
+      "link": "https://dimensionrpg.notion.site/DIMENSION-RPG-2dd0ceba71e880bc9a2ad8d258f27168",
+      "featured": true,
+      "tags": [
+        {
+          "name": "Naruto",
+          "weight": 2
+        },
+        {
+          "name": "Boruto",
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "name": "Hylex Verse",
+      "owner": "Pedro",
+      "genre": "Multiverso, Combate",
+      "year": "2026",
+      "ageRating": "14",
+      "image": "https://res.cloudinary.com/dhdkifjdt/image/upload/v1784728993/rpg-reviewer/rpgs/d0gtqyyh2azjndoyzxxo.png",
+      "banner": "https://res.cloudinary.com/dhdkifjdt/image/upload/v1784728995/rpg-reviewer/rpgs/o521ntndtqawpaedso7j.png",
+      "description": "A Academia Hylex é o local onde você escolherá seu personagem e se necessário, aprenderá a jogar. O RPG Multiversal de Cards Hylex possui um sistema de linhagem no qual você é uma espécie de fusão entre quaisquer dois personagens da ficção que escolher (Contanto que ambos estejam fora de uso). Dessa forma, poderá utilizar os poderes e equipamentos de ambos os personagens.",
+      "tags": [
+        {
+          "name": "cards",
+          "weight": 1
+        }
+      ],
+      "featured": true
+    },
+    {
+      "name": "OPM RPG - O golpe final",
+      "owner": "Freddy e Kuroashi no Sanji",
+      "genre": "Anime, Combate",
+      "year": "2026",
+      "ageRating": "10",
+      "image": "https://res.cloudinary.com/dhdkifjdt/image/upload/v1784731055/rpg-reviewer/rpgs/moqgevmrbfg1faqhqixb.png",
+      "banner": "https://res.cloudinary.com/dhdkifjdt/image/upload/v1784731056/rpg-reviewer/rpgs/sy4fiwjaldol3euhg8vu.jpg",
+      "description": "O mundo está em colapso. Você será a salvação... ou a causa disso?\r\n\r\n🌍Inspirado no universo de One Punch Man, este RPG te coloca no meio do caos:\r\n- Criaturas de nível Tigre a Deus surgem do nada.\r\n- As cidades são destruídas. Os heróis caem.\r\n- E novos nomes começam a surgir… alguns para proteger, outros para dominar.\r\n\r\n🔥Crie seu próprio personagem do zero\r\n⚔️Escolha seu estilo de luta: brutalidade, tecnologia, magia, armas ou algo único.\r\n😈Decida seu caminho — Herói ou Vilão — e construa sua reputação.\r\n📈Evolua enfrentando ameaças, missões e batalhas.\r\n🏆Seja a Lenda entre os heróis, subindo no ranking da Associação de Heróis ou se torne uma Lenda entre os Vilões, subindo no ranking da associação dos Vilões.\r\n🧠Crie suas próprias habilidades.\r\n💀A morte é real. Cada escolha tem um preço.",
+      "tags": [
+        {
+          "name": "One Punch Man",
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "name": "𝐁𝐥𝐮𝐞 𝐥𝐨𝐜𝐤 𝐢𝐧𝐟𝐢𝐧𝐢𝐭𝐞",
+      "owner": "🄼🄸🄲🄰🄴🄻",
+      "genre": "Anime, Esportes",
+      "year": "2026",
+      "ageRating": "L",
+      "image": "https://res.cloudinary.com/dhdkifjdt/image/upload/v1784733349/rpg-reviewer/rpgs/sqtyzzhkgay3umg9iou0.png",
+      "banner": "https://res.cloudinary.com/dhdkifjdt/image/upload/v1784733350/rpg-reviewer/rpgs/wyvbmcdvolxhkupgyvur.jpg",
+      "description": "Um sistema focado na busca pelo melhor atacante do mundo, onde só o ego e a habilidade de marcar fazem você avançar.\r\n \r\n- Campo dividido em 3 linhas: Ataque → Meio-Campo → Zaga. Para chegar ao gol, precisa superar cada uma delas; pode avançar ou recuar livremente, mas cada setor tem seus desafios.\r\n​\r\n- Sem limites de posição: Atacantes ajudam na defesa, volantes sobem para finalizar — o que vale é superar quem estiver na sua frente.\r\n​\r\n- Sua habilidade define tudo: Passar bem pelo ataque mostra domínio inicial; no meio-campo precisa de apoio e controle; na zaga exige técnica fria para não perder a chance.\r\n​\r\n- Objetivo: Seja o único escolhido para ser o centro do time nacional, capaz de quebrar qualquer linha e decidir qualquer jogo.",
+      "tags": [
+        {
+          "name": "Blue Lock",
+          "weight": 3
+        },
+        {
+          "name": "Futebol",
+          "weight": 2
+        },
+        {
+          "name": "Textual",
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "name": "Águas profundas",
+      "owner": "✮⋆˙⋆˚꩜｡ᘜᗩᗷᖇᓰᘿᒪᶻ 𝗓 𐰁 .ᐟ",
+      "genre": "Anime, Combate",
+      "year": "2026",
+      "ageRating": "14",
+      "image": "https://res.cloudinary.com/dhdkifjdt/image/upload/v1784734768/rpg-reviewer/rpgs/x8hjdg4xxtnz7ecniej1.png",
+      "banner": "https://res.cloudinary.com/dhdkifjdt/image/upload/v1784734769/rpg-reviewer/rpgs/wmhfm03zlxiu5vxntjuw.jpg",
+      "description": "Em um RPG textual inspirado em One Piece, mas com um mundo, história e universo totalmente originais, você assume o papel de um pirata e escolhe entre duas tripulações para iniciar sua jornada. Enquanto navega em busca do seu objetivo, descobrirá os mistérios e segredos desse vasto mundo, enfrentando desafios e explorando diversos temas ao longo da aventura.",
+      "tags": [
+        {
+          "name": "One Piece",
+          "weight": 2
+        },
+        {
+          "name": "Textual",
+          "weight": 1
+        }
+      ]
+    }
+  ],
+  "reviews": [
+    {
+      "id": "7",
+      "rpgName": "Kıngs Wαtch",
+      "username": "Honorato",
+      "rating": 5,
+      "comment": "Ótima experiência!",
+      "createdAt": "2026-07-22T01:08:05.500Z",
+      "timeAgo": "Agora mesmo",
+      "status": "approved"
+    },
+    {
+      "id": "6",
+      "rpgName": "TENKAICHI",
+      "username": "Ussui",
+      "rating": 1,
+      "comment": "Uma BOSTA KKKKK ",
+      "createdAt": "2026-07-22T00:12:52.243Z",
+      "timeAgo": "Agora mesmo",
+      "status": "approved"
+    },
+    {
+      "id": "5",
+      "rpgName": "TENKAICHI",
+      "username": "Honorato",
+      "rating": 5,
+      "comment": "Ótimo RPG, curti a experiência e continuo curtindo. Recomendo demais.",
+      "createdAt": "2026-07-22T00:10:00.871Z",
+      "timeAgo": "Agora mesmo",
+      "status": "approved"
+    }
+  ],
+  "users": [
+    {
+      "id": "1",
+      "username": "Honorato",
+      "passwordHash": "2745e4a3b50ccfe27d88aa9f73b51fd3:b189154fcd33e7822a40b3a4eeab841e68eba2ee4e628f57fb37bdcc4e29c5e02d40215d95071fc0bdf85740cc6dddcacf90d6a9a192d888b15b3cea54f83943",
+      "role": "admin",
+      "bio": "Diretor Academy de Software",
+      "avatar": "https://res.cloudinary.com/dhdkifjdt/image/upload/v1784648421/rpg-reviewer/avatars/evwr2fzdr3agdrozlhgc.jpg"
+    },
+    {
+      "id": "2",
+      "username": "testuser",
+      "passwordHash": "8da7d13c1bd13dedc76f1066b48369fb:da5b0365fd01dddcc49389ad186a80f6fb22ecbe886fb4778c58b92871661590f51d1431628beb422e5b94e83051a1e2c72053ae487c32e42ccf92a604cce7a6",
+      "role": "user"
+    },
+    {
+      "id": "3",
+      "username": "Ussui",
+      "passwordHash": "cfdda983a9b350c036758296b8d8cb7d:0f919512d761b5df8cbdb5966ca39761c3fbfd5396cfd47b482cab066e5c52a29e31a306759f4f51940b91ccca7f4f2b373a765ec39e636086cb263e099bffb3",
+      "role": "user",
+      "contact": "82988516706",
+      "avatar": "https://res.cloudinary.com/dhdkifjdt/image/upload/v1784679120/rpg-reviewer/avatars/lvyyceejv1dnocul6dup.jpg",
+      "bio": "..."
+    },
+    {
+      "id": "4",
+      "username": "test",
+      "passwordHash": "6869b589b3b6b9991aa6c2950a5ea8f2:a12e59afd170bd4ca9c27464e1212ee3fabdf28309be9c42eca64ca01d1667c92e6d3552d257d8fdec288aa7f120203554e52ab18bd5ea88a5dada181368f351",
+      "role": "user"
+    }
+  ],
+  "nextId": 8,
+  "nextRpgId": 9,
+  "sessions": {
+    "7ce7549abd95e5320711ac13ea9f9ab7bc37bd80faa65a10e58f9f6b23fca23e": "1",
+    "77a706fcde859b765361c8b532a197771e0d612ad29fb2f05f3d4a13ee4bd53e": "2",
+    "38a3df918fb304de3c93e873370f1f139d83d0e4fc87b2bb7067a06739e27b2f": "2",
+    "0d7c67a66672b2e40ed6c6fdecb2cc82bd7a09dace481b1886c528e38a306548": "3",
+    "df7875bea805d380bb0025ca5bb59c4a9135bafa91949df08b74f8e02fdd8da2": "1",
+    "b1d26408b547b05c3217e2d37e9b13d96c9624367e8088301cb3b42d86cdd047": "4",
+    "d52b4b2a9b9276f4a0a0bbe2f284f4d9dcd93a1185f30c2c897bae5dcc3cd2d6": "4",
+    "a23d45dd27849bb6f349b2c55db35458ad35720c832d26c10ac37698e0522861": "1"
+  }
+}
