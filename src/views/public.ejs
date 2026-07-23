@@ -1526,26 +1526,23 @@
         const data = await res.json();
         if (!res.ok) { errorEl.textContent = data.error; errorEl.classList.remove('hidden'); return; }
         fecharModalEditarRpg();
-        alert('Sistema atualizado! Atualize a página.');
-        location.reload();
+        await refreshData();
       } catch { errorEl.textContent = 'Erro ao conectar.'; errorEl.classList.remove('hidden'); }
     }
 
-    function deletarRpgDoDetalhe() {
+    async function deletarRpgDoDetalhe() {
       const nome = document.getElementById('btn-deletar-detalhe').dataset.rpg;
       if (!nome) return;
       if (!confirm(`Tem certeza que deseja excluir "${nome}"? Esta ação não pode ser desfeita.`)) return;
       const token = getToken();
       if (!token) return;
-      fetch('/api/rpgs/' + encodeURIComponent(nome), { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } })
-        .then(res => res.json())
-        .then(data => {
-          if (data.error) { alert(data.error); return; }
-          fecharDetalheRpg();
-          alert('Sistema excluído.');
-          location.reload();
-        })
-        .catch(() => alert('Erro ao excluir.'));
+      try {
+        const res = await fetch('/api/rpgs/' + encodeURIComponent(nome), { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await res.json();
+        if (data.error) { alert(data.error); return; }
+        fecharDetalheRpg();
+        await refreshData();
+      } catch { alert('Erro ao excluir.'); }
     }
 
     function fecharDetalheRpg() {
@@ -1600,8 +1597,7 @@
         const data = await res.json();
         if (!res.ok) { errorEl.textContent = data.error; errorEl.classList.remove('hidden'); return; }
         fecharModalRegistroRpg();
-        alert(`"${data.name}" registrado com sucesso! Atualize a página para ver as mudanças.`);
-        location.reload();
+        await refreshData();
       } catch { errorEl.textContent = 'Erro ao conectar com o servidor.'; errorEl.classList.remove('hidden'); }
     }
 
@@ -1801,6 +1797,73 @@
       });
     }
 
+    function renderCatalogo() {
+      const container = document.getElementById('catalog-grid-container');
+      const generos = [...new Set(catRpgData.map(r => r.genre))].sort((a, b) => a.localeCompare(b));
+      const starColor = getComputedStyle(document.documentElement).getPropertyValue('--star').trim() || '#f59e0b';
+      container.innerHTML = generos.map(genre => {
+        const itens = catRpgData.filter(r => r.genre === genre);
+        return `<div class="cat-section" data-genre="${genre.replace(/"/g, '&quot;')}">
+          <h3 class="cat-section-title text-base font-title font-bold mb-4 flex items-center gap-2" style="color: var(--text-primary);">
+            <span class="w-1 h-4 rounded-full inline-block" style="background: var(--accent);"></span>
+            <span class="cat-genre-name">${genre}</span>
+            <span class="text-[10px] font-normal" style="color: var(--text-muted);">(<span class="cat-genre-count">${itens.length}</span>)</span>
+          </h3>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+            ${itens.map(rpg => {
+              const revs = catReviewData.filter(r => r.rpg.name === rpg.name);
+              const media = revs.length ? (revs.reduce((s, r) => s + r.rating, 0) / revs.length).toFixed(1) : null;
+              const blurClass = rpg.ageRating === '18' && rpg.blurImage ? ' cat-blur' : '';
+              const desc = rpg.description ? rpg.description.substring(0, 90).replace(/"/g, '&quot;') : '';
+              const owner = (rpg.owner || '').replace(/"/g, '&quot;');
+              return `<div onclick="selecionarRpgCatalogo('${rpg.name.replace(/'/g, "\\'")}', this)" class="cat-card rounded-xl overflow-hidden border" data-nome="${rpg.name.replace(/"/g, '&quot;')}" data-genre="${rpg.genre.replace(/"/g, '&quot;')}" data-owner="${owner}" data-desc="${desc}" style="background: var(--bg-card); border-color: var(--border); aspect-ratio: 2/3;">
+                <img src="${rpg.image}" class="w-full h-full object-cover${blurClass}" alt="${rpg.name.replace(/"/g, '&quot;')}">
+                <span class="cat-age-badge ${rpg.ageRating}">${rpg.ageRating === 'L' ? 'L' : rpg.ageRating}</span>
+                ${media ? `<div class="cat-rating-badge absolute top-8 right-2 z-3 flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded" style="background:rgba(0,0,0,0.7);color:${starColor};backdrop-filter:blur(4px);">
+                  <i class="fa-solid fa-star text-[7px]"></i> ${media}
+                </div>` : ''}
+                <div class="cat-overlay"></div>
+                <div class="cat-label">
+                  <h4 class="font-title font-bold text-sm" style="color: white; text-shadow: 0 1px 4px rgba(0,0,0,0.8);">${rpg.name.replace(/"/g, '&quot;')}</h4>
+                  <p class="text-[10px] mt-0.5 truncate" style="color: rgba(255,255,255,0.6);">${owner}</p>
+                  <p class="text-[9px] mt-1 leading-tight line-clamp-2" style="color: rgba(255,255,255,0.5);">${desc}</p>
+                </div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    async function refreshData() {
+      try {
+        const [rpgsRes, usersRes] = await Promise.all([
+          fetch('/api/rpgs'),
+          fetch('/api/auth/users'),
+        ]);
+        if (rpgsRes.ok) {
+          const rpgs = await rpgsRes.json();
+          catRpgData = rpgs;
+          heroRpgs = rpgs.filter(r => r.featured).length ? rpgs.filter(r => r.featured) : [rpgs[0]];
+          heroIndex = 0;
+          renderCatalogo();
+          atualizarHero();
+          atualizarSearchOptions();
+        }
+        if (usersRes.ok) {
+          catUsersData = await usersRes.json();
+        }
+      } catch {}
+    }
+
+    function atualizarSearchOptions() {
+      const select = document.querySelector('#form-rpg');
+      if (!select) return;
+      const current = select.value;
+      select.innerHTML = catRpgData.map(r => `<option value="${r.name.replace(/"/g, '&quot;')}">${r.name.replace(/"/g, '&quot;')}</option>`).join('');
+      select.value = current;
+    }
+
     function atualizarMediasCatalogo() {
       document.querySelectorAll('.cat-card').forEach(card => {
         const nome = card.dataset.nome;
@@ -1851,7 +1914,10 @@
     }
 
     function preencherPerfil(username, isOwn) {
-      const user = catUsersData.find(u => u.username === username);
+      let user = catUsersData.find(u => u.username === username);
+      if (!user && isOwn) {
+        user = getUser();
+      }
       if (!user) return;
       document.getElementById('perfil-nome').textContent = user.username;
       document.getElementById('perfil-role').textContent = user.role === 'admin' ? 'Administrador' : 'Usuário';
@@ -1961,6 +2027,10 @@
         atualizarNavbar();
         fecharModalLogin();
         document.getElementById('form-login').reset();
+        try {
+          const usersRes = await fetch('/api/auth/users');
+          if (usersRes.ok) catUsersData = await usersRes.json();
+        } catch {}
       } catch { mostrarErro('login-error', 'Erro ao conectar com o servidor.'); }
     }
 
@@ -1976,6 +2046,10 @@
         atualizarNavbar();
         fecharModalRegistro();
         document.getElementById('form-registro').reset();
+        try {
+          const usersRes = await fetch('/api/auth/users');
+          if (usersRes.ok) catUsersData = await usersRes.json();
+        } catch {}
       } catch { mostrarErro('reg-error', 'Erro ao conectar com o servidor.'); }
     }
 
