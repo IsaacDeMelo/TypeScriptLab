@@ -3,14 +3,18 @@ import { getRpgs, getReviews, getUsers } from '../data'
 
 const router = Router()
 
-router.get('/', (_req: Request, res: Response) => {
-  const allReviews = getReviews(true)
+router.get('/', async (_req: Request, res: Response) => {
+  const [allReviews, rpgs, users] = await Promise.all([
+    getReviews(true),
+    getRpgs(),
+    getUsers(),
+  ])
   res.render('public', {
-    rpgs: getRpgs(),
+    rpgs,
     reviews: allReviews.filter(r => r.status === 'approved'),
     pendingReviews: allReviews.filter(r => r.status === 'pending'),
     allReviews: allReviews,
-    users: getUsers(),
+    users,
   })
 })
 

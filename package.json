@@ -15,8 +15,10 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "start": "tsx watch src/index.ts",
-    "build": "npx tsc && mkdir -p dist/views dist/data && cp src/views/*.ejs dist/views/ && cp src/data/db.json dist/data/db.json",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "build": "npx tsc && mkdir -p dist/views dist/public && cp src/views/*.ejs dist/views/ && cp -r src/public/* dist/public/",
+    "migrate": "tsx src/migrate.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
@@ -24,6 +26,7 @@
     "dotenv": "^17.4.2",
     "ejs": "^6.0.1",
     "express": "^5.2.1",
+    "mongoose": "^9.8.0",
     "multer": "^2.2.0"
   },
   "devDependencies": {

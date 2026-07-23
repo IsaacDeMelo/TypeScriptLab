@@ -5,6 +5,7 @@ import { v2 as cloudinary } from 'cloudinary'
 import publicRouter from './routes/public'
 import apiRouter from './routes/api'
 import authRouter from './routes/auth'
+import { connectDatabase } from './database'
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -28,6 +29,15 @@ app.use('/public', publicRouter)
 app.use('/api', apiRouter)
 app.use('/api/auth', authRouter)
 
-app.listen(3000, () => {
-  console.log('App is running on http://localhost:3000')
-})
+const PORT = process.env.PORT || 3000
+
+connectDatabase()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`App is running on http://localhost:${PORT}`)
+    })
+  })
+  .catch((err) => {
+    console.error('Erro ao conectar no MongoDB:', err)
+    process.exit(1)
+  })

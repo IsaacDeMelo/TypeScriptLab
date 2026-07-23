@@ -1,75 +1,11 @@
 import { randomBytes, scryptSync } from 'crypto'
-import { existsSync, readFileSync, writeFileSync } from 'fs'
-import { join } from 'path'
-import { RPG, Review, ReviewInput, Tag, User } from './types'
+import Rpg from './models/Rpg'
+import ReviewModel from './models/Review'
+import UserModel from './models/User'
+import SessionModel from './models/Session'
+import { RPG, Review, ReviewInput, User } from './types'
 
-const DB_PATH = join(__dirname, 'data', 'db.json')
-
-interface DbData {
-  rpgs: RPG[]
-  reviews: (Omit<Review, 'rpg'> & { rpgName: string })[]
-  users: User[]
-  nextId: number
-  nextRpgId: number
-  sessions: Record<string, string>
-}
-
-let db: DbData
-let sessions = new Map<string, string>()
-
-function loadDb(): DbData {
-  if (existsSync(DB_PATH)) {
-    return JSON.parse(readFileSync(DB_PATH, 'utf-8'))
-  }
-  return { rpgs: [], reviews: [], users: [], nextId: 1, nextRpgId: 1, sessions: {} }
-}
-
-function saveDb() {
-  db.sessions = Object.fromEntries(sessions)
-  writeFileSync(DB_PATH, JSON.stringify(db, null, 2), 'utf-8')
-}
-
-function restoreSessions() {
-  if (db.sessions) {
-    sessions = new Map(Object.entries(db.sessions))
-  }
-}
-
-db = loadDb()
-restoreSessions()
-
-let migrated = false
-for (const r of db.reviews) {
-  if (!r.status) {
-    r.status = 'approved'
-    migrated = true
-  }
-}
-if (!db.rpgs.some(r => r.featured) && db.rpgs.length > 0) {
-  db.rpgs[0].featured = true
-  migrated = true
-}
-for (const r of db.rpgs) {
-  if (!r.tags) {
-    r.tags = []
-    migrated = true
-  }
-}
-if (migrated) saveDb()
-
-function resolveRpg(rpgName: string): RPG | undefined {
-  return db.rpgs.find(r => r.name === rpgName)
-}
-
-export function getRpgByName(name: string): RPG | undefined {
-  return resolveRpg(name)
-}
-
-export function getRpgs(): RPG[] {
-  return [...db.rpgs]
-}
-
-function calcTimeAgo(createdAt: string): string {
+function calcTimeAgo(createdAt: string | Date): string {
   const diff = Date.now() - new Date(createdAt).getTime()
   const mins = Math.floor(diff / 60000)
   if (mins < 1) return 'Agora mesmo'
@@ -83,114 +19,179 @@ function calcTimeAgo(createdAt: string): string {
   return `${Math.floor(months / 12)} ano atrás`
 }
 
-function reviewStatus(r: { status?: string }): string {
-  return r.status || 'approved'
+function rpgFromDoc(doc: any): RPG {
+  const o = doc.toObject ? doc.toObject() : doc
+  return {
+    name: o.name,
+    owner: o.owner,
+    genre: o.genre,
+    image: o.image,
+    banner: o.banner || '',
+    description: o.description,
+    link: o.link,
+    whatsapp: o.whatsapp,
+    year: o.year,
+    ageRating: o.ageRating,
+    featured: o.featured ?? false,
+    tags: o.tags || [],
+  }
 }
 
-export function getReviews(all?: boolean): Review[] {
-  return db.reviews
-    .filter(r => all || reviewStatus(r) === 'approved')
-    .map(r => ({
-      ...r,
-      status: (reviewStatus(r) as any),
-      timeAgo: calcTimeAgo(r.createdAt),
-      rpg: resolveRpg(r.rpgName) || db.rpgs[0],
-    }))
+function reviewFromDoc(doc: any, rpg: RPG): Review {
+  const o = doc.toObject ? doc.toObject() : doc
+  return {
+    id: String(o._id),
+    rpg,
+    username: o.username,
+    rating: o.rating,
+    comment: o.comment,
+    customImage: o.customImage,
+    status: o.status || 'approved',
+    timeAgo: calcTimeAgo(o.createdAt),
+    createdAt: o.createdAt instanceof Date ? o.createdAt.toISOString() : o.createdAt,
+  }
 }
 
-export function getPendingReviews(): Review[] {
-  return db.reviews
-    .filter(r => reviewStatus(r) === 'pending')
-    .map(r => ({
-      ...r,
-      status: (reviewStatus(r) as any),
-      timeAgo: calcTimeAgo(r.createdAt),
-      rpg: resolveRpg(r.rpgName) || db.rpgs[0],
-    }))
+function userFromDoc(doc: any): User {
+  const o = doc.toObject ? doc.toObject() : doc
+  return {
+    id: String(o._id),
+    username: o.username,
+    passwordHash: o.passwordHash,
+    role: o.role,
+    bio: o.bio,
+    avatar: o.avatar,
+    contact: o.contact,
+  }
 }
 
-export function addReview(input: ReviewInput, username: string): Review {
-  const rpg = resolveRpg(input.rpgName) || db.rpgs[0]
-  const now = new Date().toISOString()
-  const user = db.users.find(u => u.username === username)
+function userPublicFromDoc(doc: any): Omit<User, 'passwordHash'> {
+  const o = doc.toObject ? doc.toObject() : doc
+  return {
+    id: String(o._id),
+    username: o.username,
+    role: o.role,
+    bio: o.bio,
+    avatar: o.avatar,
+    contact: o.contact,
+  }
+}
+
+async function resolveRpg(rpgName: string): Promise<RPG | undefined> {
+  const doc = await Rpg.findOne({ name: rpgName })
+  return doc ? rpgFromDoc(doc) : undefined
+}
+
+async function firstRpg(): Promise<RPG | undefined> {
+  const doc = await Rpg.findOne()
+  return doc ? rpgFromDoc(doc) : undefined
+}
+
+export async function getRpgByName(name: string): Promise<RPG | undefined> {
+  return resolveRpg(name)
+}
+
+export async function getRpgs(): Promise<RPG[]> {
+  const docs = await Rpg.find()
+  return docs.map(rpgFromDoc)
+}
+
+export async function getReviews(all?: boolean): Promise<Review[]> {
+  const filter: Record<string, any> = all ? {} : { status: { $ne: 'rejected' } }
+  const docs = await ReviewModel.find(filter).sort({ createdAt: -1 })
+  const results: Review[] = []
+  for (const doc of docs) {
+    const rpg = await resolveRpg(doc.rpgName) || await firstRpg() || {} as RPG
+    results.push(reviewFromDoc(doc, rpg!))
+  }
+  return results
+}
+
+export async function getPendingReviews(): Promise<Review[]> {
+  const docs = await ReviewModel.find({ status: 'pending' }).sort({ createdAt: -1 })
+  const results: Review[] = []
+  for (const doc of docs) {
+    const rpg = await resolveRpg(doc.rpgName) || await firstRpg() || {} as RPG
+    results.push(reviewFromDoc(doc, rpg!))
+  }
+  return results
+}
+
+export async function addReview(input: ReviewInput, username: string): Promise<Review> {
+  const rpg = await resolveRpg(input.rpgName) || await firstRpg() || {} as RPG
+  const user = await UserModel.findOne({ username })
   const isAdmin = user?.role === 'admin'
-  const review = {
-    id: String(db.nextId++),
+
+  const doc = await ReviewModel.create({
     rpgName: input.rpgName,
     username,
     rating: input.rating,
     comment: input.comment,
-    createdAt: now,
-    timeAgo: 'Agora mesmo',
-    status: (isAdmin ? 'approved' : 'pending') as 'approved' | 'pending',
-  } as (Omit<Review, 'rpg'> & { rpgName: string })
-  if (input.customImage) {
-    ;(review as any).customImage = input.customImage
-  }
-  db.reviews.unshift(review)
-  saveDb()
-  return { ...review, rpg }
+    customImage: input.customImage || undefined,
+    status: isAdmin ? 'approved' : 'pending',
+  })
+
+  return reviewFromDoc(doc, rpg!)
 }
 
-export function approveReview(reviewId: string): Review | undefined {
-  const r = db.reviews.find(r => r.id === reviewId)
-  if (!r) return undefined
-  r.status = 'approved'
-  saveDb()
-  return { ...r, rpg: resolveRpg(r.rpgName) || db.rpgs[0], timeAgo: calcTimeAgo(r.createdAt) }
+export async function approveReview(reviewId: string): Promise<Review | undefined> {
+  const doc = await ReviewModel.findByIdAndUpdate(
+    reviewId,
+    { status: 'approved' },
+    { new: true },
+  )
+  if (!doc) return undefined
+  const rpg = await resolveRpg(doc.rpgName) || await firstRpg() || {} as RPG
+  return reviewFromDoc(doc, rpg!)
 }
 
-export function rejectReview(reviewId: string): boolean {
-  const r = db.reviews.find(r => r.id === reviewId)
-  if (!r) return false
-  r.status = 'rejected'
-  saveDb()
-  return true
+export async function rejectReview(reviewId: string): Promise<boolean> {
+  const doc = await ReviewModel.findByIdAndUpdate(reviewId, { status: 'rejected' })
+  return !!doc
 }
 
-export function deleteReviewById(reviewId: string, username: string, isAdmin: boolean): boolean {
-  const idx = db.reviews.findIndex(r => r.id === reviewId)
-  if (idx === -1) return false
-  const review = db.reviews[idx]
+export async function deleteReviewById(reviewId: string, username: string, isAdmin: boolean): Promise<boolean> {
+  const review = await ReviewModel.findById(reviewId)
+  if (!review) return false
   if (review.username !== username && !isAdmin) return false
-  db.reviews.splice(idx, 1)
-  saveDb()
+  await ReviewModel.findByIdAndDelete(reviewId)
   return true
 }
 
-export function addRpg(input: Omit<RPG, 'banner'> & { banner?: string }): RPG {
-  const rpg: RPG = {
+export async function addRpg(input: Omit<RPG, 'banner'> & { banner?: string }): Promise<RPG> {
+  const doc = await Rpg.create({
     ...input,
     banner: input.banner || input.image,
     tags: input.tags || [],
+  })
+  return rpgFromDoc(doc)
+}
+
+export async function updateRpg(name: string, updates: Partial<RPG>): Promise<RPG | undefined> {
+  const rpg = await Rpg.findOne({ name })
+  if (!rpg) return undefined
+  for (const [key, value] of Object.entries(updates)) {
+    if (value === undefined) {
+      ;(rpg as any)[key] = null
+    } else {
+      ;(rpg as any)[key] = value
+    }
   }
-  db.rpgs.push(rpg)
-  saveDb()
-  return rpg
+  await rpg.save()
+  return rpgFromDoc(rpg)
 }
 
-export function updateRpg(name: string, updates: Partial<RPG>): RPG | undefined {
-  const idx = db.rpgs.findIndex(r => r.name === name)
-  if (idx === -1) return undefined
-  db.rpgs[idx] = { ...db.rpgs[idx], ...updates, name: db.rpgs[idx].name }
-  saveDb()
-  return db.rpgs[idx]
-}
-
-export function toggleFeaturedRpg(name: string): RPG | undefined {
-  const rpg = db.rpgs.find(r => r.name === name)
+export async function toggleFeaturedRpg(name: string): Promise<RPG | undefined> {
+  const rpg = await Rpg.findOne({ name })
   if (!rpg) return undefined
   rpg.featured = !rpg.featured
-  saveDb()
-  return { ...rpg }
+  await rpg.save()
+  return rpgFromDoc(rpg)
 }
 
-export function deleteRpg(name: string): boolean {
-  const idx = db.rpgs.findIndex(r => r.name === name)
-  if (idx === -1) return false
-  db.rpgs.splice(idx, 1)
-  saveDb()
-  return true
+export async function deleteRpg(name: string): Promise<boolean> {
+  const doc = await Rpg.findOneAndDelete({ name })
+  return !!doc
 }
 
 function hashPassword(password: string): string {
@@ -205,64 +206,61 @@ function verifyPassword(password: string, stored: string): boolean {
   return hash === verify
 }
 
-export function registerUser(username: string, password: string, contact?: string): { user: User; token: string } | { error: string } {
-  if (db.users.find(u => u.username === username)) {
-    return { error: 'Usuário já existe.' }
-  }
+export async function registerUser(username: string, password: string, contact?: string): Promise<{ user: User; token: string } | { error: string }> {
+  const existing = await UserModel.findOne({ username })
+  if (existing) return { error: 'Usuário já existe.' }
 
-  const isFirst = db.users.length === 0
-  const user: User = {
-    id: String(db.users.length + 1),
+  const count = await UserModel.countDocuments()
+  const isFirst = count === 0
+
+  const user = await UserModel.create({
     username,
     passwordHash: hashPassword(password),
     role: isFirst ? 'admin' : 'user',
     contact: contact || undefined,
-  }
-
-  db.users.push(user)
-  saveDb()
+  })
 
   const token = randomBytes(32).toString('hex')
-  sessions.set(token, user.id)
+  await SessionModel.create({ token, userId: String(user._id) })
 
-  return { user, token }
+  return { user: userFromDoc(user), token }
 }
 
-export function loginUser(username: string, password: string): { user: User; token: string } | { error: string } {
-  const user = db.users.find(u => u.username === username)
-  if (!user) {
-    return { error: 'Usuário não encontrado.' }
-  }
+export async function loginUser(username: string, password: string): Promise<{ user: User; token: string } | { error: string }> {
+  const user = await UserModel.findOne({ username })
+  if (!user) return { error: 'Usuário não encontrado.' }
 
   if (!verifyPassword(password, user.passwordHash)) {
     return { error: 'Senha incorreta.' }
   }
 
   const token = randomBytes(32).toString('hex')
-  sessions.set(token, user.id)
+  await SessionModel.create({ token, userId: String(user._id) })
 
-  return { user, token }
+  return { user: userFromDoc(user), token }
 }
 
-export function getUsers(): (Omit<User, 'passwordHash'>)[] {
-  return db.users.map(({ passwordHash, ...u }) => u)
+export async function getUsers(): Promise<Omit<User, 'passwordHash'>[]> {
+  const docs = await UserModel.find()
+  return docs.map(userPublicFromDoc)
 }
 
-export function getUserByToken(token: string): User | undefined {
-  const userId = sessions.get(token)
-  if (!userId) return undefined
-  return db.users.find(u => u.id === userId)
+export async function getUserByToken(token: string): Promise<User | undefined> {
+  const session = await SessionModel.findOne({ token })
+  if (!session) return undefined
+  const user = await UserModel.findById(session.userId)
+  return user ? userFromDoc(user) : undefined
 }
 
-export function updateProfile(userId: string, data: { bio?: string; avatar?: string }): User | undefined {
-  const user = db.users.find(u => u.id === userId)
+export async function updateProfile(userId: string, data: { bio?: string; avatar?: string }): Promise<User | undefined> {
+  const user = await UserModel.findById(userId)
   if (!user) return undefined
   if (data.bio !== undefined) user.bio = data.bio
   if (data.avatar !== undefined) user.avatar = data.avatar
-  saveDb()
-  return { ...user }
+  await user.save()
+  return userFromDoc(user)
 }
 
-export function logoutUser(token: string): void {
-  sessions.delete(token)
+export async function logoutUser(token: string): Promise<void> {
+  await SessionModel.deleteOne({ token })
 }

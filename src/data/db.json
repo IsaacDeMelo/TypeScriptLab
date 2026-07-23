@@ -87,7 +87,8 @@
           "name": "One Punch Man",
           "weight": 1
         }
-      ]
+      ],
+      "whatsapp": "https://chat.whatsapp.com/IslcpqnsJGS3Ut6aBwi6V9"
     },
     {
       "name": "𝐁𝐥𝐮𝐞 𝐥𝐨𝐜𝐤 𝐢𝐧𝐟𝐢𝐧𝐢𝐭𝐞",
@@ -119,8 +120,8 @@
       "genre": "Anime, Combate",
       "year": "2026",
       "ageRating": "14",
-      "image": "https://res.cloudinary.com/dhdkifjdt/image/upload/v1784734768/rpg-reviewer/rpgs/x8hjdg4xxtnz7ecniej1.png",
-      "banner": "https://res.cloudinary.com/dhdkifjdt/image/upload/v1784734769/rpg-reviewer/rpgs/wmhfm03zlxiu5vxntjuw.jpg",
+      "image": "https://res.cloudinary.com/dhdkifjdt/image/upload/v1784736775/rpg-reviewer/rpgs/tovoxrnxbvdmq1nxucix.png",
+      "banner": "https://res.cloudinary.com/dhdkifjdt/image/upload/v1784736777/rpg-reviewer/rpgs/yyxdwift0g6fix9k2fed.jpg",
       "description": "Em um RPG textual inspirado em One Piece, mas com um mundo, história e universo totalmente originais, você assume o papel de um pirata e escolhe entre duas tripulações para iniciar sua jornada. Enquanto navega em busca do seu objetivo, descobrirá os mistérios e segredos desse vasto mundo, enfrentando desafios e explorando diversos temas ao longo da aventura.",
       "tags": [
         {
@@ -129,6 +130,70 @@
         },
         {
           "name": "Textual",
+          "weight": 1
+        }
+      ],
+      "whatsapp": "https://chat.whatsapp.com/FLndrXOaAa5I0wH4Uqir3a?mode=gi_t"
+    },
+    {
+      "name": "Ilhas Reais",
+      "owner": "Lord🔘⚜️",
+      "genre": "Medieval, Combate",
+      "year": "2025",
+      "ageRating": "L",
+      "image": "https://res.cloudinary.com/dhdkifjdt/image/upload/v1784739227/rpg-reviewer/rpgs/wosswdc1vtycqofhjikp.png",
+      "banner": "https://res.cloudinary.com/dhdkifjdt/image/upload/v1784742524/rpg-reviewer/rpgs/vh0resd3utrwmgwmplnm.jpg",
+      "description": "Bem-vindo ao RPG  Ilhas Reais!\r\nPrepare-se para viver uma aventura única em um RPG Medieval de Fantasia totalmente pelo WhatsApp! Aqui, cada escolha muda sua história e cada batalha pode transformar você em uma lenda.\r\n Escolha seu caminho entre poderosas organizações e clãs exclusivos.\r\n Participe de guerras épicas, conquiste ilhas e enfrente jogadores em batalhas estratégicas.\r\n Colecione centenas de cartas, desbloqueie habilidades únicas, armas, armaduras, invocações e poderes lendários.\r\n Complete missões, contratos, desafios e eventos semanais para ganhar recompensas e evoluir seu personagem.",
+      "tags": []
+    },
+    {
+      "name": "Kogane To Chi - Mãos Unidas",
+      "owner": "Diziazi",
+      "genre": "Anime, Combate",
+      "year": "2026",
+      "ageRating": "16",
+      "image": "https://res.cloudinary.com/dhdkifjdt/image/upload/v1784740951/rpg-reviewer/rpgs/kl6phqvoqccvowdnwk1a.jpg",
+      "banner": "https://res.cloudinary.com/dhdkifjdt/image/upload/v1784740952/rpg-reviewer/rpgs/zeeln5gxc8yrtvwcplh3.jpg",
+      "description": "Kogane To Chi é um RPG textual que conta com um mundo expandido e imersivo para escolha e criações de personagens. Você pode ser um oni da obra original e seguir Muzan, mas também pode ser um poderoso membro da Fukkatsu Corp e seguir a infame \"Fundadora\", a causadora de um grande apocalipse que está causando caos em nível global!\r\n\r\nMas você também pode se tornar um caçador, com opção de até 11 países para escolher. De um espadachim do Japão clássico até um cangaceiro do Nordeste brasileiro!\r\n\r\nO que falta para fazer parte disso? Empunha sua espada ou prepare suas garras! Kogane To Chi te espera!",
+      "tags": [
+        {
+          "name": "Demon Slayer",
+          "weight": 2
+        },
+        {
+          "name": "Textual",
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "name": "AMS",
+      "owner": "Ryck",
+      "genre": "Fantasia, Aventura",
+      "year": "2026",
+      "ageRating": "10",
+      "image": "https://res.cloudinary.com/dhdkifjdt/image/upload/v1784765146/rpg-reviewer/rpgs/tzobc73owa14c007vuao.png",
+      "banner": "https://res.cloudinary.com/dhdkifjdt/image/upload/v1784765146/rpg-reviewer/rpgs/dd0fuovdy6futeynyun8.jpg",
+      "description": "Após séculos de conflitos entre os panteões, os deuses da Grécia decidiram colocar um fim às disputas por território. Com o passar do tempo, os panteões Nórdico e Egípcio também se uniram a esse tratado, formando uma frágil aliança para garantir que seus filhos pudessem viver em uma nova era de paz.\r\n\r\nMas essa paz jamais foi absoluta.\r\n\r\nNas profundezas do mundo, os Titãs continuam existindo, aguardando o momento ideal para retornar e reivindicar o domínio que um dia lhes pertenceu. Enquanto isso, monstros ancestrais, criaturas mitológicas e forças desconhecidas ameaçam o equilíbrio entre os reinos.\r\nAqui, você não segue a história de um protagonista... você é o protagonista da sua própria história.",
+      "tags": [
+        {
+          "name": "Cenas",
+          "weight": 5
+        },
+        {
+          "name": "Mitologia",
+          "weight": 4
+        },
+        {
+          "name": "Nórdico",
+          "weight": 3
+        },
+        {
+          "name": "Egípcio",
+          "weight": 2
+        },
+        {
+          "name": "Grego",
           "weight": 1
         }
       ]
@@ -207,6 +272,8 @@
     "df7875bea805d380bb0025ca5bb59c4a9135bafa91949df08b74f8e02fdd8da2": "1",
     "b1d26408b547b05c3217e2d37e9b13d96c9624367e8088301cb3b42d86cdd047": "4",
     "d52b4b2a9b9276f4a0a0bbe2f284f4d9dcd93a1185f30c2c897bae5dcc3cd2d6": "4",
-    "a23d45dd27849bb6f349b2c55db35458ad35720c832d26c10ac37698e0522861": "1"
+    "a23d45dd27849bb6f349b2c55db35458ad35720c832d26c10ac37698e0522861": "1",
+    "5cfc3544c3a8dad88280ff6fbaf5a7305de21b94732125fdfcf148660f0afec1": "1",
+    "114946045be8fc369b2740aab06cc5cc8442aeee47e31e2a98b3495079f9248c": "1"
   }
 }

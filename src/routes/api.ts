@@ -33,26 +33,26 @@ function uploadToCloudinary(buffer: Buffer): Promise<string> {
 
 const router = Router()
 
-router.get('/rpgs', (_req: Request, res: Response) => {
-  res.json(getRpgs())
+router.get('/rpgs', async (_req: Request, res: Response) => {
+  res.json(await getRpgs())
 })
 
-router.get('/rpgs/:name', (req: Request, res: Response) => {
-  const rpg = getRpgByName(String(req.params.name))
+router.get('/rpgs/:name', async (req: Request, res: Response) => {
+  const rpg = await getRpgByName(String(req.params.name))
   if (!rpg) { res.status(404).json({ error: 'RPG não encontrado.' }); return }
   res.json(rpg)
 })
 
-router.get('/reviews', (_req: Request, res: Response) => {
-  const rpgFilter = _req.query.rpg as string | undefined
-  let reviews = getReviews()
+router.get('/reviews', async (req: Request, res: Response) => {
+  const rpgFilter = req.query.rpg as string | undefined
+  let reviews = await getReviews()
   if (rpgFilter) {
     reviews = reviews.filter(r => r.rpg.name === rpgFilter)
   }
   res.json(reviews)
 })
 
-router.post('/reviews', (req: Request, res: Response) => {
+router.post('/reviews', async (req: Request, res: Response) => {
   const authHeader = req.headers.authorization
   if (!authHeader) {
     res.status(401).json({ error: 'Autenticação necessária. Faça login primeiro.' })
@@ -60,7 +60,7 @@ router.post('/reviews', (req: Request, res: Response) => {
   }
 
   const token = authHeader.replace('Bearer ', '')
-  const user = getUserByToken(token)
+  const user = await getUserByToken(token)
   if (!user) {
     res.status(401).json({ error: 'Sessão inválida. Faça login novamente.' })
     return
@@ -83,7 +83,7 @@ router.post('/reviews', (req: Request, res: Response) => {
       return
     }
 
-    const rpg = getRpgByName(rpgName)
+    const rpg = await getRpgByName(rpgName)
     if (!rpg) {
       res.status(400).json({ error: 'RPG não encontrado.' })
       return
@@ -104,50 +104,50 @@ router.post('/reviews', (req: Request, res: Response) => {
       }
     }
 
-    const review = addReview(input, user.username)
+    const review = await addReview(input, user.username)
     res.status(201).json(review)
   })
 })
 
-router.get('/reviews/pending', (req: Request, res: Response) => {
+router.get('/reviews/pending', async (req: Request, res: Response) => {
   const authHeader = req.headers.authorization
   if (!authHeader) { res.status(401).json({ error: 'Autenticação necessária.' }); return }
   const token = authHeader.replace('Bearer ', '')
-  const user = getUserByToken(token)
+  const user = await getUserByToken(token)
   if (!user || user.role !== 'admin') { res.status(403).json({ error: 'Apenas administradores.' }); return }
-  const pending = getPendingReviews()
+  const pending = await getPendingReviews()
   res.json(pending)
 })
 
-router.patch('/reviews/:id/approve', (req: Request, res: Response) => {
+router.patch('/reviews/:id/approve', async (req: Request, res: Response) => {
   const authHeader = req.headers.authorization
   if (!authHeader) { res.status(401).json({ error: 'Autenticação necessária.' }); return }
   const token = authHeader.replace('Bearer ', '')
-  const user = getUserByToken(token)
+  const user = await getUserByToken(token)
   if (!user || user.role !== 'admin') { res.status(403).json({ error: 'Apenas administradores.' }); return }
-  const review = approveReview(String(req.params.id))
+  const review = await approveReview(String(req.params.id))
   if (!review) { res.status(404).json({ error: 'Avaliação não encontrada.' }); return }
   res.json(review)
 })
 
-router.patch('/reviews/:id/reject', (req: Request, res: Response) => {
+router.patch('/reviews/:id/reject', async (req: Request, res: Response) => {
   const authHeader = req.headers.authorization
   if (!authHeader) { res.status(401).json({ error: 'Autenticação necessária.' }); return }
   const token = authHeader.replace('Bearer ', '')
-  const user = getUserByToken(token)
+  const user = await getUserByToken(token)
   if (!user || user.role !== 'admin') { res.status(403).json({ error: 'Apenas administradores.' }); return }
-  const ok = rejectReview(String(req.params.id))
+  const ok = await rejectReview(String(req.params.id))
   if (!ok) { res.status(404).json({ error: 'Avaliação não encontrada.' }); return }
   res.json({ message: 'Avaliação rejeitada.' })
 })
 
-router.delete('/reviews/:id', (req: Request, res: Response) => {
+router.delete('/reviews/:id', async (req: Request, res: Response) => {
   const authHeader = req.headers.authorization
   if (!authHeader) { res.status(401).json({ error: 'Autenticação necessária.' }); return }
   const token = authHeader.replace('Bearer ', '')
-  const user = getUserByToken(token)
+  const user = await getUserByToken(token)
   if (!user) { res.status(401).json({ error: 'Sessão inválida.' }); return }
-  const ok = deleteReviewById(String(req.params.id), user.username, user.role === 'admin')
+  const ok = await deleteReviewById(String(req.params.id), user.username, user.role === 'admin')
   if (!ok) { res.status(403).json({ error: 'Não autorizado ou avaliação não encontrada.' }); return }
   res.json({ message: 'Avaliação excluída.' })
 })
@@ -162,14 +162,14 @@ function uploadRpgImage(buffer: Buffer, folder: string): Promise<string> {
   })
 }
 
-router.post('/rpgs', (req: Request, res: Response) => {
+router.post('/rpgs', async (req: Request, res: Response) => {
   const authHeader = req.headers.authorization
   if (!authHeader) {
     res.status(401).json({ error: 'Autenticação necessária.' })
     return
   }
   const token = authHeader.replace('Bearer ', '')
-  const user = getUserByToken(token)
+  const user = await getUserByToken(token)
   if (!user) {
     res.status(401).json({ error: 'Sessão inválida.' })
     return
@@ -187,7 +187,8 @@ router.post('/rpgs', (req: Request, res: Response) => {
       return
     }
 
-    if (getRpgByName(name)) {
+    const existing = await getRpgByName(name)
+    if (existing) {
       res.status(400).json({ error: 'Já existe um RPG com este nome.' })
       return
     }
@@ -210,7 +211,7 @@ router.post('/rpgs', (req: Request, res: Response) => {
         parsedTags = tags
       }
 
-      const rpg = addRpg({ name, owner, genre, year, ageRating, image: imageUrl, banner: bannerUrl || undefined, description, link, whatsapp, tags: parsedTags })
+      const rpg = await addRpg({ name, owner, genre, year, ageRating, image: imageUrl, banner: bannerUrl || undefined, description, link, whatsapp, tags: parsedTags })
       res.status(201).json(rpg)
     } catch {
       res.status(500).json({ error: 'Erro ao fazer upload das imagens.' })
@@ -218,15 +219,15 @@ router.post('/rpgs', (req: Request, res: Response) => {
   })
 })
 
-router.patch('/rpgs/:name', (req: Request, res: Response) => {
+router.patch('/rpgs/:name', async (req: Request, res: Response) => {
   const authHeader = req.headers.authorization
   if (!authHeader) { res.status(401).json({ error: 'Autenticação necessária.' }); return }
   const token = authHeader.replace('Bearer ', '')
-  const user = getUserByToken(token)
+  const user = await getUserByToken(token)
   if (!user || user.role !== 'admin') { res.status(403).json({ error: 'Apenas administradores podem editar sistemas.' }); return }
 
   const rpgName = String(req.params.name)
-  const existing = getRpgByName(rpgName)
+  const existing = await getRpgByName(rpgName)
   if (!existing) { res.status(404).json({ error: 'Sistema não encontrado.' }); return }
 
   upload.fields([
@@ -259,34 +260,35 @@ router.patch('/rpgs/:name', (req: Request, res: Response) => {
       if (files?.image?.[0]) updates.image = await uploadRpgImage(files.image[0].buffer, 'rpg-reviewer/rpgs')
       if (files?.banner?.[0]) updates.banner = await uploadRpgImage(files.banner[0].buffer, 'rpg-reviewer/rpgs')
 
-      const rpg = updateRpg(rpgName, updates)
+      const rpg = await updateRpg(rpgName, updates)
       if (!rpg) { res.status(500).json({ error: 'Erro ao atualizar.' }); return }
       res.json(rpg)
-    } catch {
+    } catch (e) {
+      console.error('Erro ao atualizar RPG:', e)
       res.status(500).json({ error: 'Erro ao fazer upload das imagens.' })
     }
   })
 })
 
-router.patch('/rpgs/:name/featured', (req: Request, res: Response) => {
+router.patch('/rpgs/:name/featured', async (req: Request, res: Response) => {
   const authHeader = req.headers.authorization
   if (!authHeader) { res.status(401).json({ error: 'Autenticação necessária.' }); return }
   const token = authHeader.replace('Bearer ', '')
-  const user = getUserByToken(token)
+  const user = await getUserByToken(token)
   if (!user || user.role !== 'admin') { res.status(403).json({ error: 'Apenas administradores.' }); return }
-  const rpg = toggleFeaturedRpg(String(req.params.name))
+  const rpg = await toggleFeaturedRpg(String(req.params.name))
   if (!rpg) { res.status(404).json({ error: 'RPG não encontrado.' }); return }
   res.json(rpg)
 })
 
-router.delete('/rpgs/:name', (req: Request, res: Response) => {
+router.delete('/rpgs/:name', async (req: Request, res: Response) => {
   const authHeader = req.headers.authorization
   if (!authHeader) { res.status(401).json({ error: 'Autenticação necessária.' }); return }
   const token = authHeader.replace('Bearer ', '')
-  const user = getUserByToken(token)
+  const user = await getUserByToken(token)
   if (!user || user.role !== 'admin') { res.status(403).json({ error: 'Apenas administradores podem excluir sistemas.' }); return }
 
-  const ok = deleteRpg(String(req.params.name))
+  const ok = await deleteRpg(String(req.params.name))
   if (!ok) { res.status(404).json({ error: 'Sistema não encontrado.' }); return }
   res.json({ message: 'Sistema excluído.' })
 })
