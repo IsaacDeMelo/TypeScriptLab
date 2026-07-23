@@ -12,6 +12,7 @@ export interface IRpg {
   year?: string
   ageRating: string
   featured?: boolean
+  blurImage?: boolean
   tags?: { name: string; weight: number }[]
 }
 
@@ -29,6 +30,7 @@ const rpgSchema = new Schema<IRpg>({
   year: String,
   ageRating: { type: String, required: true },
   featured: { type: Boolean, default: false },
+  blurImage: { type: Boolean, default: false },
   tags: { type: [tagSchema], default: [] },
 })
 

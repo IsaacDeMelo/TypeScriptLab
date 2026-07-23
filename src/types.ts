@@ -15,6 +15,7 @@ export interface RPG {
   year?: string
   ageRating: string
   featured?: boolean
+  blurImage?: boolean
   tags?: Tag[]
 }
 

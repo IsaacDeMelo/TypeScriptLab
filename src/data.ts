@@ -33,6 +33,7 @@ function rpgFromDoc(doc: any): RPG {
     year: o.year,
     ageRating: o.ageRating,
     featured: o.featured ?? false,
+    blurImage: o.blurImage ?? false,
     tags: o.tags || [],
   }
 }

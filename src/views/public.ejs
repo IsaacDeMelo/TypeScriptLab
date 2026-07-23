@@ -705,7 +705,7 @@
                   const media = rpgReviews.length ? (rpgReviews.reduce((s, r) => s + r.rating, 0) / rpgReviews.length).toFixed(1) : null;
                 %>
                 <div onclick="selecionarRpgCatalogo('<%= rpg.name %>', this)" class="cat-card rounded-xl overflow-hidden border" data-nome="<%= rpg.name %>" data-genre="<%= rpg.genre %>" data-owner="<%= rpg.owner %>" data-desc="<%= rpg.description.substring(0, 80) %>" style="background: var(--bg-card); border-color: var(--border); aspect-ratio: 2/3;">
-                  <img src="<%= rpg.image %>" class="w-full h-full object-cover<%= rpg.ageRating === '18' ? ' cat-blur' : '' %>" alt="<%= rpg.name %>">
+                  <img src="<%= rpg.image %>" class="w-full h-full object-cover<%= rpg.ageRating === '18' && rpg.blurImage ? ' cat-blur' : '' %>" alt="<%= rpg.name %>">
                   <span class="cat-age-badge <%= rpg.ageRating %>"><%= rpg.ageRating === 'L' ? 'L' : rpg.ageRating %></span>
                   <% if (media) { %>
                   <div class="cat-rating-badge absolute top-8 right-2 z-3 flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded" style="background: rgba(0,0,0,0.7); color: var(--star); backdrop-filter: blur(4px);">
@@ -822,9 +822,15 @@
           <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Gênero / Categoria *</label><input type="text" id="reg-genre" required class="w-full rounded-xl p-2.5 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);" placeholder="Ex: Fantasia Medieval, Horror..."></div>
           <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Ano de Lançamento</label><input type="text" id="reg-year" class="w-full rounded-xl p-2.5 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);"></div>
           <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Classificação Etária *</label>
-            <select id="reg-age" required class="w-full rounded-xl p-2.5 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);">
+            <select id="reg-age" onchange="toggleRegBlurOption()" required class="w-full rounded-xl p-2.5 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);">
               <option value="L">Livre</option><option value="10">10</option><option value="12">12</option><option value="14">14</option><option value="16">16</option><option value="18">18</option>
             </select>
+          </div>
+          <div id="reg-blur-container" class="hidden">
+            <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer" style="background: var(--bg-input); border: 1px solid var(--border);">
+              <input type="checkbox" id="reg-blur" class="w-4 h-4 rounded accent-red-600">
+              <span class="text-[10px] font-bold" style="color: var(--text-secondary);">Borrar imagem no catálogo</span>
+            </label>
           </div>
           <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Imagem do Sistema *</label>
             <div class="rounded-xl overflow-hidden border cursor-pointer" style="background: var(--bg-input); border-color: var(--border);">
@@ -883,9 +889,15 @@
           <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Gênero</label><input type="text" id="edit-genre" class="w-full rounded-xl p-2.5 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);"></div>
           <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Ano</label><input type="text" id="edit-year" class="w-full rounded-xl p-2.5 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);"></div>
           <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Classificação Etária</label>
-            <select id="edit-age" class="w-full rounded-xl p-2.5 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);">
+            <select id="edit-age" onchange="toggleEditBlurOption()" class="w-full rounded-xl p-2.5 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);">
               <option value="L">Livre</option><option value="10">10</option><option value="12">12</option><option value="14">14</option><option value="16">16</option><option value="18">18</option>
             </select>
+          </div>
+          <div id="edit-blur-container" class="hidden">
+            <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer" style="background: var(--bg-input); border: 1px solid var(--border);">
+              <input type="checkbox" id="edit-blur" class="w-4 h-4 rounded accent-red-600">
+              <span class="text-[10px] font-bold" style="color: var(--text-secondary);">Borrar imagem no catálogo</span>
+            </label>
           </div>
           <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Nova Imagem <span style="color: var(--text-muted);">(opcional)</span></label>
             <div class="rounded-xl overflow-hidden border cursor-pointer" style="background: var(--bg-input); border-color: var(--border);">
@@ -1239,6 +1251,16 @@
       }
     }
 
+    function toggleRegBlurOption() {
+      const age = document.getElementById('reg-age').value;
+      document.getElementById('reg-blur-container').classList.toggle('hidden', age !== '18');
+    }
+
+    function toggleEditBlurOption() {
+      const age = document.getElementById('edit-age').value;
+      document.getElementById('edit-blur-container').classList.toggle('hidden', age !== '18');
+    }
+
     let heroInterval, heroIndex = 0, heroPausado = false, heroTouchX = 0, heroSwipeInit = false, heroRpgs = <%- JSON.stringify(rpgs.filter(r => r.featured).length ? rpgs.filter(r => r.featured) : [rpgs[0]]) %>;
 
     function iniciarHero() {
@@ -1404,6 +1426,8 @@
       document.getElementById('edit-genre').value = rpg.genre || '';
       document.getElementById('edit-year').value = rpg.year || '';
       document.getElementById('edit-age').value = rpg.ageRating || 'L';
+      document.getElementById('edit-blur').checked = rpg.blurImage === true;
+      toggleEditBlurOption();
       document.getElementById('edit-link').value = rpg.link || '';
       document.getElementById('edit-whatsapp').value = rpg.whatsapp || '';
       document.getElementById('edit-desc').value = rpg.description || '';
@@ -1478,6 +1502,7 @@
       formData.append('genre', document.getElementById('edit-genre').value.trim());
       formData.append('year', document.getElementById('edit-year').value.trim());
       formData.append('ageRating', document.getElementById('edit-age').value);
+      formData.append('blurImage', document.getElementById('edit-blur').checked);
       formData.append('description', document.getElementById('edit-desc').value.trim());
       const tagsStr = document.getElementById('edit-tags').value.trim();
       if (tagsStr) {
@@ -1558,6 +1583,7 @@
       formData.append('genre', document.getElementById('reg-genre').value.trim());
       formData.append('year', document.getElementById('reg-year').value.trim());
       formData.append('ageRating', document.getElementById('reg-age').value);
+      formData.append('blurImage', document.getElementById('reg-blur').checked);
       formData.append('description', document.getElementById('reg-desc').value.trim());
       const link = document.getElementById('reg-link').value.trim();
       if (link) formData.append('link', link);

@@ -211,7 +211,7 @@ router.post('/rpgs', async (req: Request, res: Response) => {
         parsedTags = tags
       }
 
-      const rpg = await addRpg({ name, owner, genre, year, ageRating, image: imageUrl, banner: bannerUrl || undefined, description, link, whatsapp, tags: parsedTags })
+      const rpg = await addRpg({ name, owner, genre, year, ageRating, image: imageUrl, banner: bannerUrl || undefined, description, link, whatsapp, tags: parsedTags, blurImage: req.body.blurImage === 'true' })
       res.status(201).json(rpg)
     } catch {
       res.status(500).json({ error: 'Erro ao fazer upload das imagens.' })
@@ -246,6 +246,7 @@ router.patch('/rpgs/:name', async (req: Request, res: Response) => {
     if (description) updates.description = description
     if (link !== undefined) updates.link = link || undefined
     if (whatsapp !== undefined) updates.whatsapp = whatsapp || undefined
+    if (req.body.blurImage !== undefined) updates.blurImage = req.body.blurImage === 'true'
     if (tags !== undefined) {
       if (typeof tags === 'string') {
         try { updates.tags = JSON.parse(tags) } catch { /* ignore */ }
