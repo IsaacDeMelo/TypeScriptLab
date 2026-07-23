@@ -17,7 +17,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
-    "build": "npx tsc && mkdir -p dist/views dist/public && cp src/views/*.ejs dist/views/ && cp -r src/public/* dist/public/",
+    "build": "tsc && mkdir -p dist/views dist/public && cp src/views/*.ejs dist/views/ && cp -r src/public/* dist/public/",
     "migrate": "tsx src/migrate.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
