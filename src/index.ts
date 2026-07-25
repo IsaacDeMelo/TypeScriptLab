@@ -1,43 +1,14 @@
 import 'dotenv/config'
 import express from 'express'
 import path from 'path'
-import { v2 as cloudinary } from 'cloudinary'
-import publicRouter from './routes/public'
-import apiRouter from './routes/api'
-import authRouter from './routes/auth'
-import { connectDatabase } from './database'
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+
+// Rode o Express direto para testar:
+app.listen(PORT, () => {
+  console.log(`App is running on http://localhost:${PORT}`)
 })
 
-const app = express()
-
-app.set('view engine', 'ejs')
-app.set('views', path.join(__dirname, 'views'))
-app.use(express.static(path.join(__dirname, 'public')))
-app.use(express.json({ limit: '50mb' }))
-app.use(express.urlencoded({ limit: '50mb', extended: true }))
-
-app.get('/', (_req, res) => {
-  res.redirect('/public')
-})
-
-app.use('/public', publicRouter)
-app.use('/api', apiRouter)
-app.use('/api/auth', authRouter)
-
-const PORT = process.env.PORT || 3000
-
+// Chame o banco de forma independente para ver o que acontece
 connectDatabase()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`App is running on http://localhost:${PORT}`)
-    })
-  })
-  .catch((err) => {
-    console.error('Erro ao conectar no MongoDB:', err)
-    process.exit(1)
-  })
+  .then(() => console.log('MongoDB conectado!'))
+  .catch((err) => console.error('Erro no banco:', err))
