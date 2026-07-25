@@ -2,6 +2,7 @@ import 'dotenv/config'
 import express from 'express'
 import path from 'path'
 
+const app = express();
 
 // Rode o Express direto para testar:
 app.listen(PORT, () => {
