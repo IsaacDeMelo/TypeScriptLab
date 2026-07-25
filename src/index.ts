@@ -5,7 +5,7 @@ import path from 'path'
 const app = express();
 
 // Rode o Express direto para testar:
-app.listen(PORT, () => {
+app.listen(3000, () => {
   console.log(`App is running on http://localhost:${PORT}`)
 })
 
