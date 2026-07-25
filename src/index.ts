@@ -31,13 +31,16 @@ app.use('/api/auth', authRouter)
 
 const PORT = process.env.PORT || 3000
 
+app.listen(PORT, () => {
+  console.log(`App is running on http://localhost:${PORT}`)
+})
+
+// 2. Chame a conexão do banco em segundo plano de forma independente
+console.log('Tentando conectar ao banco de dados...')
 connectDatabase()
   .then(() => {
-    app.listen(3000, () => {
-      console.log(`App is running on http://localhost:${3000}`)
-    })
+    console.log('MongoDB conectado com sucesso!')
   })
   .catch((err) => {
-    console.error('Erro ao conectar no MongoDB:', err)
-    process.exit(1)
+    console.error('Erro crítico ao conectar no MongoDB:', err)
   })
