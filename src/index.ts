@@ -6,7 +6,7 @@ const app = express();
 
 // Rode o Express direto para testar:
 app.listen(3000, () => {
-  console.log(`App is running on http://localhost:${PORT}`)
+  console.log(`App is running on http://localhost:${3000}`)
 })
 
 // Chame o banco de forma independente para ver o que acontece
