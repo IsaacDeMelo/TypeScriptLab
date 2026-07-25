@@ -1,11 +1,11 @@
 import 'dotenv/config'
 import express from 'express'
 import path from 'path'
-
+import { connectDatabase } from './database'
 const app = express();
 
 // Rode o Express direto para testar:
-app.listen(3000, () => {
+app.listen(PORT, () => {
   console.log(`App is running on http://localhost:${PORT}`)
 })
 
