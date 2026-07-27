@@ -50,8 +50,9 @@ app.get('/sitemap.xml', function(req, res, next) {
 
 app.get('/rpg/:slug', function(req, res, next) {
   Promise.resolve().then(async function() {
-    const { slug } = req.params
-    if (!slug) { res.redirect('/'); return }
+    const { slug: rawSlug } = req.params
+    if (!rawSlug) { res.redirect('/'); return }
+    const slug = toSlug(rawSlug)
     const rpgs = await getRpgs()
     const rpg = rpgs.find(r => toSlug(r.name) === slug)
     if (!rpg) {
