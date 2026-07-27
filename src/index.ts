@@ -54,7 +54,15 @@ app.get('/rpg/:slug', function(req, res, next) {
     if (!slug) { res.redirect('/'); return }
     const rpgs = await getRpgs()
     const rpg = rpgs.find(r => toSlug(r.name) === slug)
-    if (!rpg) { res.redirect('/'); return }
+    if (!rpg) {
+      const data = await getPageData()
+      res.status(404).render('public', {
+        ...data,
+        metaTitle: 'RPG não encontrado | Rpflix',
+        metaDescription: 'O RPG que você procura não existe ou foi removido.',
+      })
+      return
+    }
 
     const data = await getPageData()
     const desc = rpg.description.substring(0, 160)
