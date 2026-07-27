@@ -1906,7 +1906,7 @@ const seoCount = seoRevs.length;
     let catUsersData = <%- JSON.stringify(users) %>;
 
     function toSlug(name) {
-      return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      return name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     }
 
     let rpgModalOpen = false;
