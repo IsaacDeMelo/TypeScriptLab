@@ -5,6 +5,10 @@ import UserModel from './models/User'
 import SessionModel from './models/Session'
 import { RPG, Review, ReviewInput, User } from './types'
 
+export function toSlug(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+}
+
 function calcTimeAgo(createdAt: string | Date): string {
   const diff = Date.now() - new Date(createdAt).getTime()
   const mins = Math.floor(diff / 60000)

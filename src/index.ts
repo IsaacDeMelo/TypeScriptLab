@@ -9,10 +9,11 @@ import 'dotenv/config'
 import express from 'express'
 import path from 'path'
 import { v2 as cloudinary } from 'cloudinary'
-import publicRouter from './routes/public'
+import publicRouter, { getPageData } from './routes/public'
 import apiRouter from './routes/api'
 import authRouter from './routes/auth'
 import { connectDatabase } from './database'
+import { toSlug, getRpgs } from './data'
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -22,16 +23,54 @@ cloudinary.config({
 
 const app = express()
 
+app.set('trust proxy', 1)
 app.set('view engine', 'ejs')
 app.set('views', path.join(__dirname, 'views'))
 app.use(express.static(path.join(__dirname, 'public')))
 app.use(express.json({ limit: '50mb' }))
 app.use(express.urlencoded({ limit: '50mb', extended: true }))
 
-app.get('/', (_req, res) => {
-  res.redirect('/public')
+app.get('/robots.txt', function(req, res) {
+  const host = req.get('host')
+  const base = req.protocol + '://' + host
+  res.type('text/plain')
+  res.send('User-agent: *\nAllow: /\nSitemap: ' + base + '/sitemap.xml\n')
 })
 
+app.get('/sitemap.xml', function(req, res, next) {
+  Promise.resolve().then(async function() {
+    const rpgs = await getRpgs()
+    const host = req.get('host')
+    const base = req.protocol + '://' + host
+    const urls = rpgs.map(r => `  <url>\n    <loc>${base}/rpg/${toSlug(r.name)}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`).join('\n')
+    res.header('Content-Type', 'application/xml')
+    res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url>\n    <loc>${base}/</loc>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n${urls}\n</urlset>`)
+  }).catch(next)
+})
+
+app.get('/rpg/:slug', function(req, res, next) {
+  Promise.resolve().then(async function() {
+    const { slug } = req.params
+    if (!slug) { res.redirect('/'); return }
+    const rpgs = await getRpgs()
+    const rpg = rpgs.find(r => toSlug(r.name) === slug)
+    if (!rpg) { res.redirect('/'); return }
+
+    const data = await getPageData()
+    const desc = rpg.description.substring(0, 160)
+    res.render('public', {
+      ...data,
+      initialRpg: rpg.name,
+      metaTitle: `${rpg.name} — Avaliações e Críticas | Rpflix`,
+      metaDescription: desc,
+      canonicalUrl: `/rpg/${slug}`,
+      ogImage: rpg.image,
+      ogUrl: `/rpg/${slug}`,
+    })
+  }).catch(next)
+})
+
+app.use('/', publicRouter)
 app.use('/public', publicRouter)
 app.use('/api', apiRouter)
 app.use('/api/auth', authRouter)

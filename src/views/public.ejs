@@ -1,11 +1,51 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+<%
+const seoRpg = typeof initialRpg !== 'undefined' ? rpgs.find(r => r.name === initialRpg) : null;
+const seoRevs = seoRpg ? reviews.filter(r => r.rpg.name === seoRpg.name) : [];
+const seoAvg = seoRevs.length ? (seoRevs.reduce((s, r) => s + r.rating, 0) / seoRevs.length) : 0;
+const seoCount = seoRevs.length;
+%>
 <head>
   <meta name="google-site-verification" content="cvE8c8q17Rp3ylk6DTnfQqPcF8q1faf4k55S1KbhXJ8" />
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Honor - Rating | Catálogo</title>
-  <link rel="canonical" href="https://honor-rating.onrender.com/" />
+  <% if (typeof metaTitle !== 'undefined') { %>
+    <title><%= metaTitle %></title>
+    <meta name="description" content="<%= metaDescription %>">
+    <link rel="canonical" href="https://honor-rating.onrender.com<%= canonicalUrl %>">
+    <meta property="og:title" content="<%= metaTitle %>">
+    <meta property="og:description" content="<%= metaDescription %>">
+    <meta property="og:image" content="<%= ogImage %>">
+    <meta property="og:url" content="https://honor-rating.onrender.com<%= ogUrl %>">
+    <meta property="og:type" content="website">
+  <% } else { %>
+    <title>Honor - Rating | Catálogo de RPG</title>
+    <meta name="description" content="Descubra e avalie sistemas de RPG. Veja críticas, notas e recomendações da comunidade para encontrar seu próximo jogo.">
+    <link rel="canonical" href="https://honor-rating.onrender.com/" />
+  <% } %>
+
+  <% if (seoRpg) { %>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "<%= seoRpg.name %>",
+    "description": "<%= seoRpg.description.replace(/"/g, '&quot;').substring(0, 200) %>",
+    "image": "<%= seoRpg.image %>",
+    "brand": { "@type": "Brand", "name": "<%= seoRpg.owner %>" },
+    "genre": "<%= seoRpg.genre %>",
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "<%= seoCount > 0 ? seoAvg.toFixed(1) : '0' %>",
+      "bestRating": "5",
+      "worstRating": "0",
+      "ratingCount": "<%= seoCount %>"
+    },
+    "url": "https://honor-rating.onrender.com<%= canonicalUrl %>"
+  }
+  </script>
+  <% } %>
   <!-- Fontes Premium do Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -788,41 +828,64 @@
     </div>
 
     <!-- MODAL DE DETALHE DO RPG -->
-    <div id="modal-detalhe" class="modal-hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background: color-mix(in srgb, var(--bg-primary) 92%, transparent); backdrop-filter: blur(4px);">
+    <%
+    const detailRpg = seoRpg || rpgs[0];
+    const modalHiddenClass = seoRpg ? 'detalhe-aberto' : 'modal-hidden';
+    const rpgRevs = reviews.filter(r => r.rpg.name === detailRpg.name);
+    const rpgAvg = rpgRevs.length ? (rpgRevs.reduce((s, r) => s + r.rating, 0) / rpgRevs.length) : 0;
+    const rpgCount = rpgRevs.length;
+    %>
+    <div id="modal-detalhe" class="<%= modalHiddenClass %> fixed inset-0 z-50 flex items-center justify-center p-4" style="background: color-mix(in srgb, var(--bg-primary) 92%, transparent); backdrop-filter: blur(4px);">
       <div class="detalhe-card rounded-3xl w-full max-w-lg lg:max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl" style="background: linear-gradient(to bottom, var(--bg-elevated), var(--bg-card)); border: 1px solid var(--border);">
-        <div class="relative h-44 lg:h-56 rounded-t-3xl overflow-hidden bg-cover bg-center" id="detalhe-banner" style="background-image: url('<%= rpgs[0].banner %>');">
+        <div class="relative h-44 lg:h-56 rounded-t-3xl overflow-hidden bg-cover bg-center" id="detalhe-banner" style="background-image: url('<%= detailRpg.banner %>');">
           <div class="absolute inset-0" style="background: linear-gradient(to top, var(--bg-elevated) 0%, transparent 60%);"></div>
           <button onclick="fecharDetalheRpg()" class="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition z-10" style="background: rgba(0,0,0,0.5); color: white;">
             <i class="fas fa-times text-xs"></i>
           </button>
           <div class="absolute bottom-3 left-4 right-4 z-10">
-            <span class="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded" style="background: var(--accent); color: white;" id="detalhe-genre"><%= rpgs[0].genre %></span>
+            <span class="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded" style="background: var(--accent); color: white;" id="detalhe-genre"><%= detailRpg.genre %></span>
           </div>
         </div>
         <div class="p-5 space-y-4">
           <div class="flex items-start justify-between gap-4">
             <div class="min-w-0 flex-1">
-              <h2 class="text-xl font-title font-bold" style="color: var(--text-primary);" id="detalhe-name"><%= rpgs[0].name %></h2>
+              <h2 class="text-xl font-title font-bold" style="color: var(--text-primary);" id="detalhe-name"><%= detailRpg.name %></h2>
               <div class="flex items-center gap-3 mt-1">
-                <span class="text-xs" style="color: var(--text-muted);" id="detalhe-owner"><%= rpgs[0].owner %></span>
-                <span class="text-[10px] px-1.5 py-0.5 rounded font-bold" id="detalhe-age" style="background: rgba(234,179,8,0.2); color: #eab308;"><%= rpgs[0].ageRating %></span>
-                <span class="text-[10px]" style="color: var(--text-muted);" id="detalhe-year"><%= rpgs[0].year %></span>
+                <span class="text-xs" style="color: var(--text-muted);" id="detalhe-owner"><%= detailRpg.owner %></span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded font-bold" id="detalhe-age" style="background: rgba(234,179,8,0.2); color: #eab308;"><%= detailRpg.ageRating %></span>
+                <span class="text-[10px]" style="color: var(--text-muted);" id="detalhe-year"><%= detailRpg.year %></span>
               </div>
             </div>
             <div id="detalhe-rating" class="flex flex-col items-center shrink-0 rounded-2xl px-4 py-2 border" style="background: color-mix(in srgb, var(--bg-card) 60%, transparent); border-color: var(--border);">
-              <span class="text-2xl font-bold font-title leading-none" style="color: var(--star);" id="detalhe-rating-value">—</span>
-              <div id="detalhe-rating-stars" class="flex items-center gap-0.5 mt-0.5"></div>
-              <span class="text-[9px] mt-0.5" style="color: var(--text-muted);" id="detalhe-rating-count"></span>
+              <span class="text-2xl font-bold font-title leading-none" style="color: var(--star);" id="detalhe-rating-value"><%= rpgCount > 0 ? rpgAvg.toFixed(1) : '—' %></span>
+              <div id="detalhe-rating-stars" class="flex items-center gap-0.5 mt-0.5">
+                <% if (rpgCount > 0) { %>
+                  <% for (let i = 1; i <= 5; i++) { %>
+                    <i class="<%= i <= Math.floor(rpgAvg) ? 'fas fa-star' : (i === Math.ceil(rpgAvg) && rpgAvg % 1 !== 0 ? 'fas fa-star-half-alt' : 'far fa-star') %>" style="color:var(--star);font-size:9px;"></i>
+                  <% } %>
+                <% } else { %>
+                  <% for (let i = 1; i <= 5; i++) { %>
+                    <i class="fa-regular fa-star" style="color:var(--text-muted);font-size:9px;opacity:0.4;"></i>
+                  <% } %>
+                <% } %>
+              </div>
+              <span class="text-[9px] mt-0.5" style="color: var(--text-muted);" id="detalhe-rating-count"><%= rpgCount > 0 ? `${rpgCount} avaliação${rpgCount !== 1 ? 'ões' : ''}` : 'Sem avaliações' %></span>
             </div>
           </div>
-          <p class="text-xs leading-relaxed" style="color: var(--text-secondary);" id="detalhe-desc"><%= rpgs[0].description %></p>
-          <div id="detalhe-tags" class="flex flex-wrap gap-1.5"></div>
+          <p class="text-xs leading-relaxed" style="color: var(--text-secondary);" id="detalhe-desc"><%= detailRpg.description %></p>
+          <div id="detalhe-tags" class="flex flex-wrap gap-1.5">
+            <% if (detailRpg.tags && detailRpg.tags.length) { %>
+              <% detailRpg.tags.sort((a, b) => b.weight - a.weight).forEach(t => { %>
+              <span class="text-[9px] px-2 py-0.5 rounded font-medium" style="background:color-mix(in srgb, var(--accent) 15%, transparent);color:var(--accent);border:1px solid color-mix(in srgb, var(--accent) 25%, transparent);"><%= t.name %></span>
+              <% }) %>
+            <% } %>
+          </div>
           <div class="flex flex-wrap gap-2">
-            <a id="detalhe-link" href="<%= rpgs[0].link || '#' %>" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl transition-all active:scale-95" style="background: var(--accent); color: white; <%= rpgs[0].link ? '' : 'opacity:0.5;pointer-events:none;' %>">
+            <a id="detalhe-link" href="<%= detailRpg.link || '#' %>" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl transition-all active:scale-95" style="background: var(--accent); color: white; <%= detailRpg.link ? '' : 'opacity:0.5;pointer-events:none;' %>">
               <i class="fa-solid fa-globe text-[10px]"></i>
               Site Oficial
             </a>
-            <a id="detalhe-whatsapp" href="<%= rpgs[0].whatsapp || '#' %>" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl transition-all active:scale-95" style="background: #25D366; color: white; <%= rpgs[0].whatsapp ? '' : 'opacity:0.5;pointer-events:none;' %>">
+            <a id="detalhe-whatsapp" href="<%= detailRpg.whatsapp || '#' %>" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl transition-all active:scale-95" style="background: #25D366; color: white; <%= detailRpg.whatsapp ? '' : 'opacity:0.5;pointer-events:none;' %>">
               <i class="fa-brands fa-whatsapp text-[10px]"></i>
               Jogar
             </a>
@@ -847,9 +910,8 @@
               Críticas
             </h4>
             <div id="detalhe-reviews-list" class="space-y-2">
-              <% const revs = reviews.filter(r => r.rpg.name === rpgs[0].name); %>
-              <% if (revs.length) { %>
-                <% revs.forEach(r => { %>
+              <% if (rpgRevs.length) { %>
+                <% rpgRevs.forEach(r => { %>
                 <div class="detalhe-review-card rounded-xl p-3 border" style="background: color-mix(in srgb, var(--bg-card) 50%, transparent); border-color: var(--border);">
                   <div class="flex items-center justify-between mb-1">
                     <span class="text-[11px] font-semibold" style="color: var(--text-secondary);"><%= r.username %></span>
@@ -1390,11 +1452,18 @@
       abrirDetalheRpg(nome);
     }
 
-    function abrirDetalheRpg(nome) {
+    function abrirDetalheRpg(nome, fromPopstate) {
       const modal = document.getElementById('modal-detalhe');
       const rpgs = <%- JSON.stringify(rpgs) %>;
       const rpg = rpgs.find(r => r.name === nome);
       if (!rpg) return;
+
+      if (!fromPopstate) {
+        const slug = toSlug(nome);
+        window.history.pushState({ rpg: nome }, '', '/rpg/' + slug);
+        document.title = rpg.name + ' — Avaliações e Críticas | Rpflix';
+      }
+      rpgModalOpen = true;
       document.getElementById('detalhe-banner').style.backgroundImage = `url('${rpg.banner}')`;
       document.getElementById('detalhe-name').textContent = rpg.name;
       document.getElementById('detalhe-owner').textContent = rpg.owner;
@@ -1640,10 +1709,15 @@
       } catch { alert('Erro ao excluir.'); }
     }
 
-    function fecharDetalheRpg() {
+    function fecharDetalheRpg(fromPopstate) {
+      rpgModalOpen = false;
       const modal = document.getElementById('modal-detalhe');
       modal.classList.remove('detalhe-aberto');
       setTimeout(() => modal.classList.add('modal-hidden'), 300);
+      if (!fromPopstate) {
+        window.history.replaceState({}, '', '/');
+        document.title = 'Honor - Rating | Catálogo';
+      }
     }
 
     function abrirModalRegistroRpg() {
@@ -1829,6 +1903,34 @@
     let pendingReviewsData = <%- JSON.stringify(pendingReviews) %>;
     let allReviewData = <%- JSON.stringify(allReviews) %>;
     let catUsersData = <%- JSON.stringify(users) %>;
+
+    function toSlug(name) {
+      return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    }
+
+    let rpgModalOpen = false;
+
+    window.addEventListener('popstate', function() {
+      const path = window.location.pathname;
+      const match = path.match(/^\/rpg\/(.+)$/);
+      if (match) {
+        const slug = match[1];
+        const rpg = catRpgData.find(r => toSlug(r.name) === slug);
+        if (rpg) abrirDetalheRpg(rpg.name, true);
+      } else if (rpgModalOpen) {
+        fecharDetalheRpg(true);
+      }
+    });
+
+    <%
+    if (typeof initialRpg !== 'undefined') {
+    %>
+    document.addEventListener('DOMContentLoaded', function() {
+      abrirDetalheRpg('<%= initialRpg %>', true);
+    });
+    <%
+    }
+    %>
 
     function filtrarCatalogo() {
       const q = document.getElementById('cat-search').value.toLowerCase().trim();
