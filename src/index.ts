@@ -60,6 +60,9 @@ app.get('/rpg/:slug', function(req, res, next) {
         ...data,
         metaTitle: 'RPG não encontrado | Rpflix',
         metaDescription: 'O RPG que você procura não existe ou foi removido.',
+        canonicalUrl: `/rpg/${slug}`,
+        ogImage: '',
+        ogUrl: `/rpg/${slug}`,
       })
       return
     }
