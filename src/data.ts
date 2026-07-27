@@ -207,7 +207,7 @@ function verifyPassword(password: string, stored: string): boolean {
   return hash === verify
 }
 
-export async function registerUser(username: string, password: string, contact?: string): Promise<{ user: User; token: string } | { error: string }> {
+export async function registerUser(username: string, password: string, contact?: string, avatar?: string): Promise<{ user: User; token: string } | { error: string }> {
   const existing = await UserModel.findOne({ username })
   if (existing) return { error: 'Usuário já existe.' }
 
@@ -219,6 +219,7 @@ export async function registerUser(username: string, password: string, contact?:
     passwordHash: hashPassword(password),
     role: isFirst ? 'admin' : 'user',
     contact: contact || undefined,
+    avatar: avatar || undefined,
   })
 
   const token = randomBytes(32).toString('hex')
@@ -260,6 +261,48 @@ export async function updateProfile(userId: string, data: { bio?: string; avatar
   if (data.avatar !== undefined) user.avatar = data.avatar
   await user.save()
   return userFromDoc(user)
+}
+
+export interface RpgRating {
+  rpg: RPG
+  avgRating: number
+  reviewCount: number
+  bayesianAvg: number
+}
+
+export async function getRpgRatings(): Promise<RpgRating[]> {
+  const [reviews, rpgs] = await Promise.all([
+    ReviewModel.find({ status: 'approved' }),
+    getRpgs(),
+  ])
+
+  const stats: Record<string, { sum: number; count: number }> = {}
+
+  for (const review of reviews) {
+    const name = review.rpgName
+    if (!stats[name]) stats[name] = { sum: 0, count: 0 }
+    stats[name].sum += review.rating
+    stats[name].count++
+  }
+
+  const m = 20
+  const C = 3.5
+
+  const results: RpgRating[] = rpgs.map(rpg => {
+    const s = stats[rpg.name]
+    const count = s?.count || 0
+    const avg = count > 0 ? s.sum / count : 0
+    const bayesianAvg = (avg * count + m * C) / (count + m)
+    return { rpg, avgRating: avg, reviewCount: count, bayesianAvg }
+  })
+
+  results.sort((a, b) => {
+    const diff = b.bayesianAvg - a.bayesianAvg
+    if (diff !== 0) return diff
+    return b.reviewCount - a.reviewCount
+  })
+
+  return results
 }
 
 export async function logoutUser(token: string): Promise<void> {

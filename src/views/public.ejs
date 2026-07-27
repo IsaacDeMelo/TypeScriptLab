@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <meta name="google-site-verification" content="google-site-verification=qq3GIeIM4PDClbj844g722TJnrQmasVoUc8VWK6uD7w" />
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Honor - Rating | Catálogo</title>
@@ -318,11 +319,30 @@
       <div class="flex space-x-4 overflow-x-auto px-5 no-scrollbar">
         
         <% rpgs.forEach(rpg => { %>
-        <button onclick="abrirDetalheRpg('<%= rpg.name %>')" class="flex flex-col items-center space-y-1.5 flex-shrink-0 focus:outline-none group">
+        <button onclick="abrirDetalheRpg('<%= rpg.name %>')" class="flex flex-col items-center space-y-1 flex-shrink-0 focus:outline-none group">
           <div class="w-16 h-16 rounded-full p-0.5 overflow-hidden transition-all duration-300 group-hover:scale-105" style="box-shadow: 0 0 0 2px var(--accent-glow); background: var(--bg-card);">
             <img src="<%= rpg.image %>" class="w-full h-full object-cover rounded-full" alt="<%= rpg.name %>">
           </div>
           <span style="color: var(--text-secondary);" class="text-[11px] font-medium truncate w-16 text-center group-hover:text-white transition"><%= rpg.name %></span>
+          <% const sr = rpgRatings.find(r => r.rpg.name === rpg.name) %>
+          <div class="flex items-center gap-[1px]">
+            <% if (sr && sr.reviewCount > 0) { %>
+              <% for (let i = 1; i <= 5; i++) { %>
+                <% if (i <= Math.floor(sr.avgRating)) { %>
+                  <i class="fas fa-star" style="color: var(--star); font-size: 6px;"></i>
+                <% } else if (i === Math.ceil(sr.avgRating) && sr.avgRating % 1 !== 0) { %>
+                  <i class="fas fa-star-half-alt" style="color: var(--star); font-size: 6px;"></i>
+                <% } else { %>
+                  <i class="far fa-star" style="color: var(--text-muted); font-size: 6px;"></i>
+                <% } %>
+              <% } %>
+              <span class="text-[8px] ml-0.5 font-semibold" style="color: var(--text-muted);"><%= sr.reviewCount %></span>
+            <% } else { %>
+              <% for (let i = 1; i <= 5; i++) { %>
+                <i class="fa-regular fa-star" style="color: var(--text-muted); font-size: 6px;"></i>
+              <% } %>
+            <% } %>
+          </div>
         </button>
         <% }) %>
 
@@ -360,7 +380,7 @@
             const avatarUser = users.find(u => u.username === review.username);
             const hasAvatar = avatarUser && avatarUser.avatar;
             %>
-            <div onclick="verPerfil('<%= review.username %>')" class="w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs overflow-hidden shrink-0 cursor-pointer" style="background: var(--accent-dim); border: 1px solid var(--border-accent); color: var(--accent);">
+            <div onclick="verPerfil('<%= review.username %>')" class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm overflow-hidden shrink-0 cursor-pointer" style="background: var(--accent-dim); border: 1px solid var(--border-accent); color: var(--accent);">
               <% if (hasAvatar) { %>
                 <img src="<%= avatarUser.avatar %>" class="w-full h-full object-cover" alt="">
               <% } else { %>
@@ -415,7 +435,7 @@
       </button>
 
       <button id="btn-user" onclick="abrirPerfil()" class="hidden flex flex-col items-center focus:outline-none transition group" style="color: var(--accent);">
-        <div class="w-5 h-5 rounded-full flex items-center justify-center font-bold text-white text-[9px] shadow-md overflow-hidden" style="background: var(--accent);">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-xs shadow-md overflow-hidden" style="background: var(--accent);">
           <img id="user-avatar-img" class="hidden w-full h-full object-cover" src="" alt="">
           <span id="user-avatar-letter">U</span>
         </div>
@@ -573,6 +593,19 @@
           </div>
         </div>
         <form id="form-registro" onsubmit="fazerRegistro(event)" class="p-5 space-y-4">
+          <div class="flex items-center gap-3 pb-2">
+            <div id="reg-avatar-preview" class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-base overflow-hidden shrink-0" style="background: var(--accent-dim); border: 2px dashed var(--border-accent); color: var(--accent);">
+              <i class="fa-solid fa-camera text-sm"></i>
+            </div>
+            <div class="flex-1">
+              <label class="block text-xs font-bold tracking-wide mb-1" style="color: var(--text-secondary);">Foto do Perfil <span style="color: var(--text-muted); font-weight: 400;">(opcional)</span></label>
+              <label class="cursor-pointer inline-block px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all active:scale-[0.97]" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-secondary);">
+                <i class="fa-solid fa-upload mr-1"></i>Escolher
+                <input type="file" id="reg-avatar" accept=".jpg,.jpeg,.png,.webp,.gif" class="hidden" onchange="previewRegAvatar(this)">
+              </label>
+              <span id="reg-file-name" class="text-[9px] ml-2" style="color: var(--text-muted);">Nenhum</span>
+            </div>
+          </div>
           <div class="space-y-1.5">
             <label class="block text-xs font-bold tracking-wide" style="color: var(--text-secondary);">Usuário</label>
             <input type="text" id="reg-username" required minlength="3" class="w-full rounded-2xl p-3 text-sm focus:outline-none transition-all" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);" placeholder="Mínimo de 3 caracteres">
@@ -686,6 +719,32 @@
             </div>
           </div>
 
+          <!-- TOP 10 MAIS BEM AVALIADOS -->
+          <div class="cat-section mb-7 pb-5 border-b" style="border-color: var(--border);">
+            <h3 class="cat-section-title text-base font-title font-bold mb-4 flex items-center gap-2" style="color: var(--accent);">
+              <i class="fa-solid fa-trophy" style="font-size: 12px;"></i> Top 10 Mais Bem Avaliados
+            </h3>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+              <% topRpgs.forEach((rating, index) => { %>
+              <div onclick="selecionarRpgCatalogo('<%= rating.rpg.name %>', this)" class="cat-card rounded-xl overflow-hidden border" data-nome="<%= rating.rpg.name %>" data-genre="<%= rating.rpg.genre %>" data-owner="<%= rating.rpg.owner %>" data-desc="<%= rating.rpg.description.substring(0, 80) %>" style="background: var(--bg-card); border-color: var(--border); aspect-ratio: 2/3;">
+                <img src="<%= rating.rpg.image %>" class="w-full h-full object-cover" alt="<%= rating.rpg.name %>">
+                <span class="absolute top-1.5 left-1.5 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold z-10 shadow-lg border-2" style="background: <%= index < 3 ? 'var(--accent)' : 'rgba(0,0,0,0.7)' %>; color: white; border-color: <%= index < 3 ? 'var(--accent)' : 'var(--border)' %>;"><%= index + 1 %></span>
+                <span class="cat-age-badge <%= rating.rpg.ageRating %>"><%= rating.rpg.ageRating === 'L' ? 'L' : rating.rpg.ageRating %></span>
+                <div class="cat-rating-badge absolute top-8 right-2 z-3 flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded" style="background: rgba(0,0,0,0.7); color: var(--star); backdrop-filter: blur(4px);<%= rating.reviewCount === 0 ? ' opacity:0.4;' : '' %>">
+                  <i class="fa-solid fa-star text-[7px]"></i>
+                  <%= rating.avgRating.toFixed(1) %>
+                </div>
+                <div class="cat-overlay"></div>
+                <div class="cat-label">
+                  <h4 class="font-title font-bold text-sm" style="color: white; text-shadow: 0 1px 4px rgba(0,0,0,0.8);"><%= rating.rpg.name %></h4>
+                  <p class="text-[10px] mt-0.5 truncate" style="color: rgba(255,255,255,0.6);"><%= rating.rpg.owner %></p>
+                  <p class="text-[9px] mt-1 leading-tight line-clamp-2" style="color: rgba(255,255,255,0.5);"><%= rating.rpg.description.substring(0, 90) %></p>
+                </div>
+              </div>
+              <% }) %>
+            </div>
+          </div>
+
           <div id="catalog-grid-container" class="space-y-8 pb-24">
             <%
             const generos = [...new Set(rpgs.map(r => r.genre))].sort((a, b) => a.localeCompare(b));
@@ -702,17 +761,15 @@
                 <% 
                 itens.forEach(rpg => { 
                   const rpgReviews = reviews.filter(r => r.rpg.name === rpg.name);
-                  const media = rpgReviews.length ? (rpgReviews.reduce((s, r) => s + r.rating, 0) / rpgReviews.length).toFixed(1) : null;
+                  const media = rpgReviews.length ? (rpgReviews.reduce((s, r) => s + r.rating, 0) / rpgReviews.length) : 0;
                 %>
                 <div onclick="selecionarRpgCatalogo('<%= rpg.name %>', this)" class="cat-card rounded-xl overflow-hidden border" data-nome="<%= rpg.name %>" data-genre="<%= rpg.genre %>" data-owner="<%= rpg.owner %>" data-desc="<%= rpg.description.substring(0, 80) %>" style="background: var(--bg-card); border-color: var(--border); aspect-ratio: 2/3;">
                   <img src="<%= rpg.image %>" class="w-full h-full object-cover<%= rpg.ageRating === '18' && rpg.blurImage ? ' cat-blur' : '' %>" alt="<%= rpg.name %>">
                   <span class="cat-age-badge <%= rpg.ageRating %>"><%= rpg.ageRating === 'L' ? 'L' : rpg.ageRating %></span>
-                  <% if (media) { %>
-                  <div class="cat-rating-badge absolute top-8 right-2 z-3 flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded" style="background: rgba(0,0,0,0.7); color: var(--star); backdrop-filter: blur(4px);">
+                  <div class="cat-rating-badge absolute top-8 right-2 z-3 flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded" style="background: rgba(0,0,0,0.7); color: var(--star); backdrop-filter: blur(4px);<%= rpgReviews.length === 0 ? ' opacity:0.4;' : '' %>">
                     <i class="fa-solid fa-star text-[7px]"></i>
-                    <%= media %>
+                    <%= media.toFixed(1) %>
                   </div>
-                  <% } %>
                   <div class="cat-overlay"></div>
                   <div class="cat-label">
                     <h4 class="font-title font-bold text-sm" style="color: white; text-shadow: 0 1px 4px rgba(0,0,0,0.8);"><%= rpg.name %></h4>
@@ -743,12 +800,19 @@
           </div>
         </div>
         <div class="p-5 space-y-4">
-          <div>
-            <h2 class="text-xl font-title font-bold" style="color: var(--text-primary);" id="detalhe-name"><%= rpgs[0].name %></h2>
-            <div class="flex items-center gap-3 mt-1">
-              <span class="text-xs" style="color: var(--text-muted);" id="detalhe-owner"><%= rpgs[0].owner %></span>
-              <span class="text-[10px] px-1.5 py-0.5 rounded font-bold" id="detalhe-age" style="background: rgba(234,179,8,0.2); color: #eab308;"><%= rpgs[0].ageRating %></span>
-              <span class="text-[10px]" style="color: var(--text-muted);" id="detalhe-year"><%= rpgs[0].year %></span>
+          <div class="flex items-start justify-between gap-4">
+            <div class="min-w-0 flex-1">
+              <h2 class="text-xl font-title font-bold" style="color: var(--text-primary);" id="detalhe-name"><%= rpgs[0].name %></h2>
+              <div class="flex items-center gap-3 mt-1">
+                <span class="text-xs" style="color: var(--text-muted);" id="detalhe-owner"><%= rpgs[0].owner %></span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded font-bold" id="detalhe-age" style="background: rgba(234,179,8,0.2); color: #eab308;"><%= rpgs[0].ageRating %></span>
+                <span class="text-[10px]" style="color: var(--text-muted);" id="detalhe-year"><%= rpgs[0].year %></span>
+              </div>
+            </div>
+            <div id="detalhe-rating" class="flex flex-col items-center shrink-0 rounded-2xl px-4 py-2 border" style="background: color-mix(in srgb, var(--bg-card) 60%, transparent); border-color: var(--border);">
+              <span class="text-2xl font-bold font-title leading-none" style="color: var(--star);" id="detalhe-rating-value">—</span>
+              <div id="detalhe-rating-stars" class="flex items-center gap-0.5 mt-0.5"></div>
+              <span class="text-[9px] mt-0.5" style="color: var(--text-muted);" id="detalhe-rating-count"></span>
             </div>
           </div>
           <p class="text-xs leading-relaxed" style="color: var(--text-secondary);" id="detalhe-desc"><%= rpgs[0].description %></p>
@@ -1351,6 +1415,38 @@
         tagsContainer.innerHTML = '';
         tagsContainer.classList.add('hidden');
       }
+      // Preencher nota em destaque
+      const allRevs = <%- JSON.stringify(reviews) %>;
+      const rpgRevs = allRevs.filter(r => r.rpg.name === nome);
+      const count = rpgRevs.length;
+      const avg = count ? (rpgRevs.reduce((s, r) => s + r.rating, 0) / count) : 0;
+      const ratingValue = document.getElementById('detalhe-rating-value');
+      const ratingStars = document.getElementById('detalhe-rating-stars');
+      const ratingCount = document.getElementById('detalhe-rating-count');
+      if (count > 0) {
+        ratingValue.textContent = avg.toFixed(1);
+        ratingStars.innerHTML = '';
+        for (let i = 1; i <= 5; i++) {
+          const star = document.createElement('i');
+          if (i <= Math.floor(avg)) star.className = 'fas fa-star';
+          else if (i === Math.ceil(avg) && avg % 1 !== 0) star.className = 'fas fa-star-half-alt';
+          else star.className = 'far fa-star';
+          star.style.cssText = 'color:var(--star);font-size:9px;';
+          ratingStars.appendChild(star);
+        }
+        ratingCount.textContent = `${count} avaliação${count !== 1 ? 'ões' : ''}`;
+      } else {
+        ratingValue.textContent = '—';
+        ratingStars.innerHTML = '';
+        for (let i = 1; i <= 5; i++) {
+          const star = document.createElement('i');
+          star.className = 'fa-regular fa-star';
+          star.style.cssText = 'color:var(--text-muted);font-size:9px;opacity:0.4;';
+          ratingStars.appendChild(star);
+        }
+        ratingCount.textContent = 'Sem avaliações';
+      }
+
       const linkEl = document.getElementById('detalhe-link');
       if (rpg.link) { linkEl.href = rpg.link; linkEl.style.opacity = '1'; linkEl.style.pointerEvents = 'auto'; }
       else { linkEl.href = '#'; linkEl.style.opacity = '0.5'; linkEl.style.pointerEvents = 'none'; }
@@ -1359,7 +1455,6 @@
       else { waEl.href = '#'; waEl.style.opacity = '0.5'; waEl.style.pointerEvents = 'none'; }
 
       // Preencher críticas deste RPG
-      const allRevs = <%- JSON.stringify(reviews) %>;
       const revs = allRevs.filter(r => r.rpg.name === nome);
       const list = document.getElementById('detalhe-reviews-list');
       const allUsers = <%- JSON.stringify(users) %>;
@@ -1371,7 +1466,7 @@
           return `
           <div class="detalhe-review-card rounded-xl p-3 border" style="background:color-mix(in srgb, var(--bg-card) 50%, transparent);border-color:var(--border);">
             <div class="flex items-center gap-2 mb-1">
-              <div onclick="verPerfil('${r.username}')" class="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold overflow-hidden shrink-0 cursor-pointer" style="background:var(--accent-dim);color:var(--accent);">
+              <div onclick="verPerfil('${r.username}')" class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold overflow-hidden shrink-0 cursor-pointer" style="background:var(--accent-dim);color:var(--accent);">
                 ${avatar ? `<img src="${avatar}" class="w-full h-full object-cover">` : initial}
               </div>
               <span onclick="verPerfil('${r.username}')" class="text-[11px] font-semibold cursor-pointer hover:underline" style="color:var(--text-secondary);">${r.username}</span>
@@ -1812,16 +1907,17 @@
           <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
             ${itens.map(rpg => {
               const revs = catReviewData.filter(r => r.rpg.name === rpg.name);
-              const media = revs.length ? (revs.reduce((s, r) => s + r.rating, 0) / revs.length).toFixed(1) : null;
+              const media = revs.length ? (revs.reduce((s, r) => s + r.rating, 0) / revs.length) : 0;
+              const noRevs = revs.length === 0;
               const blurClass = rpg.ageRating === '18' && rpg.blurImage ? ' cat-blur' : '';
               const desc = rpg.description ? rpg.description.substring(0, 90).replace(/"/g, '&quot;') : '';
               const owner = (rpg.owner || '').replace(/"/g, '&quot;');
               return `<div onclick="selecionarRpgCatalogo('${rpg.name.replace(/'/g, "\\'")}', this)" class="cat-card rounded-xl overflow-hidden border" data-nome="${rpg.name.replace(/"/g, '&quot;')}" data-genre="${rpg.genre.replace(/"/g, '&quot;')}" data-owner="${owner}" data-desc="${desc}" style="background: var(--bg-card); border-color: var(--border); aspect-ratio: 2/3;">
                 <img src="${rpg.image}" class="w-full h-full object-cover${blurClass}" alt="${rpg.name.replace(/"/g, '&quot;')}">
                 <span class="cat-age-badge ${rpg.ageRating}">${rpg.ageRating === 'L' ? 'L' : rpg.ageRating}</span>
-                ${media ? `<div class="cat-rating-badge absolute top-8 right-2 z-3 flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded" style="background:rgba(0,0,0,0.7);color:${starColor};backdrop-filter:blur(4px);">
-                  <i class="fa-solid fa-star text-[7px]"></i> ${media}
-                </div>` : ''}
+                <div class="cat-rating-badge absolute top-8 right-2 z-3 flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded" style="background:rgba(0,0,0,0.7);color:${starColor};backdrop-filter:blur(4px);${noRevs ? 'opacity:0.4;' : ''}">
+                  <i class="fa-solid fa-star text-[7px]"></i> ${media.toFixed(1)}
+                </div>
                 <div class="cat-overlay"></div>
                 <div class="cat-label">
                   <h4 class="font-title font-bold text-sm" style="color: white; text-shadow: 0 1px 4px rgba(0,0,0,0.8);">${rpg.name.replace(/"/g, '&quot;')}</h4>
@@ -1868,19 +1964,17 @@
       document.querySelectorAll('.cat-card').forEach(card => {
         const nome = card.dataset.nome;
         const revs = catReviewData.filter(r => r.rpg.name === nome);
-        const media = revs.length ? (revs.reduce((s, r) => s + r.rating, 0) / revs.length).toFixed(1) : null;
+        const media = revs.length ? (revs.reduce((s, r) => s + r.rating, 0) / revs.length) : 0;
+        const noRevs = revs.length === 0;
         let badge = card.querySelector('.cat-rating-badge');
-        if (media) {
-          if (!badge) {
-            badge = document.createElement('div');
-            badge.className = 'cat-rating-badge absolute top-8 right-2 z-3 flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded';
-            badge.style.cssText = 'background:rgba(0,0,0,0.7);color:var(--star);backdrop-filter:blur(4px);';
-            card.appendChild(badge);
-          }
-          badge.innerHTML = '<i class="fa-solid fa-star text-[7px]"></i> ' + media;
-        } else if (badge) {
-          badge.remove();
+        if (!badge) {
+          badge = document.createElement('div');
+          badge.className = 'cat-rating-badge absolute top-8 right-2 z-3 flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded';
+          badge.style.cssText = 'background:rgba(0,0,0,0.7);color:var(--star);backdrop-filter:blur(4px);';
+          card.appendChild(badge);
         }
+        badge.style.opacity = noRevs ? '0.4' : '1';
+        badge.innerHTML = '<i class="fa-solid fa-star text-[7px]"></i> ' + media.toFixed(1);
       });
     }
 
@@ -2034,18 +2128,38 @@
       } catch { mostrarErro('login-error', 'Erro ao conectar com o servidor.'); }
     }
 
+    function previewRegAvatar(input) {
+      const file = input.files[0];
+      if (!file) return;
+      document.getElementById('reg-file-name').textContent = file.name;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const preview = document.getElementById('reg-avatar-preview');
+        preview.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`;
+      };
+      reader.readAsDataURL(file);
+    }
+
     async function fazerRegistro(event) {
       event.preventDefault();
       esconderErro('reg-error');
       try {
-        const contact = document.getElementById('reg-contact').value.trim() || undefined;
-        const res = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: document.getElementById('reg-username').value, password: document.getElementById('reg-password').value, contact }) });
+        const formData = new FormData();
+        formData.append('username', document.getElementById('reg-username').value);
+        formData.append('password', document.getElementById('reg-password').value);
+        const contact = document.getElementById('reg-contact').value.trim();
+        if (contact) formData.append('contact', contact);
+        const avatarFile = document.getElementById('reg-avatar').files[0];
+        if (avatarFile) formData.append('avatar', avatarFile);
+        const res = await fetch('/api/auth/register', { method: 'POST', body: formData });
         const data = await res.json();
         if (!res.ok) { mostrarErro('reg-error', data.error); return; }
         saveSession(data.token, data.user);
         atualizarNavbar();
         fecharModalRegistro();
         document.getElementById('form-registro').reset();
+        document.getElementById('reg-avatar-preview').innerHTML = '<i class="fa-solid fa-camera text-sm"></i>';
+        document.getElementById('reg-file-name').textContent = 'Nenhum';
         try {
           const usersRes = await fetch('/api/auth/users');
           if (usersRes.ok) catUsersData = await usersRes.json();
@@ -2180,7 +2294,7 @@
           </div>
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-2.5">
-              <div onclick="verPerfil('${review.username}')" class="w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs cursor-pointer" style="background:color-mix(in srgb, ${accent} 15%, transparent);border:1px solid color-mix(in srgb, ${accent} 30%, transparent);color:${accent};">${review.username.charAt(0).toUpperCase()}</div>
+              <div onclick="verPerfil('${review.username}')" class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm cursor-pointer" style="background:color-mix(in srgb, ${accent} 15%, transparent);border:1px solid color-mix(in srgb, ${accent} 30%, transparent);color:${accent};">${review.username.charAt(0).toUpperCase()}</div>
               <div>
                 <h4 onclick="verPerfil('${review.username}')" class="font-bold text-xs cursor-pointer hover:underline" style="color:${textSecondary};">${review.username}</h4>
                 <span class="text-[9px]" style="color:${textMuted};">${review.timeAgo}</span>

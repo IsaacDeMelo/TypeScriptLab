@@ -22,32 +22,42 @@ router.get('/users', async (_req: Request, res: Response) => {
   res.json(await getUsers())
 })
 
-router.post('/register', async (req: Request, res: Response) => {
-  const { username, password, contact } = req.body
+router.post('/register', (req: Request, res: Response) => {
+  upload.single('avatar')(req, res, async (err) => {
+    if (err) { res.status(400).json({ error: 'Erro no upload da imagem.' }); return }
 
-  if (!username || !password) {
-    res.status(400).json({ error: 'Usuário e senha são obrigatórios.' })
-    return
-  }
+    const { username, password, contact } = req.body
 
-  if (username.length < 3) {
-    res.status(400).json({ error: 'Usuário deve ter pelo menos 3 caracteres.' })
-    return
-  }
+    if (!username || !password) {
+      res.status(400).json({ error: 'Usuário e senha são obrigatórios.' })
+      return
+    }
 
-  if (password.length < 4) {
-    res.status(400).json({ error: 'Senha deve ter pelo menos 4 caracteres.' })
-    return
-  }
+    if (username.length < 3) {
+      res.status(400).json({ error: 'Usuário deve ter pelo menos 3 caracteres.' })
+      return
+    }
 
-  const result = await registerUser(username, password, contact)
+    if (password.length < 4) {
+      res.status(400).json({ error: 'Senha deve ter pelo menos 4 caracteres.' })
+      return
+    }
 
-  if ('error' in result) {
-    res.status(400).json({ error: result.error })
-    return
-  }
+    let avatarUrl: string | undefined
+    if (req.file) {
+      try { avatarUrl = await uploadToCloudinary(req.file.buffer) }
+      catch { res.status(500).json({ error: 'Erro ao enviar avatar.' }); return }
+    }
 
-  res.status(201).json({ user: result.user, token: result.token })
+    const result = await registerUser(username, password, contact, avatarUrl)
+
+    if ('error' in result) {
+      res.status(400).json({ error: result.error })
+      return
+    }
+
+    res.status(201).json({ user: result.user, token: result.token })
+  })
 })
 
 router.post('/login', async (req: Request, res: Response) => {
