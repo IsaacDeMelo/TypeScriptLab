@@ -1,17 +1,19 @@
 import { Router, Request, Response } from 'express'
-import { getRpgs, getReviews, getUsers, getRpgRatings } from '../data'
+import { getRpgs, getReviews, getRecentReviews, getPendingReviews, getUsers, getRpgRatings } from '../data'
 
 export async function getPageData() {
-  const [allReviews, rpgs, users, rpgRatings] = await Promise.all([
-    getReviews(true),
+  const [feedReviews, allReviews, pendingReviews, rpgs, users, rpgRatings] = await Promise.all([
+    getRecentReviews(20),
+    getReviews(),
+    getPendingReviews(),
     getRpgs(),
     getUsers(),
     getRpgRatings(),
   ])
   return {
     rpgs,
-    reviews: allReviews.filter(r => r.status === 'approved'),
-    pendingReviews: allReviews.filter(r => r.status === 'pending'),
+    reviews: feedReviews,
+    pendingReviews,
     allReviews,
     users,
     rpgRatings,

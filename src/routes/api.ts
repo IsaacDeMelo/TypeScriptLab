@@ -2,7 +2,8 @@ import { Router, Request, Response } from 'express'
 import multer from 'multer'
 import { v2 as cloudinary } from 'cloudinary'
 import { Readable } from 'stream'
-import { getReviews, getPendingReviews, addReview, approveReview, rejectReview, deleteReviewById, addRpg, updateRpg, deleteRpg, getRpgs, getRpgByName, getUserByToken, toggleFeaturedRpg } from '../data'
+import { getReviews, getRecentReviews, getPendingReviews, addReview, approveReview, rejectReview, deleteReviewById, addRpg, updateRpg, deleteRpg, getRpgs, getRpgByName, getUserByToken, toggleFeaturedRpg, getRpgRatings, attachRpgs } from '../data'
+import ReviewModel from '../models/Review'
 import { ReviewInput, RPG } from '../types'
 
 const upload = multer({
@@ -292,6 +293,17 @@ router.delete('/rpgs/:name', async (req: Request, res: Response) => {
   const ok = await deleteRpg(String(req.params.name))
   if (!ok) { res.status(404).json({ error: 'Sistema não encontrado.' }); return }
   res.json({ message: 'Sistema excluído.' })
+})
+
+router.get('/rpgs/ratings', async (_req: Request, res: Response) => {
+  res.json(await getRpgRatings())
+})
+
+router.get('/reviews/feed', async (req: Request, res: Response) => {
+  const limit = Math.min(parseInt(req.query.limit as string) || 20, 100)
+  const skip = parseInt(req.query.skip as string) || 0
+  const docs = await ReviewModel.find({ status: 'approved' }).sort({ createdAt: -1 }).skip(skip).limit(limit)
+  res.json(await attachRpgs(docs))
 })
 
 export default router

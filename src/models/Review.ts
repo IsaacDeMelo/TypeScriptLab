@@ -24,4 +24,7 @@ const reviewSchema = new Schema<IReview>({
   createdAt: { type: Date, default: Date.now },
 })
 
+reviewSchema.index({ rpgName: 1 })
+reviewSchema.index({ status: 1, createdAt: -1 })
+
 export default model<IReview>('Review', reviewSchema)

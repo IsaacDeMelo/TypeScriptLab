@@ -33,6 +33,11 @@ router.post('/register', (req: Request, res: Response) => {
       return
     }
 
+    if (!contact) {
+      res.status(400).json({ error: 'Contato (WhatsApp) é obrigatório.' })
+      return
+    }
+
     if (username.length < 3) {
       res.status(400).json({ error: 'Usuário deve ter pelo menos 3 caracteres.' })
       return

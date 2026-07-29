@@ -101,25 +101,31 @@ export async function getRpgs(): Promise<RPG[]> {
   return docs.map(rpgFromDoc)
 }
 
-export async function getReviews(all?: boolean): Promise<Review[]> {
-  const filter: Record<string, any> = all ? {} : { status: { $ne: 'rejected' } }
-  const docs = await ReviewModel.find(filter).sort({ createdAt: -1 })
-  const results: Review[] = []
-  for (const doc of docs) {
-    const rpg = await resolveRpg(doc.rpgName) || await firstRpg() || {} as RPG
-    results.push(reviewFromDoc(doc, rpg!))
+export async function attachRpgs(docs: any[]): Promise<Review[]> {
+  const names = [...new Set(docs.map(d => d.rpgName))]
+  const rpgDocs = await Promise.all(names.map(n => Rpg.findOne({ name: n })))
+  const rpgMap: Record<string, RPG> = {}
+  for (const doc of rpgDocs) {
+    if (doc) rpgMap[doc.name] = rpgFromDoc(doc)
   }
-  return results
+  const fallback = rpgDocs.find(Boolean) ? rpgMap[rpgDocs.find(Boolean)!.name] : undefined
+  return docs.map(d => reviewFromDoc(d, rpgMap[d.rpgName] || fallback || {} as RPG))
+}
+
+export async function getReviews(all?: boolean): Promise<Review[]> {
+  const filter: Record<string, any> = all ? {} : { status: 'approved' }
+  const docs = await ReviewModel.find(filter).sort({ createdAt: -1 })
+  return attachRpgs(docs)
+}
+
+export async function getRecentReviews(limit: number = 20): Promise<Review[]> {
+  const docs = await ReviewModel.find({ status: 'approved' }).sort({ createdAt: -1 }).limit(limit)
+  return attachRpgs(docs)
 }
 
 export async function getPendingReviews(): Promise<Review[]> {
   const docs = await ReviewModel.find({ status: 'pending' }).sort({ createdAt: -1 })
-  const results: Review[] = []
-  for (const doc of docs) {
-    const rpg = await resolveRpg(doc.rpgName) || await firstRpg() || {} as RPG
-    results.push(reviewFromDoc(doc, rpg!))
-  }
-  return results
+  return attachRpgs(docs)
 }
 
 export async function addReview(input: ReviewInput, username: string): Promise<Review> {
