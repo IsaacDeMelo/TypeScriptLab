@@ -216,6 +216,19 @@ const seoCount = seoRevs.length;
     #modal-catalogo.catalogo-aberto .cat-section:nth-child(3) .cat-card:nth-child(2) { animation-delay: 0.33s; }
     #modal-catalogo.catalogo-aberto .cat-section:nth-child(4) .cat-card:nth-child(1) { animation-delay: 0.36s; }
 
+    #cat-top10 {
+      transition: opacity 0.35s ease, max-height 0.5s ease, margin 0.4s ease, padding 0.4s ease;
+      overflow: hidden;
+    }
+    #cat-top10.cat-top10-hidden {
+      opacity: 0;
+      max-height: 0;
+      margin: 0;
+      padding: 0;
+      border: none;
+      pointer-events: none;
+    }
+
     .cat-card {
       transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease;
       cursor: pointer;
@@ -770,7 +783,7 @@ const seoCount = seoRevs.length;
           </div>
 
           <!-- TOP 10 MAIS BEM AVALIADOS -->
-          <div class="cat-section mb-7 pb-5 border-b" style="border-color: var(--border);">
+          <div id="cat-top10" class="cat-section mb-7 pb-5 border-b" style="border-color: var(--border);">
             <h3 class="cat-section-title text-base font-title font-bold mb-4 flex items-center gap-2" style="color: var(--accent);">
               <i class="fa-solid fa-trophy" style="font-size: 12px;"></i> Top 10 Mais Bem Avaliados
             </h3>
@@ -1962,7 +1975,10 @@ const seoCount = seoRevs.length;
 
     function filtrarCatalogo() {
       const q = document.getElementById('cat-search').value.toLowerCase().trim();
+      const top10 = document.getElementById('cat-top10');
+      if (top10) top10.classList.toggle('cat-top10-hidden', !!q);
       document.querySelectorAll('#catalog-grid-container .cat-section').forEach(section => {
+        if (section === top10) return;
         let visible = 0;
         section.querySelectorAll('.cat-card').forEach(card => {
           const nome = card.dataset.nome.toLowerCase();
