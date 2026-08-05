@@ -13,6 +13,10 @@ export interface IRpg {
   ageRating: string
   featured?: boolean
   blurImage?: boolean
+  limitedEdition?: boolean
+  slotsTotal?: number
+  slotsFilled?: number
+  closed?: boolean
   tags?: { name: string; weight: number }[]
 }
 
@@ -31,6 +35,10 @@ const rpgSchema = new Schema<IRpg>({
   ageRating: { type: String, required: true },
   featured: { type: Boolean, default: false },
   blurImage: { type: Boolean, default: false },
+  limitedEdition: { type: Boolean, default: false },
+  slotsTotal: Number,
+  slotsFilled: { type: Number, default: 0 },
+  closed: { type: Boolean, default: false },
   tags: { type: [tagSchema], default: [] },
 })
 

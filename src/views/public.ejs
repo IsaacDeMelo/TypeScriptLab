@@ -724,10 +724,11 @@ const seoCount = seoRevs.length;
     <div id="modal-catalogo" class="modal-hidden fixed inset-0 overflow-y-auto" style="background: var(--bg-primary); z-index: 30;">
       <div class="min-h-screen">
         <%
-        const featRpgs = rpgs.filter(r => r.featured);
-        const heroRpgs = featRpgs.length ? featRpgs : [rpgs[0]];
+        const heroLimited = rpgs.filter(r => r.limitedEdition);
+        const heroFeatured = rpgs.filter(r => r.featured && !r.limitedEdition);
+        const heroRpgs = heroLimited.concat(heroFeatured).length ? heroLimited.concat(heroFeatured) : (rpgs[0] ? [rpgs[0]] : []);
         %>
-        <div id="cat-hero-container" class="relative h-[55vh] min-h-[360px] overflow-hidden" onmouseenter="pausarHero()" onmouseleave="retomarHero()">
+        <div id="cat-hero-container" class="relative h-[55vh] min-h-[360px] overflow-hidden cursor-pointer" onmouseenter="pausarHero()" onmouseleave="retomarHero()" onclick="selecionarRpgCatalogo(heroRpgs[heroIndex] ? heroRpgs[heroIndex].name : '', this)">
           <div id="cat-banner" class="cat-banner absolute inset-0 bg-cover bg-center" style="background-image: url('<%= heroRpgs[0].banner %>'); transition: opacity 0.3s ease;"></div>
           <div class="absolute inset-0" style="background: linear-gradient(to top, var(--bg-primary) 0%, transparent 55%, rgba(0,0,0,0.5) 100%);"></div>
           <div class="absolute inset-0" style="background: linear-gradient(to right, rgba(0,0,0,0.5) 0%, transparent 100%);"></div>
@@ -736,6 +737,9 @@ const seoCount = seoRevs.length;
             <div class="flex items-center gap-3 mb-3">
               <span id="cat-genre" class="text-[10px] font-bold uppercase tracking-[0.15em] px-2.5 py-1 rounded" style="background: var(--accent); color: white;"><%= heroRpgs[0].genre %></span>
               <span id="cat-year" class="text-[10px] font-medium" style="color: rgba(255,255,255,0.4);"><%= heroRpgs[0].year %></span>
+              <span id="cat-limited-badge" class="<%= heroRpgs[0].limitedEdition ? 'flex' : 'hidden' %> text-[9px] font-bold uppercase tracking-[0.15em] px-2.5 py-1 rounded items-center gap-1" style="background: #f59e0b; color: #000;">
+                <i class="fa-solid fa-lock text-[8px]"></i> Edição Limitada
+              </span>
             </div>
             <h2 id="cat-title" class="text-4xl md:text-5xl font-title font-bold mb-3" style="color: white; text-shadow: 0 2px 20px rgba(0,0,0,0.7);"><%= heroRpgs[0].name %></h2>
             <p id="cat-desc" class="text-sm max-w-xl leading-relaxed mb-1 line-clamp-3" style="color: rgba(255,255,255,0.8); text-shadow: 0 1px 8px rgba(0,0,0,0.6); display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden;"><%= heroRpgs[0].description %></p>
@@ -750,7 +754,7 @@ const seoCount = seoRevs.length;
           </div>
           <% } %>
 
-          <button onclick="abrirFeed()" class="absolute top-5 right-5 w-10 h-10 rounded-full flex items-center justify-center text-white transition-all z-10 hover:bg-white/20 active:scale-90" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1);">
+          <button onclick="abrirFeed(event)" class="absolute top-5 right-5 w-10 h-10 rounded-full flex items-center justify-center text-white transition-all z-10 hover:bg-white/20 active:scale-90" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1);">
             <i class="fa-solid fa-comment-dots text-sm"></i>
           </button>
         </div>
@@ -801,6 +805,9 @@ const seoCount = seoRevs.length;
                 <div class="cat-label">
                   <h4 class="font-title font-bold text-sm" style="color: white; text-shadow: 0 1px 4px rgba(0,0,0,0.8);"><%= rating.rpg.name %></h4>
                   <p class="text-[10px] mt-0.5 truncate" style="color: rgba(255,255,255,0.6);"><%= rating.rpg.owner %></p>
+                  <% if (rating.rpg.limitedEdition) { %>
+                  <p class="text-[9px] mt-0.5 font-bold uppercase tracking-wider flex items-center gap-1" style="color: #f59e0b; text-shadow: 0 1px 4px rgba(0,0,0,0.8);"><i class="fa-solid fa-lock text-[7px]"></i> <%= rating.rpg.closed ? 'Vagas encerradas' : (rating.rpg.slotsTotal ? ((rating.rpg.slotsFilled || 0) + '/' + rating.rpg.slotsTotal + ' vagas') : 'Edição limitada') %></p>
+                  <% } %>
                   <p class="text-[9px] mt-1 leading-tight line-clamp-2" style="color: rgba(255,255,255,0.5);"><%= rating.rpg.description.substring(0, 90) %></p>
                 </div>
               </div>
@@ -825,6 +832,7 @@ const seoCount = seoRevs.length;
                 itens.forEach(rpg => { 
                   const rpgReviews = reviews.filter(r => r.rpg.name === rpg.name);
                   const media = rpgReviews.length ? (rpgReviews.reduce((s, r) => s + r.rating, 0) / rpgReviews.length) : 0;
+                  const limitedText = rpg.closed ? 'Vagas encerradas' : (rpg.slotsTotal ? ((rpg.slotsFilled || 0) + '/' + rpg.slotsTotal + ' vagas') : 'Edição limitada');
                 %>
                 <div onclick="selecionarRpgCatalogo('<%= rpg.name %>', this)" class="cat-card rounded-xl overflow-hidden border" data-nome="<%= rpg.name %>" data-genre="<%= rpg.genre %>" data-owner="<%= rpg.owner %>" data-desc="<%= rpg.description.substring(0, 80) %>" style="background: var(--bg-card); border-color: var(--border); aspect-ratio: 2/3;">
                   <img src="<%= rpg.image %>" class="w-full h-full object-cover<%= rpg.ageRating === '18' && rpg.blurImage ? ' cat-blur' : '' %>" alt="<%= rpg.name %>">
@@ -837,6 +845,9 @@ const seoCount = seoRevs.length;
                   <div class="cat-label">
                     <h4 class="font-title font-bold text-sm" style="color: white; text-shadow: 0 1px 4px rgba(0,0,0,0.8);"><%= rpg.name %></h4>
                     <p class="text-[10px] mt-0.5 truncate" style="color: rgba(255,255,255,0.6);"><%= rpg.owner %></p>
+                    <% if (rpg.limitedEdition) { %>
+                    <p class="text-[9px] mt-0.5 font-bold uppercase tracking-wider flex items-center gap-1" style="color: #f59e0b; text-shadow: 0 1px 4px rgba(0,0,0,0.8);"><i class="fa-solid fa-lock text-[7px]"></i> <%= limitedText %></p>
+                    <% } %>
                     <p class="text-[9px] mt-1 leading-tight line-clamp-2" style="color: rgba(255,255,255,0.5);"><%= rpg.description.substring(0, 90) %></p>
                   </div>
                 </div>
@@ -896,6 +907,13 @@ const seoCount = seoRevs.length;
             </div>
           </div>
           <p class="text-xs leading-relaxed" style="color: var(--text-secondary);" id="detalhe-desc"><%= detailRpg.description %></p>
+          <div id="detalhe-limited" class="<%= detailRpg.limitedEdition ? 'flex' : 'hidden' %> p-3 rounded-xl items-center gap-3" style="background: color-mix(in srgb, #f59e0b 10%, transparent); border: 1px solid color-mix(in srgb, #f59e0b 35%, transparent);">
+            <i class="fa-solid fa-lock text-base shrink-0" style="color: #f59e0b;"></i>
+            <div class="min-w-0">
+              <p class="text-[11px] font-bold" style="color: #f59e0b;" id="detalhe-limited-title"><%= detailRpg.closed ? 'Vagas encerradas' : (detailRpg.slotsTotal ? ('Vagas: ' + (detailRpg.slotsFilled || 0) + '/' + detailRpg.slotsTotal) : 'Edição Limitada') %></p>
+              <p class="text-[10px] mt-0.5" style="color: var(--text-secondary);" id="detalhe-limited-sub"><%= detailRpg.closed ? 'Este RPG está fechado para novas inscrições.' : (detailRpg.slotsTotal ? ((detailRpg.slotsTotal - (detailRpg.slotsFilled || 0)) + ' vaga' + ((detailRpg.slotsTotal - (detailRpg.slotsFilled || 0)) !== 1 ? 's' : '') + ' restante' + ((detailRpg.slotsTotal - (detailRpg.slotsFilled || 0)) !== 1 ? 's' : '') + '.') : 'RPG fechado com vagas limitadas.') %></p>
+            </div>
+          </div>
           <div id="detalhe-tags" class="flex flex-wrap gap-1.5">
             <% if (detailRpg.tags && detailRpg.tags.length) { %>
               <% detailRpg.tags.sort((a, b) => b.weight - a.weight).forEach(t => { %>
@@ -981,6 +999,21 @@ const seoCount = seoRevs.length;
               <span class="text-[10px] font-bold" style="color: var(--text-secondary);">Borrar imagem no catálogo</span>
             </label>
           </div>
+          <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Tipo de RPG *</label>
+            <select id="reg-tipo" onchange="toggleRegLimitedFields()" required class="w-full rounded-xl p-2.5 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);">
+              <option value="normal">Normal</option>
+              <option value="limited">Edição Limitada</option>
+            </select>
+          </div>
+          <div id="reg-limited-fields" class="hidden p-3 space-y-3 rounded-xl" style="background: color-mix(in srgb, #f59e0b 8%, transparent); border: 1px solid color-mix(in srgb, #f59e0b 30%, transparent);">
+            <p class="text-[9px] font-bold uppercase tracking-wider" style="color: #f59e0b;">Edição Limitada</p>
+            <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Total de Vagas</label><input type="number" id="reg-slots-total" min="1" class="w-full rounded-xl p-2.5 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);" placeholder="Ex: 5"></div>
+            <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Vagas Preenchidas</label><input type="number" id="reg-slots-filled" min="0" value="0" class="w-full rounded-xl p-2.5 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);" placeholder="Ex: 2"></div>
+            <label class="flex items-center gap-3 p-2 rounded-xl cursor-pointer" style="background: var(--bg-input); border: 1px solid var(--border);">
+              <input type="checkbox" id="reg-closed" class="w-4 h-4 rounded accent-red-600">
+              <span class="text-[10px] font-bold" style="color: var(--text-secondary);">Vagas encerradas (RPG fechado)</span>
+            </label>
+          </div>
           <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Imagem do Sistema *</label>
             <div class="rounded-xl overflow-hidden border cursor-pointer" style="background: var(--bg-input); border-color: var(--border);">
               <label class="flex items-center gap-3 p-3 cursor-pointer" style="color: var(--text-secondary);" for="reg-image">
@@ -1046,6 +1079,21 @@ const seoCount = seoRevs.length;
             <label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer" style="background: var(--bg-input); border: 1px solid var(--border);">
               <input type="checkbox" id="edit-blur" class="w-4 h-4 rounded accent-red-600">
               <span class="text-[10px] font-bold" style="color: var(--text-secondary);">Borrar imagem no catálogo</span>
+            </label>
+          </div>
+          <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Tipo de RPG</label>
+            <select id="edit-tipo" onchange="toggleEditLimitedFields()" class="w-full rounded-xl p-2.5 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);">
+              <option value="normal">Normal</option>
+              <option value="limited">Edição Limitada</option>
+            </select>
+          </div>
+          <div id="edit-limited-fields" class="hidden p-3 space-y-3 rounded-xl" style="background: color-mix(in srgb, #f59e0b 8%, transparent); border: 1px solid color-mix(in srgb, #f59e0b 30%, transparent);">
+            <p class="text-[9px] font-bold uppercase tracking-wider" style="color: #f59e0b;">Edição Limitada</p>
+            <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Total de Vagas</label><input type="number" id="edit-slots-total" min="1" class="w-full rounded-xl p-2.5 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);" placeholder="Ex: 5"></div>
+            <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Vagas Preenchidas</label><input type="number" id="edit-slots-filled" min="0" value="0" class="w-full rounded-xl p-2.5 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);" placeholder="Ex: 2"></div>
+            <label class="flex items-center gap-3 p-2 rounded-xl cursor-pointer" style="background: var(--bg-input); border: 1px solid var(--border);">
+              <input type="checkbox" id="edit-closed" class="w-4 h-4 rounded accent-red-600">
+              <span class="text-[10px] font-bold" style="color: var(--text-secondary);">Vagas encerradas (RPG fechado)</span>
             </label>
           </div>
           <div><label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Nova Imagem <span style="color: var(--text-muted);">(opcional)</span></label>
@@ -1383,7 +1431,8 @@ const seoCount = seoRevs.length;
       iniciarHero();
     }
 
-    function abrirFeed() {
+    function abrirFeed(e) {
+      if (e) e.stopPropagation();
       const modal = document.getElementById('modal-catalogo');
       modal.classList.remove('catalogo-aberto');
       setTimeout(() => {
@@ -1412,7 +1461,24 @@ const seoCount = seoRevs.length;
       document.getElementById('edit-blur-container').classList.toggle('hidden', age !== '18');
     }
 
-    let heroInterval, heroIndex = 0, heroPausado = false, heroTouchX = 0, heroSwipeInit = false, heroRpgs = <%- JSON.stringify(rpgs.filter(r => r.featured).length ? rpgs.filter(r => r.featured) : [rpgs[0]]) %>;
+    function toggleRegLimitedFields() {
+      const limited = document.getElementById('reg-tipo').value === 'limited';
+      document.getElementById('reg-limited-fields').classList.toggle('hidden', !limited);
+    }
+
+    function toggleEditLimitedFields() {
+      const limited = document.getElementById('edit-tipo').value === 'limited';
+      document.getElementById('edit-limited-fields').classList.toggle('hidden', !limited);
+    }
+
+    function computeHeroRpgs(rpgs) {
+      const limited = (rpgs || []).filter(r => r.limitedEdition);
+      const featured = (rpgs || []).filter(r => r.featured && !r.limitedEdition);
+      const combined = limited.concat(featured);
+      return combined.length ? combined : (rpgs && rpgs[0] ? [rpgs[0]] : []);
+    }
+
+    let heroInterval, heroIndex = 0, heroPausado = false, heroTouchX = 0, heroSwipeInit = false, heroRpgs = computeHeroRpgs(<%- JSON.stringify(rpgs) %>);
 
     function iniciarHero() {
       pararHero();
@@ -1445,6 +1511,8 @@ const seoCount = seoRevs.length;
       document.getElementById('cat-owner').textContent = `${rpg.owner} · ${rpg.year}`;
       document.getElementById('cat-genre').textContent = rpg.genre;
       document.getElementById('cat-year').textContent = rpg.year || '';
+      const limitedBadge = document.getElementById('cat-limited-badge');
+      if (limitedBadge) limitedBadge.classList.toggle('hidden', !rpg.limitedEdition);
       const dots = document.querySelectorAll('#hero-dots button');
       dots.forEach((d, i) => {
         d.style.background = i === index ? 'var(--accent)' : 'rgba(255,255,255,0.4)';
@@ -1508,8 +1576,7 @@ const seoCount = seoRevs.length;
 
     function abrirDetalheRpg(nome, fromPopstate) {
       const modal = document.getElementById('modal-detalhe');
-      const rpgs = <%- JSON.stringify(rpgs) %>;
-      const rpg = rpgs.find(r => r.name === nome);
+      const rpg = catRpgData.find(r => r.name === nome);
       if (!rpg) return;
 
       if (!fromPopstate) {
@@ -1528,6 +1595,23 @@ const seoCount = seoRevs.length;
       ageEl.style.background = rpg.ageRating === '18' ? 'rgba(0,0,0,0.8)' : rpg.ageRating === '16' ? 'rgba(239,68,68,0.3)' : rpg.ageRating === '14' ? 'rgba(251,146,60,0.3)' : 'rgba(234,179,8,0.2)';
       ageEl.style.color = rpg.ageRating === '18' ? '#fff' : rpg.ageRating === '16' ? '#ef4444' : rpg.ageRating === '14' ? '#fb923c' : '#eab308';
       document.getElementById('detalhe-desc').textContent = rpg.description;
+      const limitedBox = document.getElementById('detalhe-limited');
+      if (rpg.limitedEdition) {
+        limitedBox.classList.remove('hidden');
+        limitedBox.classList.add('flex');
+        const filled = rpg.slotsFilled || 0;
+        const total = rpg.slotsTotal;
+        const closed = rpg.closed || (total != null && filled >= total);
+        document.getElementById('detalhe-limited-title').textContent = closed ? 'Vagas encerradas' : (total != null ? `Vagas: ${filled}/${total}` : 'Edição Limitada');
+        document.getElementById('detalhe-limited-sub').textContent = rpg.closed
+          ? 'Este RPG está fechado para novas inscrições.'
+          : (total != null
+            ? `${total - filled} vaga${total - filled !== 1 ? 's' : ''} restante${total - filled !== 1 ? 's' : ''}.`
+            : 'RPG fechado com vagas limitadas.');
+      } else {
+        limitedBox.classList.add('hidden');
+        limitedBox.classList.remove('flex');
+      }
       const tagsContainer = document.getElementById('detalhe-tags');
       if (rpg.tags && rpg.tags.length) {
         tagsContainer.innerHTML = rpg.tags.sort((a, b) => b.weight - a.weight).map(t =>
@@ -1622,8 +1706,7 @@ const seoCount = seoRevs.length;
     function editarRpgDoDetalhe() {
       const nome = document.getElementById('btn-editar-detalhe').dataset.rpg;
       if (!nome) return;
-      const rpgs = <%- JSON.stringify(rpgs) %>;
-      const rpg = rpgs.find(r => r.name === nome);
+      const rpg = catRpgData.find(r => r.name === nome);
       if (!rpg) return;
       document.getElementById('edit-nome').value = rpg.name;
       document.getElementById('edit-owner').value = rpg.owner || '';
@@ -1632,6 +1715,11 @@ const seoCount = seoRevs.length;
       document.getElementById('edit-age').value = rpg.ageRating || 'L';
       document.getElementById('edit-blur').checked = rpg.blurImage === true;
       toggleEditBlurOption();
+      document.getElementById('edit-tipo').value = rpg.limitedEdition ? 'limited' : 'normal';
+      document.getElementById('edit-slots-total').value = rpg.slotsTotal || '';
+      document.getElementById('edit-slots-filled').value = rpg.slotsFilled || 0;
+      document.getElementById('edit-closed').checked = rpg.closed === true;
+      toggleEditLimitedFields();
       document.getElementById('edit-link').value = rpg.link || '';
       document.getElementById('edit-whatsapp').value = rpg.whatsapp || '';
       document.getElementById('edit-desc').value = rpg.description || '';
@@ -1708,6 +1796,11 @@ const seoCount = seoRevs.length;
       formData.append('ageRating', document.getElementById('edit-age').value);
       formData.append('blurImage', document.getElementById('edit-blur').checked);
       formData.append('description', document.getElementById('edit-desc').value.trim());
+      const editLimited = document.getElementById('edit-tipo').value === 'limited';
+      formData.append('limitedEdition', editLimited);
+      formData.append('slotsTotal', document.getElementById('edit-slots-total').value);
+      formData.append('slotsFilled', document.getElementById('edit-slots-filled').value);
+      formData.append('closed', document.getElementById('edit-closed').checked);
       const tagsStr = document.getElementById('edit-tags').value.trim();
       if (tagsStr) {
         const tags = tagsStr.split(',').map((s, i) => ({ name: s.trim(), weight: tagsStr.split(',').length - i })).filter(t => t.name);
@@ -1764,6 +1857,8 @@ const seoCount = seoRevs.length;
       const user = getUser();
       if (!user) { abrirModalLogin(); return; }
       document.getElementById('form-registrar-rpg').reset();
+      toggleRegBlurOption();
+      toggleRegLimitedFields();
       const modal = document.getElementById('modal-registrar-rpg');
       modal.classList.remove('modal-hidden');
       void modal.offsetHeight;
@@ -1791,6 +1886,11 @@ const seoCount = seoRevs.length;
       formData.append('ageRating', document.getElementById('reg-age').value);
       formData.append('blurImage', document.getElementById('reg-blur').checked);
       formData.append('description', document.getElementById('reg-desc').value.trim());
+      const regLimited = document.getElementById('reg-tipo').value === 'limited';
+      formData.append('limitedEdition', regLimited);
+      formData.append('slotsTotal', document.getElementById('reg-slots-total').value);
+      formData.append('slotsFilled', document.getElementById('reg-slots-filled').value);
+      formData.append('closed', document.getElementById('reg-closed').checked);
       const link = document.getElementById('reg-link').value.trim();
       if (link) formData.append('link', link);
       const whatsapp = document.getElementById('reg-whatsapp').value.trim();
@@ -2053,6 +2153,7 @@ const seoCount = seoRevs.length;
               const blurClass = rpg.ageRating === '18' && rpg.blurImage ? ' cat-blur' : '';
               const desc = rpg.description ? rpg.description.substring(0, 90).replace(/"/g, '&quot;') : '';
               const owner = (rpg.owner || '').replace(/"/g, '&quot;');
+              const limitedText = rpg.closed ? 'Vagas encerradas' : (rpg.slotsTotal ? ((rpg.slotsFilled || 0) + '/' + rpg.slotsTotal + ' vagas') : 'Edição limitada');
               return `<div onclick="selecionarRpgCatalogo('${rpg.name.replace(/'/g, "\\'")}', this)" class="cat-card rounded-xl overflow-hidden border" data-nome="${rpg.name.replace(/"/g, '&quot;')}" data-genre="${rpg.genre.replace(/"/g, '&quot;')}" data-owner="${owner}" data-desc="${desc}" style="background: var(--bg-card); border-color: var(--border); aspect-ratio: 2/3;">
                 <img src="${rpg.image}" class="w-full h-full object-cover${blurClass}" alt="${rpg.name.replace(/"/g, '&quot;')}">
                 <span class="cat-age-badge ${rpg.ageRating}">${rpg.ageRating === 'L' ? 'L' : rpg.ageRating}</span>
@@ -2063,6 +2164,7 @@ const seoCount = seoRevs.length;
                 <div class="cat-label">
                   <h4 class="font-title font-bold text-sm" style="color: white; text-shadow: 0 1px 4px rgba(0,0,0,0.8);">${rpg.name.replace(/"/g, '&quot;')}</h4>
                   <p class="text-[10px] mt-0.5 truncate" style="color: rgba(255,255,255,0.6);">${owner}</p>
+                  ${rpg.limitedEdition ? `<p class="text-[9px] mt-0.5 font-bold uppercase tracking-wider flex items-center gap-1" style="color: #f59e0b; text-shadow: 0 1px 4px rgba(0,0,0,0.8);"><i class="fa-solid fa-lock text-[7px]"></i> ${limitedText}</p>` : ''}
                   <p class="text-[9px] mt-1 leading-tight line-clamp-2" style="color: rgba(255,255,255,0.5);">${desc}</p>
                 </div>
               </div>`;
@@ -2082,7 +2184,7 @@ const seoCount = seoRevs.length;
         if (rpgsRes.ok) {
           const rpgs = await rpgsRes.json();
           catRpgData = rpgs;
-          heroRpgs = rpgs.filter(r => r.featured).length ? rpgs.filter(r => r.featured) : [rpgs[0]];
+          heroRpgs = computeHeroRpgs(rpgs);
           heroIndex = 0;
           renderCatalogo();
           atualizarHero();
@@ -2124,8 +2226,7 @@ const seoCount = seoRevs.length;
     }
 
     function atualizarHero() {
-      const featured = catRpgData.filter(r => r.featured);
-      heroRpgs = featured.length ? featured : [catRpgData[0]];
+      heroRpgs = computeHeroRpgs(catRpgData);
       heroIndex = 0;
       heroIrPara(null, 0);
       const dots = document.getElementById('hero-dots');

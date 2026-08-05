@@ -212,7 +212,14 @@ router.post('/rpgs', async (req: Request, res: Response) => {
         parsedTags = tags
       }
 
-      const rpg = await addRpg({ name, owner, genre, year, ageRating, image: imageUrl, banner: bannerUrl || undefined, description, link, whatsapp, tags: parsedTags, blurImage: req.body.blurImage === 'true' })
+      const rpg = await addRpg({
+        name, owner, genre, year, ageRating, image: imageUrl, banner: bannerUrl || undefined, description, link, whatsapp, tags: parsedTags,
+        blurImage: req.body.blurImage === 'true',
+        limitedEdition: req.body.limitedEdition === 'true',
+        slotsTotal: req.body.slotsTotal !== undefined && req.body.slotsTotal !== '' ? Number(req.body.slotsTotal) : undefined,
+        slotsFilled: req.body.slotsFilled !== undefined && req.body.slotsFilled !== '' ? Number(req.body.slotsFilled) : 0,
+        closed: req.body.closed === 'true',
+      })
       res.status(201).json(rpg)
     } catch {
       res.status(500).json({ error: 'Erro ao fazer upload das imagens.' })
@@ -248,6 +255,10 @@ router.patch('/rpgs/:name', async (req: Request, res: Response) => {
     if (link !== undefined) updates.link = link || undefined
     if (whatsapp !== undefined) updates.whatsapp = whatsapp || undefined
     if (req.body.blurImage !== undefined) updates.blurImage = req.body.blurImage === 'true'
+    if (req.body.limitedEdition !== undefined) updates.limitedEdition = req.body.limitedEdition === 'true'
+    if (req.body.slotsTotal !== undefined) updates.slotsTotal = req.body.slotsTotal === '' ? undefined : Number(req.body.slotsTotal)
+    if (req.body.slotsFilled !== undefined) updates.slotsFilled = req.body.slotsFilled === '' ? 0 : Number(req.body.slotsFilled)
+    if (req.body.closed !== undefined) updates.closed = req.body.closed === 'true'
     if (tags !== undefined) {
       if (typeof tags === 'string') {
         try { updates.tags = JSON.parse(tags) } catch { /* ignore */ }

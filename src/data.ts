@@ -38,6 +38,10 @@ function rpgFromDoc(doc: any): RPG {
     ageRating: o.ageRating,
     featured: o.featured ?? false,
     blurImage: o.blurImage ?? false,
+    limitedEdition: o.limitedEdition ?? false,
+    slotsTotal: o.slotsTotal,
+    slotsFilled: o.slotsFilled ?? 0,
+    closed: o.closed ?? false,
     tags: o.tags || [],
   }
 }
