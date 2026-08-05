@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express'
 import multer from 'multer'
 import { v2 as cloudinary } from 'cloudinary'
 import { Readable } from 'stream'
-import { getReviews, getRecentReviews, getPendingReviews, addReview, approveReview, rejectReview, deleteReviewById, addRpg, updateRpg, deleteRpg, getRpgs, getRpgByName, getUserByToken, toggleFeaturedRpg, getRpgRatings, attachRpgs } from '../data'
+import { getReviews, getRecentReviews, getPendingReviews, addReview, approveReview, rejectReview, deleteReviewById, addRpg, updateRpg, deleteRpg, getRpgs, getRpgByName, getUserByToken, toggleFeaturedRpg, getRpgRatings, attachRpgs, recordVisit, getAnalyticsSummary } from '../data'
 import ReviewModel from '../models/Review'
 import { ReviewInput, RPG } from '../types'
 
@@ -315,6 +315,25 @@ router.get('/reviews/feed', async (req: Request, res: Response) => {
   const skip = parseInt(req.query.skip as string) || 0
   const docs = await ReviewModel.find({ status: 'approved' }).sort({ createdAt: -1 }).skip(skip).limit(limit)
   res.json(await attachRpgs(docs))
+})
+
+router.post('/analytics', async (req: Request, res: Response) => {
+  const { type, rpg, query } = req.body || {}
+  if (type === 'rpgview' && typeof rpg === 'string' && rpg) {
+    recordVisit('rpgview', { rpg })
+  } else if (type === 'search' && typeof query === 'string' && query) {
+    recordVisit('search', { query })
+  }
+  res.json({ ok: true })
+})
+
+router.get('/analytics/summary', async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization
+  if (!authHeader) { res.status(401).json({ error: 'Autenticação necessária.' }); return }
+  const token = authHeader.replace('Bearer ', '')
+  const user = await getUserByToken(token)
+  if (!user || user.role !== 'admin') { res.status(403).json({ error: 'Apenas administradores.' }); return }
+  res.json(await getAnalyticsSummary())
 })
 
 export default router

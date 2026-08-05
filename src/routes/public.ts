@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express'
-import { getRpgs, getReviews, getRecentReviews, getPendingReviews, getUsers, getRpgRatings } from '../data'
+import { getRpgs, getReviews, getRecentReviews, getPendingReviews, getUsers, getRpgRatings, recordVisit } from '../data'
 
 export async function getPageData() {
   const [feedReviews, allReviews, pendingReviews, rpgs, users, rpgRatings] = await Promise.all([
@@ -25,6 +25,7 @@ const router = Router()
 
 router.get('/', async (_req: Request, res: Response) => {
   const data = await getPageData()
+  recordVisit('pageview')
   res.render('public', data)
 })
 

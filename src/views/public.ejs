@@ -1226,6 +1226,10 @@ const seoCount = seoRevs.length;
             <i class="fa-solid fa-check"></i> Salvar Perfil
           </button>
 
+          <button id="perfil-monitor-btn" onclick="abrirMonitoramento()" class="w-full py-2.5 rounded-2xl text-xs font-bold transition-all active:scale-[0.97] hidden" style="background: color-mix(in srgb, #10b981 12%, transparent); color: #34d399; border: 1px solid rgba(52,211,153,0.3);">
+            <i class="fa-solid fa-chart-line"></i> Monitoramento de Tráfego
+          </button>
+
           <div>
             <h4 id="perfil-reviews-title" class="text-[11px] font-bold font-title mb-3 flex items-center gap-2" style="color: var(--text-primary);">
               <i class="fa-solid fa-comment text-[10px]" style="color: var(--accent);"></i>
@@ -1239,6 +1243,65 @@ const seoCount = seoRevs.length;
           <button id="perfil-logout-btn" onclick="fazerLogout()" class="w-full py-2.5 rounded-2xl text-xs font-bold transition-all active:scale-[0.97] flex items-center justify-center gap-2 hover:bg-red-500/10" style="background: transparent; color: #f87171; border: 1px solid rgba(248,113,113,0.3);">
             <i class="fa-solid fa-sign-out-alt"></i> Sair da Conta
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL DE MONITORAMENTO (ADMIN) -->
+    <div id="modal-monitoramento" onclick="if(event.target===this)fecharMonitoramento()" class="modal-hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background: color-mix(in srgb, var(--bg-primary) 90%, transparent);">
+      <div class="rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl" style="background: var(--bg-card); border: 1px solid var(--border);">
+        <div class="p-5 border-b flex justify-between items-center sticky top-0 z-10" style="border-color: var(--border); background: var(--bg-elevated);">
+          <h3 class="text-sm font-bold font-title flex items-center gap-2" style="color: var(--text-primary);">
+            <i class="fa-solid fa-chart-line" style="color: #10b981;"></i>
+            Monitoramento de Tráfego
+          </h3>
+          <button onclick="fecharMonitoramento()" class="p-2 rounded-xl transition" style="color: var(--text-muted);">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="p-5 space-y-5">
+
+          <div class="grid grid-cols-3 gap-3">
+            <div class="rounded-2xl p-4 text-center" style="background: var(--bg-elevated); border: 1px solid var(--border);">
+              <p class="text-2xl font-bold" style="color: var(--text-primary);" id="mon-total-visits">—</p>
+              <p class="text-[9px] font-bold mt-1 uppercase tracking-wider" style="color: var(--text-muted);">Visitas</p>
+            </div>
+            <div class="rounded-2xl p-4 text-center" style="background: var(--bg-elevated); border: 1px solid var(--border);">
+              <p class="text-2xl font-bold" style="color: var(--text-primary);" id="mon-total-rpgviews">—</p>
+              <p class="text-[9px] font-bold mt-1 uppercase tracking-wider" style="color: var(--text-muted);">Páginas de RPG</p>
+            </div>
+            <div class="rounded-2xl p-4 text-center" style="background: var(--bg-elevated); border: 1px solid var(--border);">
+              <p class="text-2xl font-bold" style="color: var(--text-primary);" id="mon-total-searches">—</p>
+              <p class="text-[9px] font-bold mt-1 uppercase tracking-wider" style="color: var(--text-muted);">Buscas</p>
+            </div>
+          </div>
+
+          <div>
+            <h4 class="text-[11px] font-bold font-title mb-2 flex items-center gap-2" style="color: var(--text-primary);">
+              <i class="fa-solid fa-calendar-day text-[10px]" style="color: #10b981;"></i>
+              Últimos 14 dias
+            </h4>
+            <div id="mon-daily" class="flex items-end gap-1 h-32 rounded-2xl p-3" style="background: var(--bg-elevated); border: 1px solid var(--border);">
+              <p class="text-[10px] m-auto" style="color: var(--text-muted);">Carregando...</p>
+            </div>
+          </div>
+
+          <div>
+            <h4 class="text-[11px] font-bold font-title mb-2 flex items-center gap-2" style="color: var(--text-primary);">
+              <i class="fa-solid fa-fire text-[10px]" style="color: #f59e0b;"></i>
+              RPGs mais acessados
+            </h4>
+            <div id="mon-top-rpgs" class="space-y-2"></div>
+          </div>
+
+          <div>
+            <h4 class="text-[11px] font-bold font-title mb-2 flex items-center gap-2" style="color: var(--text-primary);">
+              <i class="fa-solid fa-magnifying-glass text-[10px]" style="color: var(--accent);"></i>
+              Buscas mais realizadas
+            </h4>
+            <div id="mon-top-searches" class="space-y-2"></div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -1578,6 +1641,7 @@ const seoCount = seoRevs.length;
       const modal = document.getElementById('modal-detalhe');
       const rpg = catRpgData.find(r => r.name === nome);
       if (!rpg) return;
+      trackAnalytics({ type: 'rpgview', rpg: nome });
 
       if (!fromPopstate) {
         const slug = toSlug(nome);
@@ -2075,6 +2139,7 @@ const seoCount = seoRevs.length;
 
     function filtrarCatalogo() {
       const q = document.getElementById('cat-search').value.toLowerCase().trim();
+      trackSearchDebounced(q);
       const top10 = document.getElementById('cat-top10');
       if (top10) top10.classList.toggle('cat-top10-hidden', !!q);
       document.querySelectorAll('#catalog-grid-container .cat-section').forEach(section => {
@@ -2271,6 +2336,7 @@ const seoCount = seoRevs.length;
       document.getElementById('perfil-camera-label').classList.toggle('hidden', !isOwn);
       document.getElementById('perfil-bio').disabled = !isOwn;
       document.getElementById('perfil-save-btn').classList.toggle('hidden', !isOwn);
+      document.getElementById('perfil-monitor-btn').classList.toggle('hidden', !(isOwn && user.role === 'admin'));
       document.getElementById('perfil-logout-btn').classList.toggle('hidden', !isOwn);
       document.getElementById('perfil-reviews-heading').textContent = isOwn ? 'Minhas Críticas' : `Críticas de ${user.username}`;
 
@@ -2302,6 +2368,87 @@ const seoCount = seoRevs.length;
 
     function fecharPerfil() {
       document.getElementById('modal-perfil').classList.add('modal-hidden');
+    }
+
+    function trackAnalytics(payload) {
+      fetch('/api/analytics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }).catch(() => {});
+    }
+
+    let searchTrackTimer = null;
+    function trackSearchDebounced(query) {
+      const q = (query || '').trim();
+      if (!q || q.length < 3) return;
+      clearTimeout(searchTrackTimer);
+      searchTrackTimer = setTimeout(() => trackAnalytics({ type: 'search', query: q }), 800);
+    }
+
+    function abrirMonitoramento() {
+      const token = getToken();
+      if (!token) return;
+      document.getElementById('modal-monitoramento').classList.remove('modal-hidden');
+      document.getElementById('mon-total-visits').textContent = '...';
+      document.getElementById('mon-total-rpgviews').textContent = '...';
+      document.getElementById('mon-total-searches').textContent = '...';
+      document.getElementById('mon-daily').innerHTML = '<p class="text-[10px] m-auto" style="color:var(--text-muted);">Carregando...</p>';
+      document.getElementById('mon-top-rpgs').innerHTML = '';
+      document.getElementById('mon-top-searches').innerHTML = '';
+
+      fetch('/api/analytics/summary', { headers: { 'Authorization': 'Bearer ' + token } })
+        .then(r => { if (r.status === 403) { fecharMonitoramento(); return null; } return r.json(); })
+        .then(data => {
+          if (!data) return;
+          document.getElementById('mon-total-visits').textContent = data.totalVisits.toLocaleString('pt-BR');
+          document.getElementById('mon-total-rpgviews').textContent = data.totalRpgViews.toLocaleString('pt-BR');
+          document.getElementById('mon-total-searches').textContent = data.totalSearches.toLocaleString('pt-BR');
+
+          const max = Math.max(...data.daily.map(d => d.count), 1);
+          const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+          document.getElementById('mon-daily').innerHTML = data.daily.map(d => {
+            const h = Math.max(Math.round((d.count / max) * 100), d.count ? 4 : 2);
+            const dt = new Date(d.day + 'T00:00:00');
+            return `
+            <div class="flex-1 flex flex-col items-center justify-end gap-1 h-full min-w-0">
+              <span class="text-[8px] font-bold" style="color:${d.count ? 'var(--text-secondary)' : 'var(--text-muted)'};">${d.count || ''}</span>
+              <div class="w-full rounded-t" style="height:${h}%; background:${d.count ? 'var(--accent)' : 'color-mix(in srgb, var(--border) 60%, transparent)'};" title="${d.day}"></div>
+              <span class="text-[7px]" style="color:var(--text-muted);">${days[dt.getDay()]}</span>
+            </div>`;
+          }).join('');
+
+          const topR = data.topRpgs.slice(0, 5);
+          const maxR = Math.max(...topR.map(t => t.count), 1);
+          document.getElementById('mon-top-rpgs').innerHTML = topR.length ? topR.map((t, i) => `
+            <div class="rounded-xl p-2.5" style="background: var(--bg-elevated); border: 1px solid var(--border);">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-[11px] font-semibold truncate" style="color:var(--text-primary);"><span class="mr-1" style="color:var(--star);">#${i + 1}</span>${t.rpg.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</span>
+                <span class="text-[10px] font-bold shrink-0 ml-2" style="color:#f59e0b;">${t.count} views</span>
+              </div>
+              <div class="h-1.5 rounded-full overflow-hidden" style="background: var(--bg-input);">
+                <div class="h-full rounded-full" style="width:${Math.round(t.count / maxR * 100)}%; background: linear-gradient(90deg, var(--accent), #f59e0b);"></div>
+              </div>
+            </div>`).join('') : '<p class="text-[10px] text-center py-3" style="color:var(--text-muted);">Nenhuma visualização registrada ainda.</p>';
+
+          const topS = data.topSearches.slice(0, 5);
+          const maxS = Math.max(...topS.map(t => t.count), 1);
+          document.getElementById('mon-top-searches').innerHTML = topS.length ? topS.map((t, i) => `
+            <div class="flex items-center justify-between rounded-xl p-2.5" style="background: var(--bg-elevated); border: 1px solid var(--border);">
+              <span class="text-[11px] font-medium truncate" style="color:var(--text-secondary);"><i class="fa-solid fa-magnifying-glass text-[9px] mr-1.5" style="color:var(--text-muted);"></i>${t.query.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</span>
+              <div class="flex items-center gap-2 shrink-0 ml-2">
+                <div class="h-1.5 w-20 rounded-full overflow-hidden" style="background: var(--bg-input);">
+                  <div class="h-full rounded-full" style="width:${Math.round(t.count / maxS * 100)}%; background: var(--accent);"></div>
+                </div>
+                <span class="text-[10px] font-bold" style="color:var(--text-muted);">${t.count}</span>
+              </div>
+            </div>`).join('') : '<p class="text-[10px] text-center py-3" style="color:var(--text-muted);">Nenhuma busca registrada ainda.</p>';
+        })
+        .catch(() => { fecharMonitoramento(); });
+    }
+
+    function fecharMonitoramento() {
+      document.getElementById('modal-monitoramento').classList.add('modal-hidden');
     }
 
     async function enviarAvatar(event) {
@@ -2509,6 +2656,7 @@ const seoCount = seoRevs.length;
 
     function buscarNoFeed() {
       const q = document.getElementById('search-input').value.toLowerCase();
+      trackSearchDebounced(q);
       document.querySelectorAll('.feed-card').forEach(c => { c.style.display = c.textContent.toLowerCase().includes(q) ? 'flex' : 'none'; });
     }
 

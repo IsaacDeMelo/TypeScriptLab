@@ -3,6 +3,7 @@ import Rpg from './models/Rpg'
 import ReviewModel from './models/Review'
 import UserModel from './models/User'
 import SessionModel from './models/Session'
+import VisitModel, { VisitType } from './models/Visit'
 import { RPG, Review, ReviewInput, User } from './types'
 
 export function toSlug(name: string): string {
@@ -321,4 +322,80 @@ export async function getRpgRatings(): Promise<RpgRating[]> {
 
 export async function logoutUser(token: string): Promise<void> {
   await SessionModel.deleteOne({ token })
+}
+
+export async function recordVisit(type: VisitType, data?: { rpg?: string; query?: string }): Promise<void> {
+  try {
+    await VisitModel.create({ type, rpg: data?.rpg, query: data?.query })
+  } catch {
+    // analytics nunca deve quebrar a navegação
+  }
+}
+
+export interface AnalyticsDailyCount {
+  day: string
+  count: number
+}
+
+export interface AnalyticsSummary {
+  totalVisits: number
+  totalRpgViews: number
+  totalSearches: number
+  topRpgs: { rpg: string; count: number }[]
+  topSearches: { query: string; count: number }[]
+  daily: AnalyticsDailyCount[]
+}
+
+export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
+  const since = new Date()
+  since.setDate(since.getDate() - 13)
+  since.setHours(0, 0, 0, 0)
+
+  const [totalVisits, totalRpgViews, totalSearches, topRpgs, topSearches, daily] = await Promise.all([
+    VisitModel.countDocuments({ type: 'pageview' }),
+    VisitModel.countDocuments({ type: 'rpgview' }),
+    VisitModel.countDocuments({ type: 'search' }),
+    VisitModel.aggregate<{ _id: string; count: number }>([
+      { $match: { type: 'rpgview', rpg: { $exists: true, $ne: '' } } },
+      { $group: { _id: '$rpg', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 10 },
+    ]),
+    VisitModel.aggregate<{ _id: string; count: number }>([
+      { $match: { type: 'search', query: { $exists: true, $ne: '' } } },
+      { $group: { _id: '$query', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 10 },
+    ]),
+    VisitModel.aggregate<{ _id: string; count: number }>([
+      { $match: { createdAt: { $gte: since } } },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]),
+  ])
+
+  const dayMap = new Map(daily.map(d => [d._id, d.count]))
+  const dates: AnalyticsDailyCount[] = []
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(since)
+    d.setDate(d.getDate() + i)
+    const key = d.toISOString().slice(0, 10)
+    dates.push({ day: key, count: dayMap.get(key) || 0 })
+  }
+
+  return {
+    totalVisits,
+    totalRpgViews,
+    totalSearches,
+    topRpgs: topRpgs.map(r => ({ rpg: r._id, count: r.count })),
+    topSearches: topSearches.map(r => ({ query: r._id, count: r.count })),
+    daily: dates,
+  }
 }

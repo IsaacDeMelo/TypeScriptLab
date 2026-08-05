@@ -13,7 +13,7 @@ import publicRouter, { getPageData } from './routes/public'
 import apiRouter from './routes/api'
 import authRouter from './routes/auth'
 import { connectDatabase } from './database'
-import { toSlug, getRpgs } from './data'
+import { toSlug, getRpgs, recordVisit } from './data'
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -70,6 +70,7 @@ app.get('/rpg/:slug', function(req, res, next) {
 
     const data = await getPageData()
     const desc = rpg.description.substring(0, 160)
+    recordVisit('rpgview', { rpg: rpg.name })
     res.render('public', {
       ...data,
       initialRpg: rpg.name,
