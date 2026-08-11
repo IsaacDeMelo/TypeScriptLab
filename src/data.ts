@@ -3,8 +3,11 @@ import Rpg from './models/Rpg'
 import ReviewModel from './models/Review'
 import UserModel from './models/User'
 import SessionModel from './models/Session'
+import AdModel from './models/Ad'
+import EventPostModel from './models/EventPost'
+import ReviewReplyModel from './models/ReviewReply'
 import VisitModel, { VisitType } from './models/Visit'
-import { RPG, Review, ReviewInput, User } from './types'
+import { RPG, Review, ReviewInput, User, ReviewReply, EventPost } from './types'
 
 export function toSlug(name: string): string {
   return name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
@@ -72,6 +75,7 @@ function userFromDoc(doc: any): User {
     bio: o.bio,
     avatar: o.avatar,
     contact: o.contact,
+    creatorOf: o.creatorOf || [],
   }
 }
 
@@ -84,6 +88,7 @@ function userPublicFromDoc(doc: any): Omit<User, 'passwordHash'> {
     bio: o.bio,
     avatar: o.avatar,
     contact: o.contact,
+    creatorOf: o.creatorOf || [],
   }
 }
 
@@ -322,6 +327,265 @@ export async function getRpgRatings(): Promise<RpgRating[]> {
 
 export async function logoutUser(token: string): Promise<void> {
   await SessionModel.deleteOne({ token })
+}
+
+export interface Ad {
+  id: string
+  title: string
+  image: string
+  link?: string
+  active: boolean
+  placement: 'hero' | 'catalog' | 'both'
+  slot: number
+  format: 'wide' | 'square' | 'poster'
+  createdAt: Date
+}
+
+function adFromDoc(doc: any): Ad {
+  const o = doc.toObject ? doc.toObject() : doc
+  return {
+    id: String(o._id),
+    title: o.title,
+    image: o.image,
+    link: o.link,
+    active: o.active ?? true,
+    placement: o.placement || 'hero',
+    slot: o.slot ?? 0,
+    format: o.format || 'wide',
+    createdAt: o.createdAt,
+  }
+}
+
+export async function getAds(): Promise<Ad[]> {
+  const docs = await AdModel.find({ active: true }).sort({ createdAt: -1 })
+  return docs.map(adFromDoc)
+}
+
+export async function getAllAds(): Promise<Ad[]> {
+  const docs = await AdModel.find().sort({ createdAt: -1 })
+  return docs.map(adFromDoc)
+}
+
+export async function addAd(data: { title: string; image: string; link?: string; placement?: 'hero' | 'catalog' | 'both'; slot?: number; format?: 'wide' | 'square' | 'poster' }): Promise<Ad> {
+  const doc = await AdModel.create(data)
+  return adFromDoc(doc)
+}
+
+export async function updateAd(id: string, data: { title?: string; image?: string; link?: string; active?: boolean; placement?: 'hero' | 'catalog' | 'both'; slot?: number; format?: 'wide' | 'square' | 'poster' }): Promise<Ad | undefined> {
+  const doc = await AdModel.findByIdAndUpdate(id, data, { new: true })
+  return doc ? adFromDoc(doc) : undefined
+}
+
+export async function deleteAd(id: string): Promise<boolean> {
+  const doc = await AdModel.findByIdAndDelete(id)
+  return !!doc
+}
+
+// ── CRIADORES ──
+export function isCreatorOf(user: User | undefined, rpgName: string): boolean {
+  if (!user) return false
+  if (user.role === 'admin') return true
+  return (user.creatorOf || []).includes(rpgName)
+}
+
+export async function setUserCreators(username: string, rpgNames: string[]): Promise<Omit<User, 'passwordHash'> | undefined> {
+  const user = await UserModel.findOne({ username })
+  if (!user) return undefined
+  user.creatorOf = rpgNames
+  await user.save()
+  return userPublicFromDoc(user)
+}
+
+// ── POSTAGENS DE EVENTOS ──
+// Score do RPG (0-100) a partir da média bayesiana (2.5 → 0, 5.0 → 100)
+export function rpgScoreFromBayesian(bayesianAvg: number): number {
+  const clamped = Math.max(1, Math.min(5, bayesianAvg))
+  return Math.round(((clamped - 2.5) / 2.5) * 100)
+}
+
+// Duração do "fixamento" (boost) de um post: quanto maior o score, mais tempo
+// o anúncio fica acima dos demais antes de cair como normalmente acontece.
+export function eventPostBoostHours(rpgScore: number): number {
+  return 6 + (rpgScore / 100) * 90 // 6h (score 0) até ~96h (score 100)
+}
+
+function boostRemainingHours(createdAt: string | Date, rpgScore: number): number {
+  const ageHours = (Date.now() - new Date(createdAt).getTime()) / 3600000
+  return Math.max(0, Math.round((eventPostBoostHours(rpgScore) - ageHours) * 10) / 10)
+}
+
+async function getRpgScoreMap(): Promise<Record<string, number>> {
+  const ratings = await getRpgRatings()
+  const map: Record<string, number> = {}
+  for (const r of ratings) map[r.rpg.name] = rpgScoreFromBayesian(r.bayesianAvg)
+  return map
+}
+
+function eventPostFromDoc(doc: any, rpg: RPG, score?: number): EventPost {
+  const o = doc.toObject ? doc.toObject() : doc
+  const boostHours = score !== undefined ? boostRemainingHours(o.createdAt, score) : 0
+  return {
+    id: String(o._id),
+    username: o.username,
+    rpg,
+    title: o.title,
+    content: o.content,
+    image: o.image,
+    timeAgo: calcTimeAgo(o.createdAt),
+    createdAt: o.createdAt instanceof Date ? o.createdAt.toISOString() : o.createdAt,
+    rpgScore: score,
+    boosted: boostHours > 0,
+    boostHours,
+  }
+}
+
+async function sortEventPosts(posts: EventPost[]): Promise<EventPost[]> {
+  return posts.sort((a, b) => {
+    const aBoost = a.boosted ? 1 : 0
+    const bBoost = b.boosted ? 1 : 0
+    if (aBoost !== bBoost) return bBoost - aBoost
+    if (aBoost && bBoost) return (b.boostHours || 0) - (a.boostHours || 0)
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  })
+}
+
+export async function getEventPosts(limit?: number): Promise<EventPost[]> {
+  const [docs, scoreMap] = await Promise.all([
+    EventPostModel.find().sort({ createdAt: -1 }),
+    getRpgScoreMap(),
+  ])
+  const names = [...new Set(docs.map(d => d.rpgName))]
+  const rpgDocs = await Promise.all(names.map(n => Rpg.findOne({ name: n })))
+  const rpgMap: Record<string, RPG> = {}
+  for (const doc of rpgDocs) {
+    if (doc) rpgMap[doc.name] = rpgFromDoc(doc)
+  }
+  const posts = docs.map(d => eventPostFromDoc(d, rpgMap[d.rpgName] || {} as RPG, scoreMap[d.rpgName]))
+  await sortEventPosts(posts)
+  return limit ? posts.slice(0, limit) : posts
+}
+
+export async function getEventPostsPaginated(skip: number, limit: number): Promise<EventPost[]> {
+  const all = await getEventPosts()
+  return all.slice(skip, skip + limit)
+}
+
+export async function addEventPost(input: { username: string; rpgName: string; title: string; content: string; image?: string }): Promise<EventPost> {
+  const doc = await EventPostModel.create(input)
+  const rpg = (await resolveRpg(input.rpgName)) || ({} as RPG)
+  const ratings = await getRpgRatings()
+  const rr = ratings.find(x => x.rpg.name === input.rpgName)
+  const score = rr ? rpgScoreFromBayesian(rr.bayesianAvg) : 0
+  return eventPostFromDoc(doc, rpg, score)
+}
+
+export async function deleteEventPost(id: string, username: string, isAdmin: boolean): Promise<boolean> {
+  const post = await EventPostModel.findById(id)
+  if (!post) return false
+  if (post.username !== username && !isAdmin) return false
+  await EventPostModel.findByIdAndDelete(id)
+  return true
+}
+
+// ── STATUS / SCORE DO CRIADOR ──
+export interface CreatorRpgStatus {
+  rpg: RPG
+  views: number
+  reviewCount: number
+  avgRating: number
+  bayesianAvg: number
+  score: number
+  repliesCount: number
+  postsCount: number
+  boostedPosts: number
+}
+
+export interface CreatorStats {
+  username: string
+  score: number
+  rpgs: CreatorRpgStatus[]
+}
+
+export async function getCreatorStats(username: string): Promise<CreatorStats | undefined> {
+  const user = await UserModel.findOne({ username })
+  if (!user) return undefined
+
+  const names = (user.creatorOf || []).filter(Boolean)
+  const ratings = await getRpgRatings()
+  const scoreMap: Record<string, number> = {}
+  const ratingMap: Record<string, RpgRating> = {}
+  for (const r of ratings) {
+    scoreMap[r.rpg.name] = rpgScoreFromBayesian(r.bayesianAvg)
+    ratingMap[r.rpg.name] = r
+  }
+
+  const rpgs: CreatorRpgStatus[] = []
+  for (const name of names) {
+    const rpg = await resolveRpg(name)
+    if (!rpg) continue
+    const [views, postsCount, reviews, eventPosts] = await Promise.all([
+      VisitModel.countDocuments({ type: 'rpgview', rpg: name }),
+      EventPostModel.countDocuments({ rpgName: name }),
+      ReviewModel.find({ rpgName: name, status: 'approved' }),
+      EventPostModel.find({ rpgName: name }),
+    ])
+    const reviewIds = reviews.map(r => String(r._id))
+    const repliesCount = reviewIds.length
+      ? await ReviewReplyModel.countDocuments({ reviewId: { $in: reviewIds } })
+      : 0
+    const score = scoreMap[name] || 0
+    const rr = ratingMap[name]
+    rpgs.push({
+      rpg,
+      views,
+      reviewCount: reviews.length,
+      avgRating: rr ? rr.avgRating : 0,
+      bayesianAvg: rr ? rr.bayesianAvg : 3.5,
+      score,
+      repliesCount,
+      postsCount,
+      boostedPosts: eventPosts.filter(p => boostRemainingHours(p.createdAt, score) > 0).length,
+    })
+  }
+
+  const score = rpgs.length
+    ? Math.round(rpgs.reduce((acc, r) => acc + r.score, 0) / rpgs.length)
+    : 0
+
+  return { username, score, rpgs }
+}
+
+// ── RESPOSTAS A AVALIAÇÕES ──
+function replyFromDoc(doc: any): ReviewReply {
+  const o = doc.toObject ? doc.toObject() : doc
+  return {
+    id: String(o._id),
+    reviewId: o.reviewId,
+    username: o.username,
+    content: o.content,
+    timeAgo: calcTimeAgo(o.createdAt),
+    createdAt: o.createdAt instanceof Date ? o.createdAt.toISOString() : o.createdAt,
+  }
+}
+
+export async function getReviewReplies(reviewId: string): Promise<ReviewReply[]> {
+  const docs = await ReviewReplyModel.find({ reviewId }).sort({ createdAt: 1 })
+  return docs.map(replyFromDoc)
+}
+
+export async function addReviewReply(reviewId: string, username: string, content: string): Promise<ReviewReply | undefined> {
+  const review = await ReviewModel.findById(reviewId)
+  if (!review) return undefined
+  const doc = await ReviewReplyModel.create({ reviewId, username, content })
+  return replyFromDoc(doc)
+}
+
+export async function deleteReviewReply(replyId: string, username: string, isAdmin: boolean): Promise<boolean> {
+  const reply = await ReviewReplyModel.findById(replyId)
+  if (!reply) return false
+  if (reply.username !== username && !isAdmin) return false
+  await ReviewReplyModel.findByIdAndDelete(replyId)
+  return true
 }
 
 export async function recordVisit(type: VisitType, data?: { rpg?: string; query?: string }): Promise<void> {

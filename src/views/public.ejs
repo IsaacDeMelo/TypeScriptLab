@@ -198,7 +198,7 @@ const seoCount = seoRevs.length;
       to   { transform: scale(1); }
     }
 
-    #modal-catalogo.catalogo-aberto .cat-banner {
+    .cat-banner-zoom {
       animation: catBannerZoom 6s ease-out forwards;
     }
     #modal-catalogo.catalogo-aberto .cat-hero {
@@ -367,12 +367,12 @@ const seoCount = seoRevs.length;
     <div id="feed-view" class="hidden">
     
     <!-- SEÇÃO STORIES (MELHORES RPGs) -->
-    <section class="py-5 border-b" style="border-color: var(--border); background-color: color-mix(in srgb, var(--bg-primary) 60%, transparent);">
+    <section id="feed-destaques-section" class="py-5 border-b" style="border-color: var(--border); background-color: color-mix(in srgb, var(--bg-primary) 60%, transparent);">
       <h2 style="color: var(--text-muted);" class="text-[10px] uppercase tracking-widest font-bold px-5 mb-3 font-title">Em Destaque</h2>
       
       <div class="flex space-x-4 overflow-x-auto px-5 no-scrollbar">
         
-        <% rpgs.forEach(rpg => { %>
+        <% rpgs.filter(r => r.featured).forEach(rpg => { %>
         <button onclick="abrirDetalheRpg('<%= rpg.name %>')" class="flex flex-col items-center space-y-1 flex-shrink-0 focus:outline-none group">
           <div class="w-16 h-16 rounded-full p-0.5 overflow-hidden transition-all duration-300 group-hover:scale-105" style="box-shadow: 0 0 0 2px var(--accent-glow); background: var(--bg-card);">
             <img src="<%= rpg.image %>" class="w-full h-full object-cover rounded-full" alt="<%= rpg.name %>">
@@ -411,11 +411,47 @@ const seoCount = seoRevs.length;
         </span>
         <input type="text" id="search-input" onkeyup="buscarNoFeed()" placeholder="Pesquise por RPG, usuário ou palavras-chave..." class="w-full rounded-lg pl-9 pr-4 py-2 text-xs focus:outline-none transition-colors placeholder:opacity-50" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);"> 
       </div>
+      <button id="btn-postar-evento" onclick="abrirModalPostarEvento()" class="hidden mt-3 w-full py-2.5 rounded-xl text-[11px] font-bold transition-all active:scale-[0.97] flex items-center justify-center gap-2" style="background: var(--accent); color: white;">
+        <i class="fa-solid fa-bullhorn"></i>
+        Postar Evento
+      </button>
     </div>
 
     <!-- FEED DE AVALIAÇÕES -->
     <main id="feed-container" class="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4 xl:grid-cols-3 overflow-y-auto">
       
+      <% eventPosts.forEach(post => { %>
+      <div class="feed-card feed-event-card rounded-2xl p-4.5 border transition-all duration-300 shadow-sm flex flex-col space-y-3.5" data-rpg="<%= post.rpg.name %>" style="background: color-mix(in srgb, #22c55e 6%, var(--bg-card) 40%, transparent); border-color: color-mix(in srgb, #22c55e 30%, var(--border));">
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-[9px] font-bold px-2 py-0.5 rounded-full tracking-wide uppercase shrink-0" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40;"><i class="fa-solid fa-bullhorn text-[8px] mr-1"></i>Evento do Criador</span>
+          <% if (post.boosted) { %>
+          <span class="text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0" style="background:#f59e0b20;color:#f59e0b;border:1px solid #f59e0b40;" title="Quanto mais avaliações boas o sistema tem, mais tempo este post fica no topo."><i class="fa-solid fa-rocket text-[8px] mr-1"></i>Em alta · <%= Math.round(post.boostHours) %>h</span>
+          <% } else { %>
+          <span class="text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0" style="background:var(--bg-input);color:var(--text-muted);border:1px solid var(--border);" title="O impulso deste post terminou e ele está caindo conforme o tempo."><i class="fa-solid fa-arrow-trend-down text-[8px] mr-1"></i>Caindo</span>
+          <% } %>
+          <span class="text-[9px]" style="color: var(--text-muted);"><%= post.timeAgo %></span>
+        </div>
+        <div class="flex items-center space-x-3 p-2.5 rounded-xl border" style="background: color-mix(in srgb, var(--bg-elevated) 40%, transparent); border-color: var(--border);">
+          <img src="<%= post.rpg.image %>" class="w-12 h-14 object-cover rounded-lg shadow-md" alt="Capa <%= post.rpg.name %>">
+          <div class="flex-1 min-w-0">
+            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wide uppercase font-title" style="background: #22c55e; color: white;"><%= post.rpg.genre %></span>
+            <h3 class="font-title font-bold text-sm truncate mt-0.5 cursor-pointer hover:underline" style="color: var(--text-primary);" onclick="abrirDetalheRpg('<%= post.rpg.name %>')"><%= post.rpg.name %></h3>
+            <p class="text-[10px] truncate" style="color: var(--text-muted);">Por: <span class="rpg-owner"><%= post.rpg.owner %></span></p>
+          </div>
+        </div>
+        <h4 class="text-sm font-bold" style="color: var(--text-primary);"><%= post.title %></h4>
+        <p class="text-xs leading-relaxed pl-1" style="color: var(--text-secondary);"><%= post.content %></p>
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-semibold flex items-center gap-1" style="color: #22c55e;">
+            <i class="fa-solid fa-award"></i> <%= post.username %>
+          </span>
+          <button onclick="deletarEvento('<%= post.id %>', this)" class="event-delete-btn text-[9px] px-2 py-1 rounded-lg font-bold transition-all hidden active:scale-[0.94]" style="color: #ef4444; background: color-mix(in srgb, #ef4444 10%, transparent); border: 1px solid color-mix(in srgb, #ef4444 20%, transparent);" data-owner="<%= post.username %>">
+            <i class="fa-solid fa-trash-alt mr-1"></i>Excluir
+          </button>
+        </div>
+      </div>
+      <% }) %>
+
       <% reviews.forEach(review => { %>
       <div class="feed-card rounded-2xl p-4.5 border transition-all duration-300 shadow-sm flex flex-col space-y-3.5" data-rpg="<%= review.rpg.name %>" style="background: color-mix(in srgb, var(--bg-card) 40%, transparent); border-color: var(--border);">
         
@@ -424,7 +460,9 @@ const seoCount = seoRevs.length;
           <div class="flex-1 min-w-0">
             <span class="text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wide uppercase font-title" style="background: var(--accent-dim); color: var(--accent);"><%= review.rpg.genre %></span>
             <h3 class="font-title font-bold text-sm truncate mt-0.5 cursor-pointer hover:underline" style="color: var(--text-primary);" onclick="abrirDetalheRpg('<%= review.rpg.name %>')"><%= review.rpg.name %></h3>
-            <p class="text-[10px] truncate" style="color: var(--text-muted);">Por: <span class="rpg-owner"><%= review.rpg.owner %></span></p>
+            <p class="text-[10px] truncate flex items-center gap-1" style="color: var(--text-muted);">Por: <span class="rpg-owner"><%= review.rpg.owner %></span>
+              <span class="creator-badge hidden items-center gap-0.5 text-[8px] font-bold px-1 py-0.5 rounded-full" data-rpg="<%= review.rpg.name %>" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40;"><i class="fa-solid fa-award"></i>Criador</span>
+            </p>
           </div>
         </div>
 
@@ -728,8 +766,8 @@ const seoCount = seoRevs.length;
         const heroFeatured = rpgs.filter(r => r.featured && !r.limitedEdition);
         const heroRpgs = heroLimited.concat(heroFeatured).length ? heroLimited.concat(heroFeatured) : (rpgs[0] ? [rpgs[0]] : []);
         %>
-        <div id="cat-hero-container" class="relative h-[55vh] min-h-[360px] overflow-hidden cursor-pointer" onmouseenter="pausarHero()" onmouseleave="retomarHero()" onclick="selecionarRpgCatalogo(heroRpgs[heroIndex] ? heroRpgs[heroIndex].name : '', this)">
-          <div id="cat-banner" class="cat-banner absolute inset-0 bg-cover bg-center" style="background-image: url('<%= heroRpgs[0].banner %>'); transition: opacity 0.3s ease;"></div>
+        <div id="cat-hero-container" class="relative h-[55vh] min-h-[360px] overflow-hidden cursor-pointer" onmouseenter="pausarHero()" onmouseleave="retomarHero()" onclick="heroClicar()">
+          <div id="cat-banner" class="cat-banner cat-banner-zoom absolute inset-0 bg-cover bg-center" style="background-image: url('<%= heroRpgs[0].banner %>'); transition: opacity 0.3s ease;"></div>
           <div class="absolute inset-0" style="background: linear-gradient(to top, var(--bg-primary) 0%, transparent 55%, rgba(0,0,0,0.5) 100%);"></div>
           <div class="absolute inset-0" style="background: linear-gradient(to right, rgba(0,0,0,0.5) 0%, transparent 100%);"></div>
 
@@ -744,6 +782,9 @@ const seoCount = seoRevs.length;
             <h2 id="cat-title" class="text-4xl md:text-5xl font-title font-bold mb-3" style="color: white; text-shadow: 0 2px 20px rgba(0,0,0,0.7);"><%= heroRpgs[0].name %></h2>
             <p id="cat-desc" class="text-sm max-w-xl leading-relaxed mb-1 line-clamp-3" style="color: rgba(255,255,255,0.8); text-shadow: 0 1px 8px rgba(0,0,0,0.6); display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden;"><%= heroRpgs[0].description %></p>
             <p id="cat-owner" class="text-xs" style="color: rgba(255,255,255,0.4);"><%= heroRpgs[0].owner %></p>
+            <a id="cat-ad-link" class="hidden mt-3 text-xs font-bold items-center gap-2" style="color: var(--accent);" target="_blank" rel="noopener">
+              <span class="px-2 py-0.5 rounded" style="background: rgba(0,0,0,0.6);"><i class="fa-solid fa-circle-info text-[9px]"></i> Anúncio de parceiro</span>
+            </a>
           </div>
 
           <% if (heroRpgs.length > 1) { %>
@@ -770,6 +811,18 @@ const seoCount = seoRevs.length;
               <button id="btn-pending-reviews" onclick="abrirModalPendentes()" class="py-2.5 px-3 rounded-xl text-[11px] font-bold transition-all active:scale-[0.97] flex items-center justify-center gap-2 relative" style="background: #f59e0b; color: #000;">
                 <i class="fa-solid fa-clock"></i>
                 <span id="pending-count-badge" class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold" style="background: var(--accent); color: white;">0</span>
+              </button>
+              <button onclick="abrirModalAnuncios()" class="py-2.5 px-3 rounded-xl text-[11px] font-bold transition-all active:scale-[0.97] flex items-center justify-center gap-2" style="background: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);">
+                <i class="fa-solid fa-rectangle-ad"></i>
+                Anúncios
+              </button>
+              <button onclick="abrirModalDestaques()" class="py-2.5 px-3 rounded-xl text-[11px] font-bold transition-all active:scale-[0.97] flex items-center justify-center gap-2" style="background: color-mix(in srgb, var(--star) 15%, transparent); color: var(--star); border: 1px solid color-mix(in srgb, var(--star) 35%, transparent);">
+                <i class="fa-solid fa-star"></i>
+                Destaques
+              </button>
+              <button onclick="abrirModalCriadores()" class="py-2.5 px-3 rounded-xl text-[11px] font-bold transition-all active:scale-[0.97] flex items-center justify-center gap-2" style="background: color-mix(in srgb, #22c55e 15%, transparent); color: #22c55e; border: 1px solid color-mix(in srgb, #22c55e 35%, transparent);">
+                <i class="fa-solid fa-award"></i>
+                Criadores
               </button>
             </div>
           </div>
@@ -886,6 +939,7 @@ const seoCount = seoRevs.length;
               <h2 class="text-xl font-title font-bold" style="color: var(--text-primary);" id="detalhe-name"><%= detailRpg.name %></h2>
               <div class="flex items-center gap-3 mt-1">
                 <span class="text-xs" style="color: var(--text-muted);" id="detalhe-owner"><%= detailRpg.owner %></span>
+                <span class="creator-badge hidden items-center gap-0.5 text-[8px] font-bold px-1.5 py-0.5 rounded-full" data-rpg="<%= detailRpg.name %>" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40;"><i class="fa-solid fa-award"></i>Você é o criador</span>
                 <span class="text-[10px] px-1.5 py-0.5 rounded font-bold" id="detalhe-age" style="background: rgba(234,179,8,0.2); color: #eab308;"><%= detailRpg.ageRating %></span>
                 <span class="text-[10px]" style="color: var(--text-muted);" id="detalhe-year"><%= detailRpg.year %></span>
               </div>
@@ -1163,6 +1217,175 @@ const seoCount = seoRevs.length;
       </div>
     </div>
 
+    <!-- MODAL DE ANÚNCIOS (ADMIN) -->
+    <div id="modal-anuncios" class="modal-hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background: color-mix(in srgb, var(--bg-primary) 90%, transparent);">
+      <div class="rounded-3xl w-full max-w-lg max-h-[85vh] overflow-y-auto shadow-2xl" style="background: var(--bg-card); border: 1px solid var(--border);">
+        <div class="p-5 border-b flex justify-between items-center sticky top-0 z-10" style="border-color: var(--border); background: var(--bg-elevated);">
+          <h3 class="text-sm font-bold font-title flex items-center gap-2" style="color: var(--text-primary);">
+            <i class="fa-solid fa-rectangle-ad" style="color: var(--accent);"></i>
+            Anúncios de Parceiros
+          </h3>
+          <button onclick="fecharModalAnuncios()" class="p-2 rounded-xl transition" style="color: var(--text-muted);">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="p-4 space-y-3">
+          <div class="rounded-2xl p-4 space-y-2.5" style="background: var(--bg-elevated); border: 1px solid var(--border);">
+            <p class="text-[10px] font-bold uppercase tracking-wider" style="color: var(--text-muted);">Novo anúncio</p>
+            <input id="ad-input-title" type="text" class="w-full rounded-xl px-3 py-2 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);" placeholder="Nome do anunciante (fica no canto da imagem)">
+            <div class="flex items-center gap-2 rounded-xl px-3 py-2 cursor-pointer" style="background: var(--bg-input); border: 1px solid var(--border);" onclick="document.getElementById('ad-input-image').click()">
+              <i class="fa-solid fa-image text-[10px]" style="color: var(--text-muted);"></i>
+              <span id="ad-image-filename" class="text-xs flex-1 truncate" style="color: var(--text-muted);">Escolher imagem do anúncio</span>
+              <input id="ad-input-image" type="file" accept=".jpg,.jpeg,.png,.webp,.gif" class="hidden" onchange="atualizarAdFilename(this)">
+            </div>
+            <input id="ad-input-link" type="text" class="w-full rounded-xl px-3 py-2 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);" placeholder="Link externo (abre ao clicar no anúncio)">
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[9px] font-bold uppercase tracking-wider mb-1" style="color: var(--text-muted);">Onde exibir</label>
+                <select id="ad-input-placement" class="w-full rounded-xl px-3 py-2 text-xs focus:outline-none">
+                  <option value="hero">Topo (carrossel)</option>
+                  <option value="catalog">Entre as categorias</option>
+                  <option value="both">Ambos</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[9px] font-bold uppercase tracking-wider mb-1" style="color: var(--text-muted);">Formato no catálogo</label>
+                <select id="ad-input-format" class="w-full rounded-xl px-3 py-2 text-xs focus:outline-none">
+                  <option value="wide">Faixa larga</option>
+                  <option value="square">Quadrado</option>
+                  <option value="poster">Poster</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label class="block text-[9px] font-bold uppercase tracking-wider mb-1" style="color: var(--text-muted);">Posição entre as categorias (0 = logo após o Top 10, 1 = após a 1ª categoria, ...)</label>
+              <input id="ad-input-slot" type="number" min="0" value="0" class="w-full rounded-xl px-3 py-2 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);">
+            </div>
+            <button onclick="criarAnuncio()" id="ad-save-btn" class="w-full text-white font-bold py-2.5 rounded-xl text-xs transition-all active:scale-[0.97]" style="background: var(--accent);">
+              <i class="fa-solid fa-plus"></i> Adicionar anúncio
+            </button>
+            <p id="ad-error" class="hidden text-[10px] font-bold" style="color: #ef4444;"></p>
+          </div>
+          <div id="anuncios-list" class="space-y-2">
+            <p class="text-xs text-center py-6" style="color: var(--text-muted);">Nenhum anúncio cadastrado.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL DE DESTAQUES (ADMIN) -->
+    <div id="modal-destaques" class="modal-hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background: color-mix(in srgb, var(--bg-primary) 90%, transparent);">
+      <div class="rounded-3xl w-full max-w-lg max-h-[85vh] overflow-y-auto shadow-2xl" style="background: var(--bg-card); border: 1px solid var(--border);">
+        <div class="p-5 border-b flex justify-between items-center sticky top-0 z-10" style="border-color: var(--border); background: var(--bg-elevated);">
+          <h3 class="text-sm font-bold font-title flex items-center gap-2" style="color: var(--text-primary);">
+            <i class="fa-solid fa-star" style="color: var(--star);"></i>
+            RPGs em Destaque
+          </h3>
+          <button onclick="fecharModalDestaques()" class="p-2 rounded-xl transition" style="color: var(--text-muted);">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="p-4 space-y-2">
+          <p class="text-[10px] leading-relaxed mb-3" style="color: var(--text-muted);">Os RPGs marcados aparecem no topo do carrossel do catálogo e na seção "Em Destaque" do feed.</p>
+          <div id="destaques-list" class="space-y-2">
+            <p class="text-xs text-center py-6" style="color: var(--text-muted);">Carregando...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL DE CRIADORES (ADMIN) -->
+    <div id="modal-criadores" class="modal-hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background: color-mix(in srgb, var(--bg-primary) 90%, transparent);">
+      <div class="rounded-3xl w-full max-w-lg max-h-[85vh] overflow-y-auto shadow-2xl" style="background: var(--bg-card); border: 1px solid var(--border);">
+        <div class="p-5 border-b flex justify-between items-center sticky top-0 z-10" style="border-color: var(--border); background: var(--bg-elevated);">
+          <h3 class="text-sm font-bold font-title flex items-center gap-2" style="color: var(--text-primary);">
+            <i class="fa-solid fa-award" style="color: #22c55e;"></i>
+            Selo de Criador
+          </h3>
+          <button onclick="fecharModalCriadores()" class="p-2 rounded-xl transition" style="color: var(--text-muted);">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="p-4 space-y-2">
+          <p class="text-[10px] leading-relaxed mb-3" style="color: var(--text-muted);">Dê o selo de criador a um usuário e marque de quais RPGs ele é criador. Criadores podem publicar eventos e responder avaliações.</p>
+          <div class="rounded-2xl p-3 space-y-2" style="background: var(--bg-elevated); border: 1px solid var(--border);">
+            <select id="creator-user-select" class="w-full rounded-xl px-3 py-2 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);">
+              <option value="">Selecione um usuário...</option>
+            </select>
+            <div id="creator-rpgs-box" class="hidden max-h-40 overflow-y-auto p-2 rounded-xl space-y-1" style="background: var(--bg-input); border: 1px solid var(--border);">
+            </div>
+            <button onclick="salvarCriador()" class="w-full text-white font-bold py-2.5 rounded-xl text-xs transition-all active:scale-[0.97]" style="background: #22c55e;">
+              <i class="fa-solid fa-award"></i> Salvar Selo de Criador
+            </button>
+            <p id="creator-error" class="hidden text-[10px] font-bold" style="color: #ef4444;"></p>
+          </div>
+          <div id="criadores-list" class="space-y-2">
+            <p class="text-xs text-center py-6" style="color: var(--text-muted);">Nenhum criador cadastrado.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL DE POSTAR EVENTO -->
+    <div id="modal-postar-evento" class="modal-hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background: color-mix(in srgb, var(--bg-primary) 90%, transparent);">
+      <div class="rounded-3xl w-full max-w-md shadow-2xl" style="background: var(--bg-card); border: 1px solid var(--border);">
+        <div class="p-5 border-b flex justify-between items-center" style="border-color: var(--border); background: var(--bg-elevated);">
+          <h3 class="text-sm font-bold font-title flex items-center gap-2" style="color: var(--text-primary);">
+            <i class="fa-solid fa-bullhorn" style="color: var(--accent);"></i>
+            Postar Evento
+          </h3>
+          <button onclick="fecharModalPostarEvento()" class="p-2 rounded-xl transition" style="color: var(--text-muted);">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="p-4 space-y-3">
+          <div>
+            <label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Sistema *</label>
+            <select id="event-rpg-select" class="w-full rounded-xl px-3 py-2 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);">
+            </select>
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Título *</label>
+            <input id="event-title" type="text" class="w-full rounded-xl px-3 py-2 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);" placeholder="Ex: Inscrições abertas para a nova temporada!">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold mb-1" style="color: var(--text-secondary);">Descrição do evento *</label>
+            <textarea id="event-content" rows="4" class="w-full rounded-xl px-3 py-2 text-xs focus:outline-none resize-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);" placeholder="Conte sobre o evento..."></textarea>
+          </div>
+          <p id="event-error" class="hidden text-[10px] font-bold" style="color: #ef4444;"></p>
+          <button onclick="publicarEvento()" class="w-full text-white font-bold py-2.5 rounded-xl text-xs transition-all active:scale-[0.97]" style="background: var(--accent);">
+            <i class="fa-solid fa-paper-plane"></i> Publicar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL DE RESPONDER AVALIAÇÃO -->
+    <div id="modal-responder-review" class="modal-hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background: color-mix(in srgb, var(--bg-primary) 90%, transparent);">
+      <div class="rounded-3xl w-full max-w-md shadow-2xl" style="background: var(--bg-card); border: 1px solid var(--border);">
+        <div class="p-5 border-b flex justify-between items-center" style="border-color: var(--border); background: var(--bg-elevated);">
+          <h3 class="text-sm font-bold font-title flex items-center gap-2" style="color: var(--text-primary);">
+            <i class="fa-solid fa-reply" style="color: #22c55e;"></i>
+            Responder Avaliação
+          </h3>
+          <button onclick="fecharModalResponderReview()" class="p-2 rounded-xl transition" style="color: var(--text-muted);">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="p-4 space-y-3">
+          <div class="rounded-xl p-3 border" style="background: color-mix(in srgb, var(--bg-card) 60%, transparent); border-color: var(--border);">
+            <p class="text-[11px] font-semibold mb-1" style="color: var(--text-secondary);" id="reply-review-author"></p>
+            <p class="text-[11px] leading-relaxed" style="color: var(--text-muted);" id="reply-review-comment"></p>
+          </div>
+          <textarea id="reply-content" rows="3" class="w-full rounded-xl px-3 py-2 text-xs focus:outline-none resize-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);" placeholder="Escreva sua resposta como criador..."></textarea>
+          <p id="reply-error" class="hidden text-[10px] font-bold" style="color: #ef4444;"></p>
+          <button onclick="enviarResposta()" class="w-full text-white font-bold py-2.5 rounded-xl text-xs transition-all active:scale-[0.97]" style="background: #22c55e;">
+            <i class="fa-solid fa-paper-plane"></i> Enviar Resposta
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- PAINEL DE CORES (DESKTOP — LADO DIREITO) -->
     <div id="theme-panel" class="fixed right-0 top-1/2 -translate-y-1/2 z-50" style="display: none;">
       <button onclick="toggleThemePanel()" class="flex items-center gap-2 px-3 py-3 rounded-l-xl text-white text-xs font-bold shadow-lg transition-all" style="background: var(--accent); writing-mode: vertical-lr;">
@@ -1207,6 +1430,9 @@ const seoCount = seoRevs.length;
           <div class="text-center">
             <p class="text-base font-bold" style="color: var(--text-primary);" id="perfil-nome">Carregando...</p>
             <div class="inline-block mt-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider" id="perfil-role" style="background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent);">Usuário</div>
+            <div id="perfil-score-chip" class="hidden inline-flex items-center gap-1 mt-1.5 ml-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-bold" style="background:#f59e0b20;color:#f59e0b;border:1px solid #f59e0b40;" title="Score calculado pela nota e volume de avaliações dos seus sistemas">
+              <i class="fa-solid fa-gauge-high text-[8px]"></i> Score <span id="perfil-score-value">0</span>
+            </div>
           </div>
 
           <div class="flex items-start gap-3 p-3 rounded-2xl" style="background: var(--bg-elevated);">
@@ -1228,6 +1454,10 @@ const seoCount = seoRevs.length;
 
           <button id="perfil-monitor-btn" onclick="abrirMonitoramento()" class="w-full py-2.5 rounded-2xl text-xs font-bold transition-all active:scale-[0.97] hidden" style="background: color-mix(in srgb, #10b981 12%, transparent); color: #34d399; border: 1px solid rgba(52,211,153,0.3);">
             <i class="fa-solid fa-chart-line"></i> Monitoramento de Tráfego
+          </button>
+
+          <button id="perfil-painel-btn" onclick="abrirPainelCriador()" class="w-full py-2.5 rounded-2xl text-xs font-bold transition-all active:scale-[0.97] hidden" style="background: color-mix(in srgb, #22c55e 12%, transparent); color: #22c55e; border: 1px solid rgba(34,197,94,0.3);">
+            <i class="fa-solid fa-chart-simple"></i> Painel do Criador
           </button>
 
           <div>
@@ -1302,6 +1532,41 @@ const seoCount = seoRevs.length;
             <div id="mon-top-searches" class="space-y-2"></div>
           </div>
 
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL PAINEL DO CRIADOR -->
+    <div id="modal-painel-criador" onclick="if(event.target===this)fecharPainelCriador()" class="modal-hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background: color-mix(in srgb, var(--bg-primary) 90%, transparent);">
+      <div class="rounded-3xl w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl" style="background: var(--bg-card); border: 1px solid var(--border);">
+        <div class="p-5 border-b flex justify-between items-center sticky top-0 z-10" style="border-color: var(--border); background: var(--bg-elevated);">
+          <h3 class="text-sm font-bold font-title flex items-center gap-2" style="color: var(--text-primary);">
+            <i class="fa-solid fa-chart-simple" style="color: #22c55e;"></i>
+            Painel do Criador
+          </h3>
+          <button onclick="fecharPainelCriador()" class="p-2 rounded-xl transition" style="color: var(--text-muted);">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="p-5 space-y-5">
+          <div id="painel-score-card" class="rounded-2xl p-5 flex items-center gap-4" style="background: linear-gradient(135deg, #22c55e, color-mix(in srgb, #22c55e 60%, #000));">
+            <div class="w-16 h-16 rounded-full flex items-center justify-center flex-col shrink-0" style="background: rgba(0,0,0,0.25); border: 2px solid rgba(255,255,255,0.4);">
+              <span class="text-xl font-bold font-title text-white leading-none" id="painel-score-valor">0</span>
+              <span class="text-[7px] font-bold text-white/80 uppercase tracking-wider mt-0.5">Score</span>
+            </div>
+            <div class="min-w-0">
+              <p class="text-sm font-bold text-white" id="painel-nivel">Calculando...</p>
+              <p class="text-[10px] leading-relaxed text-white/85 mt-1">Quanto mais avaliações boas seus sistemas tiverem, maior o seu score e mais tempo seus posts de evento ficam no topo do feed.</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 px-1">
+            <i class="fa-solid fa-gauge-high text-[10px]" style="color: #f59e0b;"></i>
+            <span class="text-[11px] font-bold font-title" style="color: var(--text-primary);">Status dos seus sistemas</span>
+          </div>
+          <div id="painel-rpgs" class="space-y-3">
+            <p class="text-xs text-center py-6" style="color: var(--text-muted);">Carregando...</p>
+          </div>
         </div>
       </div>
     </div>
@@ -1491,7 +1756,7 @@ const seoCount = seoRevs.length;
       document.body.style.overflow = 'hidden';
       document.getElementById('nav-catalogo').style.color = 'var(--accent)';
       document.getElementById('nav-feed').style.color = 'var(--text-muted)';
-      iniciarHero();
+      atualizarHero();
     }
 
     function abrirFeed(e) {
@@ -1541,15 +1806,35 @@ const seoCount = seoRevs.length;
       return combined.length ? combined : (rpgs && rpgs[0] ? [rpgs[0]] : []);
     }
 
-    let heroInterval, heroIndex = 0, heroPausado = false, heroTouchX = 0, heroSwipeInit = false, heroRpgs = computeHeroRpgs(<%- JSON.stringify(rpgs) %>);
+    function buildHeroSlides(rpgs, ads) {
+      const rpgList = computeHeroRpgs(rpgs);
+      const adList = (ads || []).filter(a => a.active);
+      const slides = [];
+      let adIdx = 0;
+      rpgList.forEach((r, i) => {
+        slides.push({ type: 'rpg', data: r });
+        if (adList.length && (i + 1) % 3 === 0) {
+          slides.push({ type: 'ad', data: adList[adIdx % adList.length] });
+          adIdx++;
+        }
+      });
+      if (adList.length && !slides.some(s => s.type === 'ad')) {
+        slides.push({ type: 'ad', data: adList[0] });
+      }
+      return slides;
+    }
+
+    let catAdsData = <%- JSON.stringify(ads || []) %>;
+    let heroSlides = buildHeroSlides(<%- JSON.stringify(rpgs) %>, catAdsData);
+    let heroInterval, heroIndex = 0, heroPausado = false, heroTouchX = 0, heroSwipeInit = false;
 
     function iniciarHero() {
       pararHero();
-      if (heroRpgs.length < 2) return;
+      if (heroSlides.length < 2) return;
       iniciarHeroSwipe();
       heroInterval = setInterval(() => {
         if (heroPausado) return;
-        heroIndex = (heroIndex + 1) % heroRpgs.length;
+        heroIndex = (heroIndex + 1) % heroSlides.length;
         heroIrPara(null, heroIndex);
       }, 3000);
     }
@@ -1561,21 +1846,31 @@ const seoCount = seoRevs.length;
     function heroIrPara(e, index) {
       if (e) { e.stopPropagation(); pausarHero(); setTimeout(retomarHero, 6000); }
       heroIndex = index;
-      const rpg = heroRpgs[index];
-      if (!rpg) return;
+      const slide = heroSlides[index];
+      if (!slide) return;
       const banner = document.getElementById('cat-banner');
       banner.style.opacity = '0';
       setTimeout(() => {
-        banner.style.backgroundImage = `url('${rpg.banner}')`;
+        banner.style.backgroundImage = `url('${slide.type === 'ad' ? slide.data.image : slide.data.banner}')`;
         banner.style.opacity = '1';
+        banner.classList.remove('cat-banner-zoom');
+        void banner.offsetWidth;
+        banner.classList.add('cat-banner-zoom');
       }, 150);
-      document.getElementById('cat-title').textContent = rpg.name;
-      document.getElementById('cat-desc').textContent = rpg.description;
-      document.getElementById('cat-owner').textContent = `${rpg.owner} · ${rpg.year}`;
-      document.getElementById('cat-genre').textContent = rpg.genre;
-      document.getElementById('cat-year').textContent = rpg.year || '';
+      const isAd = slide.type === 'ad';
+      const adLink = document.getElementById('cat-ad-link');
+      document.getElementById('cat-title').textContent = isAd ? slide.data.title : slide.data.name;
+      document.getElementById('cat-desc').textContent = isAd ? (slide.data.link || '') : slide.data.description;
+      document.getElementById('cat-owner').textContent = isAd ? 'Parceiro' : `${slide.data.owner} · ${slide.data.year}`;
+      document.getElementById('cat-genre').textContent = isAd ? 'Anúncio' : slide.data.genre;
+      document.getElementById('cat-year').textContent = isAd ? '' : (slide.data.year || '');
       const limitedBadge = document.getElementById('cat-limited-badge');
-      if (limitedBadge) limitedBadge.classList.toggle('hidden', !rpg.limitedEdition);
+      if (limitedBadge) limitedBadge.classList.toggle('hidden', isAd || !slide.data.limitedEdition);
+      if (adLink) {
+        adLink.classList.toggle('hidden', !isAd);
+        adLink.classList.toggle('inline-flex', isAd);
+        adLink.href = isAd && slide.data.link ? slide.data.link : '#';
+      }
       const dots = document.querySelectorAll('#hero-dots button');
       dots.forEach((d, i) => {
         d.style.background = i === index ? 'var(--accent)' : 'rgba(255,255,255,0.4)';
@@ -1583,8 +1878,18 @@ const seoCount = seoRevs.length;
       });
     }
 
-    function heroProximo(e) { if (e) e.stopPropagation(); pausarHero(); setTimeout(retomarHero, 6000); heroIndex = (heroIndex + 1) % heroRpgs.length; heroIrPara(null, heroIndex); }
-    function heroAnterior(e) { if (e) e.stopPropagation(); pausarHero(); setTimeout(retomarHero, 6000); heroIndex = (heroIndex - 1 + heroRpgs.length) % heroRpgs.length; heroIrPara(null, heroIndex); }
+    function heroClicar() {
+      const slide = heroSlides[heroIndex];
+      if (!slide) return;
+      if (slide.type === 'ad') {
+        if (slide.data.link) window.open(slide.data.link, '_blank');
+        return;
+      }
+      selecionarRpgCatalogo(slide.data.name, document.getElementById('cat-hero-container'));
+    }
+
+    function heroProximo(e) { if (e) e.stopPropagation(); pausarHero(); setTimeout(retomarHero, 6000); heroIndex = (heroIndex + 1) % heroSlides.length; heroIrPara(null, heroIndex); }
+    function heroAnterior(e) { if (e) e.stopPropagation(); pausarHero(); setTimeout(retomarHero, 6000); heroIndex = (heroIndex - 1 + heroSlides.length) % heroSlides.length; heroIrPara(null, heroIndex); }
 
     function iniciarHeroSwipe() {
       if (heroSwipeInit) return;
@@ -1602,7 +1907,7 @@ const seoCount = seoRevs.length;
 
     function selecionarRpgCatalogo(nome, el) {
       revelarBlur(el);
-      const idx = heroRpgs.findIndex(r => r.name === nome);
+      const idx = heroSlides.findIndex(s => s.type === 'rpg' && s.data.name === nome);
       if (idx !== -1) { heroIrPara(null, idx); heroIndex = idx; }
       window.scrollTo({ top: 0, behavior: 'smooth' });
       abrirDetalheRpg(nome);
@@ -1614,6 +1919,8 @@ const seoCount = seoRevs.length;
           const u = catUsersData.find(u => u.username === r.username);
           const avatar = u?.avatar;
           const initial = r.username.charAt(0).toUpperCase();
+          const rpgName = r.rpg.name;
+          const podeResponder = isCreatorOfUser(rpgName);
           return `
           <div class="detalhe-review-card rounded-xl p-3 border" style="background:color-mix(in srgb, var(--bg-card) 50%, transparent);border-color:var(--border);">
             <div class="flex items-center gap-2 mb-1">
@@ -1624,9 +1931,17 @@ const seoCount = seoRevs.length;
               <span class="text-[10px] ml-auto" style="color:var(--star);">${'★'.repeat(Math.floor(r.rating))}${r.rating % 1 ? '½' : ''} ${r.rating}</span>
             </div>
             <p class="text-[11px] leading-relaxed" style="color:var(--text-muted);">${r.comment.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
-            <span class="text-[9px]" style="color:var(--text-muted);">${r.timeAgo}</span>
+            <div class="flex items-center gap-2 mt-1.5">
+              <span class="text-[9px]" style="color:var(--text-muted);">${r.timeAgo}</span>
+              ${podeResponder ? `<button onclick="abrirModalResponderReview('${r.id}', '${r.username.replace(/'/g, "\\'")}', '${r.comment.replace(/'/g, "\\'").replace(/</g, '&lt;').replace(/>/g, '&gt;').slice(0, 80)}')" class="text-[9px] px-2 py-1 rounded-lg font-bold transition-all active:scale-[0.94] inline-flex items-center gap-1 ml-auto" style="color:#22c55e;background:color-mix(in srgb, #22c55e 10%, transparent);border:1px solid color-mix(in srgb, #22c55e 25%, transparent);"><i class="fa-solid fa-reply"></i> Responder</button>` : ''}
+            </div>
+            <div class="review-replies-box hidden mt-2 space-y-2" data-reviews-list="${r.id}"></div>
           </div>`;
         }).join('');
+        revs.forEach(r => {
+          const box = list.querySelector(`[data-reviews-list="${r.id}"]`);
+          if (box) carregarRespostas(r.id, box);
+        });
       } else {
         list.innerHTML = '<p class="text-xs text-center py-4" style="color:var(--text-muted);">Nenhuma crítica ainda. Seja o primeiro a avaliar!</p>';
       }
@@ -2037,6 +2352,328 @@ const seoCount = seoRevs.length;
       document.getElementById('modal-pendentes').classList.add('modal-hidden');
     }
 
+    let adsData = <%- JSON.stringify(ads || []) %>;
+
+    async function abrirModalAnuncios() {
+      const modal = document.getElementById('modal-anuncios');
+      modal.classList.remove('modal-hidden');
+      document.getElementById('ad-error').classList.add('hidden');
+      document.getElementById('ad-input-title').value = '';
+      document.getElementById('ad-input-image').value = '';
+      document.getElementById('ad-input-link').value = '';
+      document.getElementById('ad-input-placement').value = 'hero';
+      document.getElementById('ad-input-format').value = 'wide';
+      document.getElementById('ad-input-slot').value = '0';
+      document.getElementById('ad-image-filename').textContent = 'Escolher imagem do anúncio';
+      try {
+        const res = await fetch('/api/ads/all', { headers: { 'Authorization': 'Bearer ' + getToken() } });
+        if (res.ok) {
+          adsData = await res.json();
+        }
+      } catch {}
+      renderAnuncios();
+    }
+
+    function fecharModalAnuncios() {
+      document.getElementById('modal-anuncios').classList.add('modal-hidden');
+    }
+
+    function atualizarAdFilename(input) {
+      document.getElementById('ad-image-filename').textContent = input.files.length > 0 ? input.files[0].name : 'Escolher imagem do anúncio';
+    }
+
+    function renderAnuncios() {
+      const list = document.getElementById('anuncios-list');
+      if (!adsData.length) {
+        list.innerHTML = '<p class="text-xs text-center py-6" style="color: var(--text-muted);">Nenhum anúncio cadastrado.</p>';
+        return;
+      }
+      list.innerHTML = adsData.map(a => `
+        <div class="anuncio-card rounded-2xl p-3 border flex items-center gap-3" style="background: color-mix(in srgb, var(--bg-card) 40%, transparent); border-color: var(--border);">
+          <img src="${a.image}" class="w-20 h-10 object-cover rounded-lg" alt="">
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-bold truncate" style="color: var(--text-primary);">${a.title}</p>
+            <p class="text-[10px] truncate" style="color: var(--text-muted);">${a.placement === 'hero' ? 'Topo (carrossel)' : a.placement === 'both' ? 'Topo + entre categorias' : 'Entre categorias'}${a.placement !== 'hero' ? ' · após a ' + a.slot + 'ª · ' + a.format : ''}${a.link ? ' · ' + a.link : ''}</p>
+            <span class="inline-block mt-1 px-2 py-0.5 rounded-full text-[8px] font-bold uppercase" style="${a.active ? 'background:#22c55e;color:#fff;' : 'background:var(--text-muted);color:var(--bg-primary);'}">${a.active ? 'Ativo' : 'Inativo'}</span>
+          </div>
+          <div class="flex gap-1.5 shrink-0">
+            <button onclick="editarAnuncio('${a.id}', this)" class="w-8 h-8 rounded-xl flex items-center justify-center text-[10px] transition active:scale-90" style="color: var(--text-primary); background: color-mix(in srgb, var(--text-muted) 12%, transparent); border: 1px solid var(--border);" title="Editar">
+              <i class="fa-solid fa-pen"></i>
+            </button>
+            <button onclick="alternarAnuncio('${a.id}')" class="w-8 h-8 rounded-xl flex items-center justify-center text-[10px] transition active:scale-90" style="color: var(--text-primary); background: color-mix(in srgb, var(--text-muted) 12%, transparent); border: 1px solid var(--border);" title="${a.active ? 'Desativar' : 'Ativar'}">
+              <i class="fa-solid fa-${a.active ? 'toggle-on' : 'toggle-off'}"></i>
+            </button>
+            <button onclick="deletarAnuncio('${a.id}')" class="w-8 h-8 rounded-xl flex items-center justify-center text-[10px] transition active:scale-90 text-white" style="background: #ef4444;" title="Excluir">
+              <i class="fa-solid fa-trash-alt"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    let adEditandoId = null;
+
+    function editarAnuncio(id, btn) {
+      const ad = adsData.find(a => a.id === id);
+      if (!ad) return;
+      adEditandoId = id;
+      document.getElementById('ad-input-title').value = ad.title;
+      document.getElementById('ad-input-link').value = ad.link || '';
+      document.getElementById('ad-input-placement').value = ad.placement || 'hero';
+      document.getElementById('ad-input-format').value = ad.format || 'wide';
+      document.getElementById('ad-input-slot').value = ad.slot ?? 0;
+      document.getElementById('ad-input-image').value = '';
+      document.getElementById('ad-image-filename').textContent = 'Manter imagem atual (trocar?)';
+      const saveBtn = document.getElementById('ad-save-btn');
+      if (saveBtn) saveBtn.innerHTML = '<i class="fa-solid fa-save"></i> Salvar alterações';
+      document.getElementById('ad-error').classList.add('hidden');
+      saveBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    async function criarAnuncio() {
+      const errEl = document.getElementById('ad-error');
+      errEl.classList.add('hidden');
+      const title = document.getElementById('ad-input-title').value.trim();
+      const link = document.getElementById('ad-input-link').value.trim();
+      const placement = document.getElementById('ad-input-placement').value;
+      const format = document.getElementById('ad-input-format').value;
+      const slot = parseInt(document.getElementById('ad-input-slot').value || '0', 10);
+      const fileInput = document.getElementById('ad-input-image');
+      const file = fileInput.files[0];
+      if (!title) {
+        errEl.textContent = 'Informe o nome do anunciante.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+      const form = new FormData();
+      form.append('title', title);
+      if (link) form.append('link', link);
+      form.append('placement', placement);
+      form.append('slot', String(slot));
+      form.append('format', format);
+      const resSaveBtn = document.getElementById('ad-save-btn');
+      try {
+        if (adEditandoId) {
+          if (file) form.append('image', file);
+          const res = await fetch(`/api/ads/${adEditandoId}`, {
+            method: 'PATCH',
+            headers: { 'Authorization': 'Bearer ' + getToken() },
+            body: form
+          });
+          const data = await res.json();
+          if (!res.ok) { errEl.textContent = data.error || 'Erro ao salvar.'; errEl.classList.remove('hidden'); return; }
+          adsData = adsData.map(a => a.id === adEditandoId ? data : a);
+        } else {
+          if (!file) { errEl.textContent = 'Escolha uma imagem para o anúncio.'; errEl.classList.remove('hidden'); return; }
+          form.append('image', file);
+          const res = await fetch('/api/ads', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + getToken() },
+            body: form
+          });
+          const data = await res.json();
+          if (!res.ok) { errEl.textContent = data.error || 'Erro ao criar anúncio.'; errEl.classList.remove('hidden'); return; }
+          adsData = [data, ...adsData];
+        }
+        adEditandoId = null;
+        document.getElementById('ad-input-title').value = '';
+        document.getElementById('ad-input-image').value = '';
+        document.getElementById('ad-input-link').value = '';
+        document.getElementById('ad-input-placement').value = 'hero';
+        document.getElementById('ad-input-format').value = 'wide';
+        document.getElementById('ad-input-slot').value = '0';
+        document.getElementById('ad-image-filename').textContent = 'Escolher imagem do anúncio';
+        const saveBtn = document.getElementById('ad-save-btn');
+        if (saveBtn) saveBtn.innerHTML = '<i class="fa-solid fa-plus"></i> Adicionar anúncio';
+        renderAnuncios();
+        await refreshAds();
+      } catch { errEl.textContent = 'Erro de conexão.'; errEl.classList.remove('hidden'); }
+    }
+
+    async function alternarAnuncio(id) {
+      const ad = adsData.find(a => a.id === id);
+      if (!ad) return;
+      try {
+        const res = await fetch(`/api/ads/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+          body: JSON.stringify({ active: !ad.active })
+        });
+        if (!res.ok) { alert('Erro ao alternar anúncio.'); return; }
+        ad.active = !ad.active;
+        renderAnuncios();
+        await refreshAds();
+      } catch { alert('Erro de conexão.'); }
+    }
+
+    async function deletarAnuncio(id) {
+      if (!confirm('Excluir este anúncio?')) return;
+      try {
+        const res = await fetch(`/api/ads/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + getToken() }
+        });
+        if (!res.ok) { alert('Erro ao excluir anúncio.'); return; }
+        adsData = adsData.filter(a => a.id !== id);
+        renderAnuncios();
+        await refreshAds();
+      } catch { alert('Erro de conexão.'); }
+    }
+
+    async function refreshAds() {
+      try {
+        const res = await fetch('/api/ads');
+        if (res.ok) {
+          catAdsData = await res.json();
+          atualizarHero();
+        }
+      } catch {}
+    }
+
+    // ── DESTAQUES (ADMIN) ──
+    function abrirModalDestaques() {
+      const modal = document.getElementById('modal-destaques');
+      modal.classList.remove('modal-hidden');
+      renderDestaques();
+    }
+
+    function fecharModalDestaques() {
+      document.getElementById('modal-destaques').classList.add('modal-hidden');
+    }
+
+    function renderDestaques() {
+      const list = document.getElementById('destaques-list');
+      if (!catRpgData.length) {
+        list.innerHTML = '<p class="text-xs text-center py-6" style="color: var(--text-muted);">Nenhum RPG cadastrado.</p>';
+        return;
+      }
+      list.innerHTML = catRpgData.map(r => `
+        <div class="rounded-2xl p-3 border flex items-center gap-3" style="background: color-mix(in srgb, var(--bg-card) 40%, transparent); border-color: var(--border);">
+          <img src="${r.image}" class="w-10 h-12 object-cover rounded-lg" alt="">
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-bold truncate" style="color: var(--text-primary);">${r.name}</p>
+            <p class="text-[10px] truncate" style="color: var(--text-muted);">${r.owner}</p>
+          </div>
+          <button onclick="toggleDestaque('${r.name.replace(/'/g, "\\'")}', this)" class="relative w-11 h-6 rounded-full transition-colors shrink-0" style="background: ${r.featured ? 'var(--accent)' : 'var(--text-muted)'};">
+            <span class="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform" style="${r.featured ? 'right:0.5;transform:translateX(-0)' : 'left:0.5;transform:translateX(0)'};left:${r.featured ? 'auto' : '0.5'};right:${r.featured ? '0.5' : 'auto'};"></span>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    async function toggleDestaque(nome, btn) {
+      const rpg = catRpgData.find(r => r.name === nome);
+      if (!rpg) return;
+      try {
+        const res = await fetch(`/api/rpgs/${encodeURIComponent(nome)}/featured`, {
+          method: 'PATCH',
+          headers: { 'Authorization': 'Bearer ' + getToken() }
+        });
+        if (!res.ok) { alert('Erro ao alterar destaque.'); return; }
+        rpg.featured = !rpg.featured;
+        const knob = btn.querySelector('span');
+        btn.style.background = rpg.featured ? 'var(--accent)' : 'var(--text-muted)';
+        if (rpg.featured) { knob.style.left = 'auto'; knob.style.right = '0.5'; }
+        else { knob.style.left = '0.5'; knob.style.right = 'auto'; }
+        atualizarHero();
+        renderFeedDestaques();
+      } catch { alert('Erro de conexão.'); }
+    }
+
+    // ── CRIADORES (ADMIN) ──
+    function abrirModalCriadores() {
+      const modal = document.getElementById('modal-criadores');
+      modal.classList.remove('modal-hidden');
+      const select = document.getElementById('creator-user-select');
+      select.innerHTML = '<option value="">Selecione um usuário...</option>' +
+        catUsersData.map(u => `<option value="${u.username.replace(/"/g, '&quot;')}">${u.username}</option>`).join('');
+      renderCriadoresList();
+    }
+
+    function fecharModalCriadores() {
+      document.getElementById('modal-criadores').classList.add('modal-hidden');
+    }
+
+    function renderCriadoresList() {
+      const list = document.getElementById('criadores-list');
+      const criadores = catUsersData.filter(u => (u.creatorOf || []).length > 0);
+      if (!criadores.length) {
+        list.innerHTML = '<p class="text-xs text-center py-6" style="color: var(--text-muted);">Nenhum criador cadastrado.</p>';
+        return;
+      }
+      list.innerHTML = criadores.map(u => `
+        <div class="rounded-2xl p-3 border" style="background: color-mix(in srgb, #22c55e 6%, transparent); border-color: color-mix(in srgb, #22c55e 25%, transparent);">
+          <div class="flex items-center gap-2 mb-1.5">
+            <span class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0" style="background: #22c55e; color: #fff;">${u.username.charAt(0).toUpperCase()}</span>
+            <span class="text-xs font-bold" style="color: var(--text-primary);">${u.username}</span>
+            <span class="text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40;">Criador</span>
+          </div>
+          <p class="text-[10px] leading-relaxed" style="color: var(--text-muted);">${(u.creatorOf || []).map(rn => catRpgData.find(r => r.name === rn)?.name || rn).join(' · ')}</p>
+        </div>
+      `).join('');
+    }
+
+    function atualizarCreatorRpgsBox() {
+      const select = document.getElementById('creator-user-select');
+      const username = select.value;
+      const box = document.getElementById('creator-rpgs-box');
+      if (!username) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+      const user = catUsersData.find(u => u.username === username);
+      const current = (user?.creatorOf || []);
+      box.classList.remove('hidden');
+      box.innerHTML = catRpgData.map(r => {
+        const checked = current.includes(r.name);
+        return `
+          <label class="flex items-center gap-2 p-1.5 rounded-lg cursor-pointer" style="border: 1px solid var(--border); background: var(--bg-card);">
+            <input type="checkbox" value="${r.name.replace(/"/g, '&quot;')}" ${checked ? 'checked' : ''} class="creator-rpg-cb w-3.5 h-3.5 rounded accent-green-500">
+            <span class="text-[11px] truncate" style="color: var(--text-primary);">${r.name}</span>
+          </label>`;
+      }).join('');
+    }
+
+    async function salvarCriador() {
+      const select = document.getElementById('creator-user-select');
+      const username = select.value;
+      const errEl = document.getElementById('creator-error');
+      errEl.classList.add('hidden');
+      if (!username) { errEl.textContent = 'Selecione um usuário.'; errEl.classList.remove('hidden'); return; }
+      const rpgNames = [...document.querySelectorAll('.creator-rpg-cb:checked')].map(cb => cb.value);
+      try {
+        const res = await fetch(`/api/creators/${encodeURIComponent(username)}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+          body: JSON.stringify({ rpgNames })
+        });
+        const data = await res.json();
+        if (!res.ok) { errEl.textContent = data.error || 'Erro ao salvar.'; errEl.classList.remove('hidden'); return; }
+        const user = catUsersData.find(u => u.username === username);
+        if (user) user.creatorOf = data.creatorOf || [];
+        renderCriadoresList();
+        atualizarFeedSelo();
+      } catch { errEl.textContent = 'Erro de conexão.'; errEl.classList.remove('hidden'); }
+    }
+
+    function isCreatorOfUser(rpgName) {
+      const user = getUser();
+      if (!user) return false;
+      if (user.role === 'admin') return true;
+      const u = catUsersData.find(x => x.username === user.username);
+      return u && (u.creatorOf || []).includes(rpgName);
+    }
+
+    function atualizarFeedSelo() {
+      document.querySelectorAll('.creator-badge').forEach(b => {
+        const rpgName = b.getAttribute('data-rpg');
+        b.style.display = isCreatorOfUser(rpgName) ? 'inline-flex' : 'none';
+      });
+      const btn = document.getElementById('btn-postar-evento');
+      if (btn) {
+        const user = getUser();
+        const u = user ? catUsersData.find(x => x.username === user.username) : null;
+        btn.classList.toggle('hidden', !(u && (u.creatorOf || []).length > 0));
+      }
+    }
+
     function aprovarAvaliacao(id) {
       fetch(`/api/reviews/${id}/approve`, {
         method: 'PATCH',
@@ -2094,10 +2731,20 @@ const seoCount = seoRevs.length;
           const owner = btn.getAttribute('data-owner');
           btn.classList.toggle('hidden', !(user && (user.role === 'admin' || user.username === owner)));
         });
+        document.querySelectorAll('.event-delete-btn').forEach(btn => {
+          const owner = btn.getAttribute('data-owner');
+          btn.classList.toggle('hidden', !(user && (user.role === 'admin' || user.username === owner)));
+        });
+        document.querySelectorAll('.reply-delete-btn').forEach(btn => {
+          const owner = btn.getAttribute('data-owner');
+          btn.classList.toggle('hidden', !(user && (user.role === 'admin' || user.username === owner)));
+        });
+        atualizarFeedSelo();
       } else {
         btnUser.classList.add('hidden');
         btnLogin.classList.remove('hidden');
         if (adminSection) adminSection.classList.add('hidden');
+        document.querySelectorAll('.creator-badge').forEach(b => { b.style.display = 'none'; });
       }
     }
 
@@ -2108,6 +2755,8 @@ const seoCount = seoRevs.length;
     let allReviewData = <%- JSON.stringify(allReviews) %>;
     let catUsersData = <%- JSON.stringify(users) %>;
     let catRpgRatings = <%- JSON.stringify(rpgRatings) %>;
+    let catEventPostsData = <%- JSON.stringify(eventPosts || []) %>;
+    let catRepliesData = {};
 
     function toSlug(name) {
       return name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -2249,7 +2898,7 @@ const seoCount = seoRevs.length;
         if (rpgsRes.ok) {
           const rpgs = await rpgsRes.json();
           catRpgData = rpgs;
-          heroRpgs = computeHeroRpgs(rpgs);
+          heroSlides = buildHeroSlides(rpgs, catAdsData);
           heroIndex = 0;
           renderCatalogo();
           atualizarHero();
@@ -2261,6 +2910,8 @@ const seoCount = seoRevs.length;
         if (ratingsRes.ok) {
           catRpgRatings = await ratingsRes.json();
         }
+        renderFeedDestaques();
+        atualizarFeedSelo();
       } catch {}
     }
 
@@ -2291,17 +2942,17 @@ const seoCount = seoRevs.length;
     }
 
     function atualizarHero() {
-      heroRpgs = computeHeroRpgs(catRpgData);
+      heroSlides = buildHeroSlides(catRpgData, catAdsData);
       heroIndex = 0;
       heroIrPara(null, 0);
       const dots = document.getElementById('hero-dots');
-      if (heroRpgs.length < 2) {
+      if (heroSlides.length < 2) {
         if (dots) dots.innerHTML = '';
         pararHero();
         return;
       }
       if (dots) {
-        dots.innerHTML = heroRpgs.map((_, i) => `
+        dots.innerHTML = heroSlides.map((_, i) => `
           <button onclick="heroIrPara(event, ${i})" class="w-1.5 h-1.5 rounded-full transition-all" style="background:${i === 0 ? 'var(--accent)' : 'rgba(255,255,255,0.4)'};${i === 0 ? 'width:16px;' : ''}"></button>
         `).join('');
       }
@@ -2325,7 +2976,21 @@ const seoCount = seoRevs.length;
       }
       if (!user) return;
       document.getElementById('perfil-nome').textContent = user.username;
-      document.getElementById('perfil-role').textContent = user.role === 'admin' ? 'Administrador' : 'Usuário';
+      const roleEl = document.getElementById('perfil-role');
+      const criadorRpgs = (user.creatorOf || []).filter(rn => catRpgData.some(r => r.name === rn));
+      if (user.role === 'admin') {
+        roleEl.textContent = 'Administrador';
+        roleEl.style.background = 'color-mix(in srgb, var(--accent) 15%, transparent)';
+        roleEl.style.color = 'var(--accent)';
+      } else if (criadorRpgs.length) {
+        roleEl.textContent = 'Criador';
+        roleEl.style.background = '#22c55e20';
+        roleEl.style.color = '#22c55e';
+      } else {
+        roleEl.textContent = 'Usuário';
+        roleEl.style.background = 'color-mix(in srgb, var(--accent) 15%, transparent)';
+        roleEl.style.color = 'var(--accent)';
+      }
       document.getElementById('perfil-bio').value = user.bio || '';
       document.getElementById('perfil-contact').textContent = user.contact || 'Não informado';
       const avatar = document.getElementById('perfil-avatar');
@@ -2364,10 +3029,124 @@ const seoCount = seoRevs.length;
 
       const modal = document.getElementById('modal-perfil');
       modal.classList.remove('modal-hidden');
+      carregarScorePerfil(user.username, isOwn);
     }
 
     function fecharPerfil() {
       document.getElementById('modal-perfil').classList.add('modal-hidden');
+    }
+
+    function escalaNivel(score) {
+      if (score >= 80) return { nivel: 'Lenda', cor: '#a855f7' };
+      if (score >= 60) return { nivel: 'Destaque', cor: '#22c55e' };
+      if (score >= 40) return { nivel: 'Reconhecido', cor: '#10b981' };
+      if (score >= 20) return { nivel: 'Emergente', cor: '#f59e0b' };
+      return { nivel: 'Iniciante', cor: '#f59e0b' };
+    }
+
+    async function carregarScorePerfil(username, isOwn) {
+      const chip = document.getElementById('perfil-score-chip');
+      const painelBtn = document.getElementById('perfil-painel-btn');
+      if (chip) chip.classList.add('hidden');
+      if (painelBtn) painelBtn.classList.add('hidden');
+      if (!isOwn) return;
+      const user = catUsersData.find(u => u.username === username);
+      const isCreator = (user?.creatorOf || []).some(rn => catRpgData.some(r => r.name === rn));
+      if (!isCreator) return;
+      const token = getToken();
+      if (!token) return;
+      try {
+        const res = await fetch('/api/creators/' + encodeURIComponent(username) + '/stats', { headers: { 'Authorization': 'Bearer ' + token } });
+        if (!res.ok) return;
+        const stats = await res.json();
+        if (chip) {
+          chip.classList.remove('hidden');
+          document.getElementById('perfil-score-value').textContent = stats.score;
+        }
+        if (painelBtn) painelBtn.classList.remove('hidden');
+      } catch {}
+    }
+
+    function abrirPainelCriador() {
+      const user = getUser();
+      if (!user) return;
+      const modal = document.getElementById('modal-painel-criador');
+      modal.classList.remove('modal-hidden');
+      document.getElementById('painel-rpgs').innerHTML = '<p class="text-xs text-center py-6" style="color: var(--text-muted);">Carregando...</p>';
+      document.getElementById('painel-score-valor').textContent = '0';
+      document.getElementById('painel-nivel').textContent = 'Calculando...';
+
+      fetch('/api/creators/' + encodeURIComponent(user.username) + '/stats', { headers: { 'Authorization': 'Bearer ' + getToken() } })
+        .then(r => { if (r.status === 403) { fecharPainelCriador(); return null; } return r.json(); })
+        .then(stats => {
+          if (!stats) return;
+          document.getElementById('painel-score-valor').textContent = stats.score;
+          const { nivel, cor } = escalaNivel(stats.score);
+          const nivelEl = document.getElementById('painel-nivel');
+          nivelEl.textContent = 'Nível: ' + nivel + ' · Score ' + stats.score + '/100';
+          const scoreCard = document.getElementById('painel-score-card');
+          scoreCard.style.background = 'linear-gradient(135deg, ' + cor + ', color-mix(in srgb, ' + cor + ' 60%, #000))';
+
+          const container = document.getElementById('painel-rpgs');
+          if (!stats.rpgs.length) {
+            container.innerHTML = '<p class="text-xs text-center py-6" style="color: var(--text-muted);">Nenhum sistema vinculado ao seu selo de criador.</p>';
+            return;
+          }
+          container.innerHTML = stats.rpgs.map(r => {
+            const stars = r.reviewCount > 0
+              ? '<i class="fas fa-star" style="color:var(--star);font-size:8px;"></i>'.repeat(Math.floor(r.avgRating)) + (r.avgRating % 1 !== 0 ? '<i class="fas fa-star-half-alt" style="color:var(--star);font-size:8px;"></i>' : '')
+              : '<i class="fa-regular fa-star" style="color:var(--text-muted);font-size:8px;"></i>';
+            const boostBar = Math.min(100, r.boostedPosts ? (r.boostedPosts * 40) : 0);
+            return `
+            <div class="rounded-2xl p-3.5 border space-y-3" style="background: color-mix(in srgb, var(--bg-elevated) 40%, transparent); border-color: var(--border);">
+              <div class="flex items-center gap-3">
+                <img src="${r.rpg.image}" class="w-11 h-13 object-cover rounded-lg" alt="">
+                <div class="flex-1 min-w-0">
+                  <h4 class="text-xs font-bold truncate" style="color: var(--text-primary);">${r.rpg.name}</h4>
+                  <div class="flex items-center gap-1.5 mt-0.5">
+                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style="background:${cor}20;color:${cor};border:1px solid ${cor}40;">Score ${r.score}</span>
+                    <div class="flex items-center gap-0.5">${stars}</div>
+                    <span class="text-[9px]" style="color: var(--text-muted);">${r.reviewCount > 0 ? r.avgRating.toFixed(1) : 'Sem notas'}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="grid grid-cols-4 gap-2 text-center">
+                <div class="rounded-xl py-2" style="background: var(--bg-input);">
+                  <p class="text-sm font-bold" style="color: var(--text-primary);">${r.views.toLocaleString('pt-BR')}</p>
+                  <p class="text-[8px] font-bold uppercase tracking-wider mt-0.5" style="color: var(--text-muted);">Acessos</p>
+                </div>
+                <div class="rounded-xl py-2" style="background: var(--bg-input);">
+                  <p class="text-sm font-bold" style="color: var(--text-primary);">${r.reviewCount}</p>
+                  <p class="text-[8px] font-bold uppercase tracking-wider mt-0.5" style="color: var(--text-muted);">Avaliações</p>
+                </div>
+                <div class="rounded-xl py-2" style="background: var(--bg-input);">
+                  <p class="text-sm font-bold" style="color: var(--text-primary);">${r.repliesCount}</p>
+                  <p class="text-[8px] font-bold uppercase tracking-wider mt-0.5" style="color: var(--text-muted);">Respostas</p>
+                </div>
+                <div class="rounded-xl py-2" style="background: var(--bg-input);">
+                  <p class="text-sm font-bold" style="color: var(--text-primary);">${r.postsCount}</p>
+                  <p class="text-[8px] font-bold uppercase tracking-wider mt-0.5" style="color: var(--text-muted);">Posts</p>
+                </div>
+              </div>
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-[9px] font-bold" style="color: var(--text-muted);">Posts impulsionados</span>
+                  <span class="text-[9px] font-bold" style="color: ${r.boostedPosts ? '#f59e0b' : 'var(--text-muted)'};">${r.boostedPosts} em alta</span>
+                </div>
+                <div class="h-1.5 rounded-full overflow-hidden" style="background: var(--bg-input);">
+                  <div class="h-full rounded-full transition-all" style="width:${boostBar}%; background: linear-gradient(90deg, ${cor}, #f59e0b);"></div>
+                </div>
+              </div>
+            </div>`;
+          }).join('');
+        })
+        .catch(() => {
+          document.getElementById('painel-rpgs').innerHTML = '<p class="text-xs text-center py-6" style="color: var(--text-muted);">Erro ao carregar o painel.</p>';
+        });
+    }
+
+    function fecharPainelCriador() {
+      document.getElementById('modal-painel-criador').classList.add('modal-hidden');
     }
 
     function trackAnalytics(payload) {
@@ -2569,28 +3348,52 @@ const seoCount = seoRevs.length;
     let feedSkip = 20;
     let feedLoading = false;
     let feedHasMore = true;
+    let feedEventsLoaded = 0;
+    let feedEventsDone = true;
 
-    async function carregarMaisReviews() {
+    function iniciarFeedEventos() {
+      feedEventsLoaded = catEventPostsData.length || 0;
+      feedEventsDone = feedEventsLoaded < 50;
+      feedHasMore = true;
+    }
+
+    async function carregarMaisFeed() {
       if (feedLoading || !feedHasMore) return;
       feedLoading = true;
-      document.getElementById('feed-spinner').classList.remove('hidden');
-      document.getElementById('feed-loader').classList.add('hidden');
+      const spinner = document.getElementById('feed-spinner');
+      const loader = document.getElementById('feed-loader');
+      spinner.classList.remove('hidden');
+      if (loader) loader.classList.add('hidden');
       try {
-        const res = await fetch('/api/reviews/feed?skip=' + feedSkip + '&limit=20');
-        if (!res.ok) { feedHasMore = false; return; }
-        const reviews = await res.json();
-        if (reviews.length < 20) feedHasMore = false;
-        feedSkip += reviews.length;
-        const container = document.getElementById('feed-container');
-        reviews.forEach(r => {
-          const card = criarCardFeed(r);
-          container.insertBefore(card, document.getElementById('feed-spinner'));
-        });
-      } catch { feedHasMore = false; }
+        if (!feedEventsDone) {
+          const res = await fetch('/api/feed/events?skip=' + feedEventsLoaded + '&limit=20');
+          if (!res.ok) { feedEventsDone = true; }
+          else {
+            const posts = await res.json();
+            posts.forEach(p => {
+              document.getElementById('feed-container').insertBefore(criarCardEvento(p), spinner);
+            });
+            feedEventsLoaded += posts.length;
+            if (posts.length < 20) feedEventsDone = true;
+          }
+        }
+        if (feedEventsDone && feedHasMore) {
+          const res = await fetch('/api/reviews/feed?skip=' + feedSkip + '&limit=20');
+          if (!res.ok) { feedHasMore = false; return; }
+          const reviews = await res.json();
+          if (reviews.length < 20) feedHasMore = false;
+          feedSkip += reviews.length;
+          const container = document.getElementById('feed-container');
+          reviews.forEach(r => {
+            const card = criarCardFeed(r);
+            container.insertBefore(card, spinner);
+          });
+        }
+      } catch { feedEventsDone = true; feedHasMore = false; }
       finally {
         feedLoading = false;
-        document.getElementById('feed-spinner').classList.add('hidden');
-        if (feedHasMore) document.getElementById('feed-loader').classList.remove('hidden');
+        spinner.classList.add('hidden');
+        if (feedHasMore && loader) loader.classList.remove('hidden');
       }
     }
 
@@ -2611,7 +3414,9 @@ const seoCount = seoRevs.length;
           <div class="flex-1 min-w-0">
             <span class="text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wide uppercase font-title" style="background: var(--accent-dim); color: var(--accent);">${r.rpg.genre}</span>
             <h3 class="font-title font-bold text-sm truncate mt-0.5 cursor-pointer hover:underline" style="color: var(--text-primary);" onclick="abrirDetalheRpg('${r.rpg.name.replace(/'/g, "\\'")}')">${r.rpg.name}</h3>
-            <p class="text-[10px] truncate" style="color: var(--text-muted);">Por: <span class="rpg-owner">${r.rpg.owner}</span></p>
+            <p class="text-[10px] truncate flex items-center gap-1" style="color: var(--text-muted);">Por: <span class="rpg-owner">${r.rpg.owner}</span>
+              <span class="creator-badge hidden items-center gap-0.5 text-[8px] font-bold px-1 py-0.5 rounded-full" data-rpg="${r.rpg.name}" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40;"><i class="fa-solid fa-award"></i>Criador</span>
+            </p>
           </div>
         </div>
         <div class="flex items-center justify-between">
@@ -2641,14 +3446,234 @@ const seoCount = seoRevs.length;
       return div;
     }
 
+    // ── POSTAR EVENTO ──
+    function abrirModalPostarEvento() {
+      const user = getUser();
+      if (!user) { abrirModalLogin(); return; }
+      const u = catUsersData.find(x => x.username === user.username);
+      const meusRpgs = (u?.creatorOf || []).filter(rn => catRpgData.some(r => r.name === rn));
+      if (!meusRpgs.length) { alert('Você não é criador de nenhum sistema.'); return; }
+      const select = document.getElementById('event-rpg-select');
+      select.innerHTML = meusRpgs.map(rn => `<option value="${rn.replace(/"/g, '&quot;')}">${rn}</option>`).join('');
+      document.getElementById('event-title').value = '';
+      document.getElementById('event-content').value = '';
+      document.getElementById('event-error').classList.add('hidden');
+      document.getElementById('modal-postar-evento').classList.remove('modal-hidden');
+    }
+
+    function fecharModalPostarEvento() {
+      document.getElementById('modal-postar-evento').classList.add('modal-hidden');
+    }
+
+    async function publicarEvento() {
+      const errEl = document.getElementById('event-error');
+      errEl.classList.add('hidden');
+      const rpgName = document.getElementById('event-rpg-select').value;
+      const title = document.getElementById('event-title').value.trim();
+      const content = document.getElementById('event-content').value.trim();
+      if (!rpgName || !title || !content) { errEl.textContent = 'Preencha todos os campos.'; errEl.classList.remove('hidden'); return; }
+      try {
+        const res = await fetch('/api/posts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+          body: JSON.stringify({ rpgName, title, content })
+        });
+        const data = await res.json();
+        if (!res.ok) { errEl.textContent = data.error || 'Erro ao publicar.'; errEl.classList.remove('hidden'); return; }
+        fecharModalPostarEvento();
+        await refreshPosts();
+        abrirFeed();
+      } catch { errEl.textContent = 'Erro de conexão.'; errEl.classList.remove('hidden'); }
+    }
+
+    async function deletarEvento(id, btn) {
+      if (!confirm('Excluir esta postagem?')) return;
+      try {
+        const res = await fetch(`/api/posts/${id}`, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getToken() } });
+        if (!res.ok) { alert('Erro ao excluir.'); return; }
+        const card = btn.closest('.feed-event-card');
+        if (card) card.remove();
+        catEventPostsData = catEventPostsData.filter(p => p.id !== id);
+      } catch { alert('Erro de conexão.'); }
+    }
+
+    async function refreshPosts() {
+      try {
+        const res = await fetch('/api/posts');
+        if (res.ok) {
+          const posts = await res.json();
+          const container = document.getElementById('feed-container');
+          if (!container) return;
+          const spinner = document.getElementById('feed-spinner');
+          const existentes = [...container.querySelectorAll('.feed-event-card')];
+          existentes.forEach(e => e.remove());
+          posts.forEach(p => {
+            container.insertBefore(criarCardEvento(p), spinner);
+          });
+          catEventPostsData = posts;
+          iniciarFeedEventos();
+        }
+      } catch {}
+    }
+
+    function criarCardEvento(p) {
+      const div = document.createElement('div');
+      div.className = 'feed-card feed-event-card rounded-2xl p-4.5 border transition-all duration-300 shadow-sm flex flex-col space-y-3.5';
+      div.style.background = 'color-mix(in srgb, #22c55e 6%, var(--bg-card) 40%, transparent)';
+      div.style.borderColor = 'color-mix(in srgb, #22c55e 30%, var(--border))';
+      div.setAttribute('data-rpg', p.rpg.name);
+      div.innerHTML = `
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-[9px] font-bold px-2 py-0.5 rounded-full tracking-wide uppercase shrink-0" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40;"><i class="fa-solid fa-bullhorn text-[8px] mr-1"></i>Evento do Criador</span>
+          ${p.boosted
+            ? `<span class="text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0" style="background:#f59e0b20;color:#f59e0b;border:1px solid #f59e0b40;" title="Quanto mais avaliações boas o sistema tem, mais tempo este post fica no topo."><i class="fa-solid fa-rocket text-[8px] mr-1"></i>Em alta · ${Math.round(p.boostHours)}h</span>`
+            : `<span class="text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0" style="background:var(--bg-input);color:var(--text-muted);border:1px solid var(--border);" title="O impulso deste post terminou e ele está caindo conforme o tempo."><i class="fa-solid fa-arrow-trend-down text-[8px] mr-1"></i>Caindo</span>`}
+          <span class="text-[9px]" style="color: var(--text-muted);">${p.timeAgo}</span>
+        </div>
+        <div class="flex items-center space-x-3 p-2.5 rounded-xl border" style="background: color-mix(in srgb, var(--bg-elevated) 40%, transparent); border-color: var(--border);">
+          <img src="${p.rpg.image}" class="w-12 h-14 object-cover rounded-lg shadow-md" alt="">
+          <div class="flex-1 min-w-0">
+            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wide uppercase font-title" style="background: #22c55e; color: white;">${p.rpg.genre}</span>
+            <h3 class="font-title font-bold text-sm truncate mt-0.5 cursor-pointer hover:underline" style="color: var(--text-primary);" onclick="abrirDetalheRpg('${p.rpg.name.replace(/'/g, "\\'")}')">${p.rpg.name}</h3>
+            <p class="text-[10px] truncate" style="color: var(--text-muted);">Por: ${p.rpg.owner}</p>
+          </div>
+        </div>
+        <h4 class="text-sm font-bold" style="color: var(--text-primary);">${p.title}</h4>
+        <p class="text-xs leading-relaxed pl-1" style="color: var(--text-secondary);">${p.content}</p>
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-semibold flex items-center gap-1" style="color: #22c55e;"><i class="fa-solid fa-award"></i> ${p.username}</span>
+          <button onclick="deletarEvento('${p.id}', this)" class="event-delete-btn text-[9px] px-2 py-1 rounded-lg font-bold transition-all hidden active:scale-[0.94]" style="color: #ef4444; background: color-mix(in srgb, #ef4444 10%, transparent); border: 1px solid color-mix(in srgb, #ef4444 20%, transparent);" data-owner="${p.username}">
+            <i class="fa-solid fa-trash-alt mr-1"></i>Excluir
+          </button>
+        </div>`;
+      const storedUser = getUser();
+      if (storedUser) {
+        const btn = div.querySelector('.event-delete-btn');
+        if (btn) btn.classList.toggle('hidden', !(storedUser.role === 'admin' || storedUser.username === p.username));
+      }
+      return div;
+    }
+
+    function renderFeedDestaques() {
+      const section = document.getElementById('feed-destaques-section');
+      if (!section) return;
+      const feats = catRpgData.filter(r => r.featured);
+      if (!feats.length) { section.style.display = 'none'; return; }
+      section.style.display = '';
+      const container = section.querySelector('.no-scrollbar');
+      container.innerHTML = feats.map(r => {
+        const sr = catRpgRatings.find(x => x.rpg.name === r.name);
+        const stars = sr && sr.reviewCount > 0
+          ? '<i class="fas fa-star" style="color:var(--star);font-size:6px;"></i>'.repeat(Math.floor(sr.avgRating)) + (sr.avgRating % 1 !== 0 ? '<i class="fas fa-star-half-alt" style="color:var(--star);font-size:6px;"></i>' : '') + `<span class="text-[8px] ml-0.5 font-semibold" style="color:var(--text-muted);">${sr.reviewCount}</span>`
+          : '<i class="fa-regular fa-star" style="color:var(--text-muted);font-size:6px;"></i>'.repeat(5);
+        return `
+          <button onclick="abrirDetalheRpg('${r.name.replace(/'/g, "\\'")}')" class="flex flex-col items-center space-y-1 flex-shrink-0 focus:outline-none group">
+            <div class="w-16 h-16 rounded-full p-0.5 overflow-hidden transition-all duration-300 group-hover:scale-105" style="box-shadow: 0 0 0 2px var(--accent-glow); background: var(--bg-card);">
+              <img src="${r.image}" class="w-full h-full object-cover rounded-full" alt="">
+            </div>
+            <span style="color: var(--text-secondary);" class="text-[11px] font-medium truncate w-16 text-center group-hover:text-white transition">${r.name}</span>
+            <div class="flex items-center gap-[1px]">${stars}</div>
+          </button>`;
+      }).join('');
+    }
+
+    // ── RESPONDER AVALIAÇÕES ──
+    let replyReviewId = null;
+
+    function abrirModalResponderReview(reviewId, username, comment) {
+      const user = getUser();
+      if (!user) { abrirModalLogin(); return; }
+      replyReviewId = reviewId;
+      document.getElementById('reply-review-author').textContent = `Avaliação de ${username}`;
+      document.getElementById('reply-review-comment').textContent = comment;
+      document.getElementById('reply-content').value = '';
+      document.getElementById('reply-error').classList.add('hidden');
+      document.getElementById('modal-responder-review').classList.remove('modal-hidden');
+    }
+
+    function fecharModalResponderReview() {
+      document.getElementById('modal-responder-review').classList.add('modal-hidden');
+      replyReviewId = null;
+    }
+
+    async function enviarResposta() {
+      const errEl = document.getElementById('reply-error');
+      errEl.classList.add('hidden');
+      const content = document.getElementById('reply-content').value.trim();
+      if (!content) { errEl.textContent = 'Escreva sua resposta.'; errEl.classList.remove('hidden'); return; }
+      if (!replyReviewId) return;
+      try {
+        const res = await fetch(`/api/reviews/${replyReviewId}/replies`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+          body: JSON.stringify({ content })
+        });
+        const data = await res.json();
+        if (!res.ok) { errEl.textContent = data.error || 'Erro ao responder.'; errEl.classList.remove('hidden'); return; }
+        fecharModalResponderReview();
+        await carregarRespostas(replyReviewId, document.querySelector('[data-reviews-list="' + replyReviewId + '"]'));
+        replyReviewId = null;
+      } catch { errEl.textContent = 'Erro de conexão.'; errEl.classList.remove('hidden'); }
+    }
+
+    async function carregarRespostas(reviewId, container) {
+      if (!container) return;
+      try {
+        const res = await fetch(`/api/reviews/${reviewId}/replies`);
+        if (!res.ok) return;
+        const replies = await res.json();
+        catRepliesData[reviewId] = replies;
+        renderRespostas(reviewId, container);
+      } catch {}
+    }
+
+    function renderRespostas(reviewId, container) {
+      if (!container) return;
+      const replies = catRepliesData[reviewId] || [];
+      if (!replies.length) { container.innerHTML = ''; container.classList.add('hidden'); return; }
+      container.classList.remove('hidden');
+      container.innerHTML = replies.map(rep => `
+        <div class="rounded-xl p-2.5 border flex items-start gap-2" style="background: color-mix(in srgb, #22c55e 6%, transparent); border-color: color-mix(in srgb, #22c55e 25%, transparent);">
+          <i class="fa-solid fa-award text-[10px] mt-0.5" style="color: #22c55e;"></i>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-1.5 mb-0.5">
+              <span class="text-[10px] font-bold" style="color: #22c55e;">${rep.username}</span>
+              <span class="text-[8px] font-bold px-1 py-0.5 rounded uppercase" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40;">Criador</span>
+              <span class="text-[8px] ml-auto" style="color: var(--text-muted);">${rep.timeAgo}</span>
+            </div>
+            <p class="text-[10px] leading-relaxed" style="color: var(--text-secondary);">${rep.content.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+          </div>
+          <button onclick="deletarResposta('${rep.id}', this)" class="reply-delete-btn hidden text-[9px] px-1.5 py-0.5 rounded-lg font-bold shrink-0" style="color: #ef4444; background: color-mix(in srgb, #ef4444 10%, transparent);" data-owner="${rep.username}">
+            <i class="fa-solid fa-trash-alt"></i>
+          </button>
+        </div>`).join('');
+      const storedUser = getUser();
+      if (storedUser) {
+        container.querySelectorAll('.reply-delete-btn').forEach(b => {
+          b.classList.toggle('hidden', !(storedUser.role === 'admin' || storedUser.username === b.getAttribute('data-owner')));
+        });
+      }
+    }
+
+    async function deletarResposta(id, btn) {
+      if (!confirm('Excluir esta resposta?')) return;
+      try {
+        const res = await fetch(`/api/replies/${id}`, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getToken() } });
+        if (!res.ok) { alert('Erro ao excluir.'); return; }
+        const box = btn.closest('.review-replies-box');
+        if (box) box.remove();
+      } catch { alert('Erro de conexão.'); }
+    }
+
     // Infinite scroll: carrega mais ao chegar no final
     let feedObserver = null;
     document.addEventListener('DOMContentLoaded', function() {
       const spinner = document.getElementById('feed-spinner');
       if (!spinner) return;
+      iniciarFeedEventos();
       feedObserver = new IntersectionObserver(function(entries) {
         if (entries[0].isIntersecting && feedHasMore) {
-          carregarMaisReviews();
+          carregarMaisFeed();
         }
       }, { rootMargin: '200px' });
       feedObserver.observe(spinner);
@@ -2833,6 +3858,8 @@ const seoCount = seoRevs.length;
       if (e.key === 'Escape') {
         if (!document.getElementById('modal-perfil').classList.contains('modal-hidden')) fecharPerfil();
         if (!document.getElementById('modal-pendentes').classList.contains('modal-hidden')) fecharModalPendentes();
+        if (!document.getElementById('modal-painel-criador').classList.contains('modal-hidden')) fecharPainelCriador();
+        if (!document.getElementById('modal-monitoramento').classList.contains('modal-hidden')) fecharMonitoramento();
       }
     });
 

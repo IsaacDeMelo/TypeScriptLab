@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express'
 import multer from 'multer'
 import { v2 as cloudinary } from 'cloudinary'
 import { Readable } from 'stream'
-import { getReviews, getRecentReviews, getPendingReviews, addReview, approveReview, rejectReview, deleteReviewById, addRpg, updateRpg, deleteRpg, getRpgs, getRpgByName, getUserByToken, toggleFeaturedRpg, getRpgRatings, attachRpgs, recordVisit, getAnalyticsSummary } from '../data'
+import { getReviews, getRecentReviews, getPendingReviews, addReview, approveReview, rejectReview, deleteReviewById, addRpg, updateRpg, deleteRpg, getRpgs, getRpgByName, getUserByToken, toggleFeaturedRpg, getRpgRatings, attachRpgs, recordVisit, getAnalyticsSummary, getAds, getAllAds, addAd, updateAd, deleteAd, setUserCreators, isCreatorOf, getEventPosts, getEventPostsPaginated, addEventPost, deleteEventPost, getReviewReplies, addReviewReply, deleteReviewReply, getCreatorStats } from '../data'
 import ReviewModel from '../models/Review'
 import { ReviewInput, RPG } from '../types'
 
@@ -317,6 +317,12 @@ router.get('/reviews/feed', async (req: Request, res: Response) => {
   res.json(await attachRpgs(docs))
 })
 
+router.get('/feed/events', async (req: Request, res: Response) => {
+  const limit = Math.min(parseInt(req.query.limit as string) || 20, 100)
+  const skip = parseInt(req.query.skip as string) || 0
+  res.json(await getEventPostsPaginated(skip, limit))
+})
+
 router.post('/analytics', async (req: Request, res: Response) => {
   const { type, rpg, query } = req.body || {}
   if (type === 'rpgview' && typeof rpg === 'string' && rpg) {
@@ -334,6 +340,167 @@ router.get('/analytics/summary', async (req: Request, res: Response) => {
   const user = await getUserByToken(token)
   if (!user || user.role !== 'admin') { res.status(403).json({ error: 'Apenas administradores.' }); return }
   res.json(await getAnalyticsSummary())
+})
+
+// ── ADS ──
+router.get('/ads', async (_req: Request, res: Response) => {
+  res.json(await getAds())
+})
+
+router.get('/ads/all', async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization
+  if (!authHeader) { res.status(401).json({ error: 'Autenticação necessária.' }); return }
+  const token = authHeader.replace('Bearer ', '')
+  const user = await getUserByToken(token)
+  if (!user || user.role !== 'admin') { res.status(403).json({ error: 'Apenas administradores.' }); return }
+  res.json(await getAllAds())
+})
+
+router.post('/ads', upload.single('image'), async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization
+  if (!authHeader) { res.status(401).json({ error: 'Autenticação necessária.' }); return }
+  const token = authHeader.replace('Bearer ', '')
+  const user = await getUserByToken(token)
+  if (!user || user.role !== 'admin') { res.status(403).json({ error: 'Apenas administradores.' }); return }
+  const { title, link } = req.body
+  if (!title) { res.status(400).json({ error: 'Campo obrigatório: title.' }); return }
+  if (!req.file) { res.status(400).json({ error: 'Envie uma imagem para o anúncio.' }); return }
+  let image: string
+  try {
+    image = await uploadToCloudinary(req.file.buffer)
+  } catch {
+    res.status(500).json({ error: 'Falha ao enviar a imagem.' }); return
+  }
+  const ad = await addAd({
+    title, image, link,
+    placement: req.body.placement === 'catalog' || req.body.placement === 'both' ? req.body.placement : 'hero',
+    slot: req.body.slot !== undefined && req.body.slot !== '' ? Number(req.body.slot) : 0,
+    format: ['wide', 'square', 'poster'].includes(req.body.format) ? req.body.format : 'wide',
+  })
+  res.status(201).json(ad)
+})
+
+router.patch('/ads/:id', upload.single('image'), async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization
+  if (!authHeader) { res.status(401).json({ error: 'Autenticação necessária.' }); return }
+  const token = authHeader.replace('Bearer ', '')
+  const user = await getUserByToken(token)
+  if (!user || user.role !== 'admin') { res.status(403).json({ error: 'Apenas administradores.' }); return }
+  const update: { title?: string; image?: string; link?: string; active?: boolean; placement?: string; slot?: number; format?: string } = {}
+  if (req.body.title !== undefined) update.title = req.body.title
+  if (req.body.link !== undefined) update.link = req.body.link
+  if (req.body.active !== undefined) update.active = req.body.active === true || req.body.active === 'true'
+  if (req.body.placement !== undefined && ['hero', 'catalog', 'both'].includes(req.body.placement)) update.placement = req.body.placement
+  if (req.body.slot !== undefined) update.slot = req.body.slot === '' ? 0 : Number(req.body.slot)
+  if (req.body.format !== undefined && ['wide', 'square', 'poster'].includes(req.body.format)) update.format = req.body.format
+  if (req.file) {
+    try {
+      update.image = await uploadToCloudinary(req.file.buffer)
+    } catch {
+      res.status(500).json({ error: 'Falha ao enviar a imagem.' }); return
+    }
+  }
+  const ad = await updateAd(String(req.params.id), update)
+  if (!ad) { res.status(404).json({ error: 'Anúncio não encontrado.' }); return }
+  res.json(ad)
+})
+
+router.delete('/ads/:id', async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization
+  if (!authHeader) { res.status(401).json({ error: 'Autenticação necessária.' }); return }
+  const token = authHeader.replace('Bearer ', '')
+  const user = await getUserByToken(token)
+  if (!user || user.role !== 'admin') { res.status(403).json({ error: 'Apenas administradores.' }); return }
+  const ok = await deleteAd(String(req.params.id))
+  if (!ok) { res.status(404).json({ error: 'Anúncio não encontrado.' }); return }
+  res.json({ message: 'Anúncio excluído.' })
+})
+
+// ── CRIADORES (Selo) ──
+router.patch('/creators/:username', async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization
+  if (!authHeader) { res.status(401).json({ error: 'Autenticação necessária.' }); return }
+  const token = authHeader.replace('Bearer ', '')
+  const user = await getUserByToken(token)
+  if (!user || user.role !== 'admin') { res.status(403).json({ error: 'Apenas administradores.' }); return }
+  const rpgNames = req.body.rpgNames
+  if (!Array.isArray(rpgNames)) { res.status(400).json({ error: 'rpgNames deve ser uma lista.' }); return }
+  const updated = await setUserCreators(String(req.params.username), rpgNames)
+  if (!updated) { res.status(404).json({ error: 'Usuário não encontrado.' }); return }
+  res.json(updated)
+})
+
+router.get('/creators/:username/stats', async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization
+  if (!authHeader) { res.status(401).json({ error: 'Autenticação necessária.' }); return }
+  const token = authHeader.replace('Bearer ', '')
+  const user = await getUserByToken(token)
+  if (!user) { res.status(401).json({ error: 'Sessão inválida.' }); return }
+  if (user.username !== String(req.params.username) && user.role !== 'admin') { res.status(403).json({ error: 'Apenas o próprio criador ou administradores.' }); return }
+  const stats = await getCreatorStats(String(req.params.username))
+  if (!stats) { res.status(404).json({ error: 'Usuário não encontrado.' }); return }
+  res.json(stats)
+})
+
+// ── POSTAGENS DE EVENTOS ──
+router.get('/posts', async (_req: Request, res: Response) => {
+  res.json(await getEventPosts())
+})
+
+router.post('/posts', async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization
+  if (!authHeader) { res.status(401).json({ error: 'Autenticação necessária.' }); return }
+  const token = authHeader.replace('Bearer ', '')
+  const user = await getUserByToken(token)
+  if (!user) { res.status(401).json({ error: 'Sessão inválida.' }); return }
+  const { rpgName, title, content } = req.body
+  if (!rpgName || !title || !content) { res.status(400).json({ error: 'Campos obrigatórios: rpgName, title, content.' }); return }
+  if (!isCreatorOf(user, rpgName)) { res.status(403).json({ error: 'Apenas criadores do sistema podem postar eventos.' }); return }
+  const post = await addEventPost({ username: user.username, rpgName, title, content })
+  res.status(201).json(post)
+})
+
+router.delete('/posts/:id', async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization
+  if (!authHeader) { res.status(401).json({ error: 'Autenticação necessária.' }); return }
+  const token = authHeader.replace('Bearer ', '')
+  const user = await getUserByToken(token)
+  if (!user) { res.status(401).json({ error: 'Sessão inválida.' }); return }
+  const ok = await deleteEventPost(String(req.params.id), user.username, user.role === 'admin')
+  if (!ok) { res.status(403).json({ error: 'Sem permissão ou postagem não encontrada.' }); return }
+  res.json({ message: 'Postagem excluída.' })
+})
+
+// ── RESPOSTAS A AVALIAÇÕES ──
+router.get('/reviews/:id/replies', async (req: Request, res: Response) => {
+  res.json(await getReviewReplies(String(req.params.id)))
+})
+
+router.post('/reviews/:id/replies', async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization
+  if (!authHeader) { res.status(401).json({ error: 'Autenticação necessária.' }); return }
+  const token = authHeader.replace('Bearer ', '')
+  const user = await getUserByToken(token)
+  if (!user) { res.status(401).json({ error: 'Sessão inválida.' }); return }
+  const { content } = req.body
+  if (!content) { res.status(400).json({ error: 'Conteúdo da resposta é obrigatório.' }); return }
+  const review = await ReviewModel.findById(String(req.params.id))
+  if (!review) { res.status(404).json({ error: 'Avaliação não encontrada.' }); return }
+  if (!isCreatorOf(user, review.rpgName)) { res.status(403).json({ error: 'Apenas criadores do sistema podem responder avaliações.' }); return }
+  const reply = await addReviewReply(String(req.params.id), user.username, content)
+  if (!reply) { res.status(404).json({ error: 'Avaliação não encontrada.' }); return }
+  res.status(201).json(reply)
+})
+
+router.delete('/replies/:id', async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization
+  if (!authHeader) { res.status(401).json({ error: 'Autenticação necessária.' }); return }
+  const token = authHeader.replace('Bearer ', '')
+  const user = await getUserByToken(token)
+  if (!user) { res.status(401).json({ error: 'Sessão inválida.' }); return }
+  const ok = await deleteReviewReply(String(req.params.id), user.username, user.role === 'admin')
+  if (!ok) { res.status(403).json({ error: 'Sem permissão ou resposta não encontrada.' }); return }
+  res.json({ message: 'Resposta excluída.' })
 })
 
 export default router

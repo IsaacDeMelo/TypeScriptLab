@@ -7,6 +7,7 @@ export interface IUser {
   bio?: string
   avatar?: string
   contact?: string
+  creatorOf?: string[]
 }
 
 const userSchema = new Schema<IUser>({
@@ -16,6 +17,7 @@ const userSchema = new Schema<IUser>({
   bio: String,
   avatar: String,
   contact: String,
+  creatorOf: { type: [String], default: [] },
 })
 
 export default model<IUser>('User', userSchema)

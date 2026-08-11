@@ -50,4 +50,28 @@ export interface User {
   bio?: string
   avatar?: string
   contact?: string
+  creatorOf?: string[]
+}
+
+export interface ReviewReply {
+  id: string
+  reviewId: string
+  username: string
+  content: string
+  timeAgo: string
+  createdAt: string
+}
+
+export interface EventPost {
+  id: string
+  username: string
+  rpg: RPG
+  title: string
+  content: string
+  image?: string
+  timeAgo: string
+  createdAt: string
+  rpgScore?: number
+  boosted?: boolean
+  boostHours?: number
 }
