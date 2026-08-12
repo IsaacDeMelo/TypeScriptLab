@@ -329,29 +329,39 @@ export async function logoutUser(token: string): Promise<void> {
   await SessionModel.deleteOne({ token })
 }
 
-export interface Ad {
-  id: string
-  title: string
+export interface AdCreative {
   image: string
-  link?: string
-  active: boolean
   placement: 'hero' | 'catalog' | 'both'
   slot: number
   format: 'wide' | 'square' | 'poster'
+}
+
+export interface Ad {
+  id: string
+  title: string
+  link?: string
+  active: boolean
+  creatives: AdCreative[]
   createdAt: Date
 }
 
 function adFromDoc(doc: any): Ad {
   const o = doc.toObject ? doc.toObject() : doc
+  let creatives: AdCreative[] = (o.creatives || []).map((c: any) => ({
+    image: c.image,
+    placement: c.placement || 'hero',
+    slot: c.slot ?? 0,
+    format: c.format || 'wide',
+  }))
+  if (!creatives.length && o.image) {
+    creatives = [{ image: o.image, placement: o.placement || 'hero', slot: o.slot ?? 0, format: o.format || 'wide' }]
+  }
   return {
     id: String(o._id),
     title: o.title,
-    image: o.image,
     link: o.link,
     active: o.active ?? true,
-    placement: o.placement || 'hero',
-    slot: o.slot ?? 0,
-    format: o.format || 'wide',
+    creatives,
     createdAt: o.createdAt,
   }
 }
@@ -366,12 +376,12 @@ export async function getAllAds(): Promise<Ad[]> {
   return docs.map(adFromDoc)
 }
 
-export async function addAd(data: { title: string; image: string; link?: string; placement?: 'hero' | 'catalog' | 'both'; slot?: number; format?: 'wide' | 'square' | 'poster' }): Promise<Ad> {
+export async function addAd(data: { title: string; link?: string; active?: boolean; creatives: AdCreative[] }): Promise<Ad> {
   const doc = await AdModel.create(data)
   return adFromDoc(doc)
 }
 
-export async function updateAd(id: string, data: { title?: string; image?: string; link?: string; active?: boolean; placement?: 'hero' | 'catalog' | 'both'; slot?: number; format?: 'wide' | 'square' | 'poster' }): Promise<Ad | undefined> {
+export async function updateAd(id: string, data: { title?: string; link?: string; active?: boolean; creatives?: AdCreative[] }): Promise<Ad | undefined> {
   const doc = await AdModel.findByIdAndUpdate(id, data, { new: true })
   return doc ? adFromDoc(doc) : undefined
 }
@@ -612,8 +622,8 @@ export interface AnalyticsSummary {
 
 export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
   const since = new Date()
-  since.setDate(since.getDate() - 13)
-  since.setHours(0, 0, 0, 0)
+  since.setUTCHours(0, 0, 0, 0)
+  since.setUTCDate(since.getUTCDate() - 13)
 
   const [totalVisits, totalRpgViews, totalSearches, topRpgs, topSearches, daily] = await Promise.all([
     VisitModel.countDocuments({ type: 'pageview' }),
@@ -649,7 +659,7 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
   const dates: AnalyticsDailyCount[] = []
   for (let i = 0; i < 14; i++) {
     const d = new Date(since)
-    d.setDate(d.getDate() + i)
+    d.setUTCDate(d.getUTCDate() + i)
     const key = d.toISOString().slice(0, 10)
     dates.push({ day: key, count: dayMap.get(key) || 0 })
   }

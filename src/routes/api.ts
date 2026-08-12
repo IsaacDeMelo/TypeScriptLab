@@ -343,6 +343,29 @@ router.get('/analytics/summary', async (req: Request, res: Response) => {
 })
 
 // ── ADS ──
+function parseCreativeArray(raw: any): any[] {
+  if (!raw) return []
+  let arr = raw
+  if (typeof raw === 'string') {
+    try { arr = JSON.parse(raw) } catch { return [] }
+  }
+  if (!Array.isArray(arr)) return []
+  return arr
+}
+
+function parseCreativeMeta(raw: any): { placement?: 'hero' | 'catalog' | 'both'; slot?: number; format?: 'wide' | 'square' | 'poster' } {
+  if (!raw) return {}
+  let obj = raw
+  if (typeof raw === 'string') {
+    try { obj = JSON.parse(raw) } catch { return {} }
+  }
+  return {
+    placement: ['hero', 'catalog', 'both'].includes(obj.placement) ? obj.placement : undefined,
+    slot: obj.slot !== undefined && obj.slot !== '' ? Number(obj.slot) : undefined,
+    format: ['wide', 'square', 'poster'].includes(obj.format) ? obj.format : undefined,
+  }
+}
+
 router.get('/ads', async (_req: Request, res: Response) => {
   res.json(await getAds())
 })
@@ -356,7 +379,7 @@ router.get('/ads/all', async (req: Request, res: Response) => {
   res.json(await getAllAds())
 })
 
-router.post('/ads', upload.single('image'), async (req: Request, res: Response) => {
+router.post('/ads', upload.array('images', 10), async (req: Request, res: Response) => {
   const authHeader = req.headers.authorization
   if (!authHeader) { res.status(401).json({ error: 'Autenticação necessária.' }); return }
   const token = authHeader.replace('Bearer ', '')
@@ -364,40 +387,79 @@ router.post('/ads', upload.single('image'), async (req: Request, res: Response) 
   if (!user || user.role !== 'admin') { res.status(403).json({ error: 'Apenas administradores.' }); return }
   const { title, link } = req.body
   if (!title) { res.status(400).json({ error: 'Campo obrigatório: title.' }); return }
-  if (!req.file) { res.status(400).json({ error: 'Envie uma imagem para o anúncio.' }); return }
-  let image: string
-  try {
-    image = await uploadToCloudinary(req.file.buffer)
-  } catch {
-    res.status(500).json({ error: 'Falha ao enviar a imagem.' }); return
+  const files = (req.files as Express.Multer.File[]) || []
+  if (!files.length) { res.status(400).json({ error: 'Envie ao menos uma imagem para o anúncio.' }); return }
+  const metas = parseCreativeArray(req.body.creatives)
+  const creatives: Array<{ image: string; placement: 'hero' | 'catalog' | 'both'; slot: number; format: 'wide' | 'square' | 'poster' }> = []
+  for (let i = 0; i < files.length; i++) {
+    let image: string
+    try {
+      image = await uploadToCloudinary(files[i].buffer)
+    } catch {
+      res.status(500).json({ error: 'Falha ao enviar a imagem.' }); return
+    }
+    const m = metas[i] || {}
+    creatives.push({
+      image,
+      placement: m.placement === 'catalog' || m.placement === 'both' || m.placement === 'hero' ? m.placement : 'hero',
+      slot: m.slot !== undefined && m.slot !== '' ? Number(m.slot) : 0,
+      format: m.format === 'square' || m.format === 'poster' ? m.format : 'wide',
+    })
   }
-  const ad = await addAd({
-    title, image, link,
-    placement: req.body.placement === 'catalog' || req.body.placement === 'both' ? req.body.placement : 'hero',
-    slot: req.body.slot !== undefined && req.body.slot !== '' ? Number(req.body.slot) : 0,
-    format: ['wide', 'square', 'poster'].includes(req.body.format) ? req.body.format : 'wide',
-  })
+  const ad = await addAd({ title, link, active: req.body.active === 'false' ? false : true, creatives })
   res.status(201).json(ad)
 })
 
-router.patch('/ads/:id', upload.single('image'), async (req: Request, res: Response) => {
+router.patch('/ads/:id', upload.array('images', 10), async (req: Request, res: Response) => {
   const authHeader = req.headers.authorization
   if (!authHeader) { res.status(401).json({ error: 'Autenticação necessária.' }); return }
   const token = authHeader.replace('Bearer ', '')
   const user = await getUserByToken(token)
   if (!user || user.role !== 'admin') { res.status(403).json({ error: 'Apenas administradores.' }); return }
-  const update: { title?: string; image?: string; link?: string; active?: boolean; placement?: string; slot?: number; format?: string } = {}
+  const update: { title?: string; link?: string; active?: boolean; creatives?: Array<{ image: string; placement: 'hero' | 'catalog' | 'both'; slot: number; format: 'wide' | 'square' | 'poster' }> } = {}
   if (req.body.title !== undefined) update.title = req.body.title
   if (req.body.link !== undefined) update.link = req.body.link
   if (req.body.active !== undefined) update.active = req.body.active === true || req.body.active === 'true'
-  if (req.body.placement !== undefined && ['hero', 'catalog', 'both'].includes(req.body.placement)) update.placement = req.body.placement
-  if (req.body.slot !== undefined) update.slot = req.body.slot === '' ? 0 : Number(req.body.slot)
-  if (req.body.format !== undefined && ['wide', 'square', 'poster'].includes(req.body.format)) update.format = req.body.format
-  if (req.file) {
-    try {
-      update.image = await uploadToCloudinary(req.file.buffer)
-    } catch {
-      res.status(500).json({ error: 'Falha ao enviar a imagem.' }); return
+  const files = (req.files as Express.Multer.File[]) || []
+  if (files.length || req.body.removeCreatives !== undefined || req.body.creativesMeta !== undefined || req.body.addCreatives !== undefined) {
+    const all = await getAllAds()
+    const ad = all.find(a => a.id === String(req.params.id))
+    if (!ad) { res.status(404).json({ error: 'Anúncio não encontrado.' }); return }
+    const creatives = ad.creatives.map(c => ({ ...c }))
+    if (req.body.creativesMeta !== undefined) {
+      const meta = parseCreativeArray(req.body.creativesMeta)
+      for (const m of meta) {
+        const mm = parseCreativeMeta(m)
+        const idx = Number(m && m.index)
+        if (m && typeof idx === 'number' && creatives[idx]) {
+          if (mm.placement) creatives[idx].placement = mm.placement
+          if (mm.format) creatives[idx].format = mm.format
+          if (mm.slot !== undefined) creatives[idx].slot = mm.slot
+        }
+      }
+    }
+    if (req.body.removeCreatives !== undefined) {
+      let idxs: number[] = []
+      try { idxs = JSON.parse(req.body.removeCreatives) } catch { idxs = [] }
+      update.creatives = creatives.filter((_c, i) => !idxs.includes(i))
+    } else {
+      update.creatives = creatives
+    }
+    const adds = parseCreativeArray(req.body.addCreatives)
+    for (let i = 0; i < files.length; i++) {
+      let image: string
+      try {
+        image = await uploadToCloudinary(files[i].buffer)
+      } catch {
+        res.status(500).json({ error: 'Falha ao enviar a imagem.' }); return
+      }
+      const m = adds[i] || {}
+      update.creatives.push({
+        image,
+        placement: m.placement === 'catalog' || m.placement === 'both' || m.placement === 'hero' ? m.placement : 'hero',
+        slot: m.slot !== undefined && m.slot !== '' ? Number(m.slot) : 0,
+        format: m.format === 'square' || m.format === 'poster' ? m.format : 'wide',
+      })
     }
   }
   const ad = await updateAd(String(req.params.id), update)

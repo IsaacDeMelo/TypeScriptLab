@@ -460,9 +460,7 @@ const seoCount = seoRevs.length;
           <div class="flex-1 min-w-0">
             <span class="text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wide uppercase font-title" style="background: var(--accent-dim); color: var(--accent);"><%= review.rpg.genre %></span>
             <h3 class="font-title font-bold text-sm truncate mt-0.5 cursor-pointer hover:underline" style="color: var(--text-primary);" onclick="abrirDetalheRpg('<%= review.rpg.name %>')"><%= review.rpg.name %></h3>
-            <p class="text-[10px] truncate flex items-center gap-1" style="color: var(--text-muted);">Por: <span class="rpg-owner"><%= review.rpg.owner %></span>
-              <span class="creator-badge hidden items-center gap-0.5 text-[8px] font-bold px-1 py-0.5 rounded-full" data-rpg="<%= review.rpg.name %>" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40;"><i class="fa-solid fa-award"></i>Criador</span>
-            </p>
+            <p class="text-[10px] truncate flex items-center gap-1" style="color: var(--text-muted);">Por: <span class="rpg-owner"><%= review.rpg.owner %></span></p>
           </div>
         </div>
 
@@ -480,7 +478,9 @@ const seoCount = seoRevs.length;
               <% } %>
             </div>
             <div>
-              <h4 onclick="verPerfil('<%= review.username %>')" class="font-bold text-xs cursor-pointer hover:underline" style="color: var(--text-secondary);"><%= review.username %></h4>
+              <h4 onclick="verPerfil('<%= review.username %>')" class="font-bold text-xs cursor-pointer hover:underline inline-flex items-center gap-1" style="color: var(--text-secondary);"><%= review.username %>
+                <span class="creator-badge hidden items-center gap-0.5 text-[7px] font-bold px-1 py-0.5 rounded-full" data-creator="<%= review.username %>" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40;"><i class="fa-solid fa-award"></i>Criador</span>
+              </h4>
               <span class="text-[9px]" style="color: var(--text-muted);"><%= review.timeAgo %></span>
             </div>
           </div>
@@ -802,8 +802,8 @@ const seoCount = seoRevs.length;
 
         <div class="px-8 py-6 lg:px-12 lg:py-8" id="catalog-controls">
           <div class="w-full max-w-7xl mx-auto">
-          <div id="cat-admin-section" class="mb-4 hidden">
-            <div class="flex gap-2">
+          <div id="cat-admin-section" class="mb-4 hidden overflow-x-hidden">
+            <div class="flex flex-wrap gap-2">
               <button onclick="abrirModalRegistroRpg()" class="flex-1 py-2.5 rounded-xl text-[11px] font-bold transition-all active:scale-[0.97] flex items-center justify-center gap-2" style="background: var(--accent); color: white;">
                 <i class="fa-solid fa-plus-circle"></i>
                 Novo Sistema
@@ -939,7 +939,7 @@ const seoCount = seoRevs.length;
               <h2 class="text-xl font-title font-bold" style="color: var(--text-primary);" id="detalhe-name"><%= detailRpg.name %></h2>
               <div class="flex items-center gap-3 mt-1">
                 <span class="text-xs" style="color: var(--text-muted);" id="detalhe-owner"><%= detailRpg.owner %></span>
-                <span class="creator-badge hidden items-center gap-0.5 text-[8px] font-bold px-1.5 py-0.5 rounded-full" data-rpg="<%= detailRpg.name %>" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40;"><i class="fa-solid fa-award"></i>Você é o criador</span>
+                <span class="rpg-criador-badge hidden items-center gap-0.5 text-[8px] font-bold px-1.5 py-0.5 rounded-full" data-rpg="<%= detailRpg.name %>" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40;"><i class="fa-solid fa-award"></i>Você é o criador</span>
                 <span class="text-[10px] px-1.5 py-0.5 rounded font-bold" id="detalhe-age" style="background: rgba(234,179,8,0.2); color: #eab308;"><%= detailRpg.ageRating %></span>
                 <span class="text-[10px]" style="color: var(--text-muted);" id="detalhe-year"><%= detailRpg.year %></span>
               </div>
@@ -1233,35 +1233,19 @@ const seoCount = seoRevs.length;
           <div class="rounded-2xl p-4 space-y-2.5" style="background: var(--bg-elevated); border: 1px solid var(--border);">
             <p class="text-[10px] font-bold uppercase tracking-wider" style="color: var(--text-muted);">Novo anúncio</p>
             <input id="ad-input-title" type="text" class="w-full rounded-xl px-3 py-2 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);" placeholder="Nome do anunciante (fica no canto da imagem)">
-            <div class="flex items-center gap-2 rounded-xl px-3 py-2 cursor-pointer" style="background: var(--bg-input); border: 1px solid var(--border);" onclick="document.getElementById('ad-input-image').click()">
-              <i class="fa-solid fa-image text-[10px]" style="color: var(--text-muted);"></i>
-              <span id="ad-image-filename" class="text-xs flex-1 truncate" style="color: var(--text-muted);">Escolher imagem do anúncio</span>
-              <input id="ad-input-image" type="file" accept=".jpg,.jpeg,.png,.webp,.gif" class="hidden" onchange="atualizarAdFilename(this)">
-            </div>
             <input id="ad-input-link" type="text" class="w-full rounded-xl px-3 py-2 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);" placeholder="Link externo (abre ao clicar no anúncio)">
-            <div class="grid grid-cols-2 gap-2">
-              <div>
-                <label class="block text-[9px] font-bold uppercase tracking-wider mb-1" style="color: var(--text-muted);">Onde exibir</label>
-                <select id="ad-input-placement" class="w-full rounded-xl px-3 py-2 text-xs focus:outline-none">
-                  <option value="hero">Topo (carrossel)</option>
-                  <option value="catalog">Entre as categorias</option>
-                  <option value="both">Ambos</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-[9px] font-bold uppercase tracking-wider mb-1" style="color: var(--text-muted);">Formato no catálogo</label>
-                <select id="ad-input-format" class="w-full rounded-xl px-3 py-2 text-xs focus:outline-none">
-                  <option value="wide">Faixa larga</option>
-                  <option value="square">Quadrado</option>
-                  <option value="poster">Poster</option>
-                </select>
-              </div>
-            </div>
             <div>
-              <label class="block text-[9px] font-bold uppercase tracking-wider mb-1" style="color: var(--text-muted);">Posição entre as categorias (0 = logo após o Top 10, 1 = após a 1ª categoria, ...)</label>
-              <input id="ad-input-slot" type="number" min="0" value="0" class="w-full rounded-xl px-3 py-2 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);">
+              <p class="text-[9px] font-bold uppercase tracking-wider mb-1.5" style="color: var(--text-muted);">Imagens do anúncio</p>
+              <div id="ad-creatives-list" class="space-y-2"></div>
+              <button onclick="adicionarLinhaCriativo()" class="w-full rounded-xl py-2 text-[10px] font-bold transition active:scale-[0.97]" style="color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); border: 1px dashed color-mix(in srgb, var(--accent) 50%, transparent);">
+                <i class="fa-solid fa-plus"></i> Adicionar outra imagem
+              </button>
             </div>
-            <button onclick="criarAnuncio()" id="ad-save-btn" class="w-full text-white font-bold py-2.5 rounded-xl text-xs transition-all active:scale-[0.97]" style="background: var(--accent);">
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input id="ad-input-active" type="checkbox" checked class="accent-[color:var(--accent)] w-4 h-4">
+              <span class="text-[11px] font-semibold" style="color: var(--text-secondary);">Anúncio ativo</span>
+            </label>
+            <button onclick="salvarAnuncio()" id="ad-save-btn" class="w-full text-white font-bold py-2.5 rounded-xl text-xs transition-all active:scale-[0.97]" style="background: var(--accent);">
               <i class="fa-solid fa-plus"></i> Adicionar anúncio
             </button>
             <p id="ad-error" class="hidden text-[10px] font-bold" style="color: #ef4444;"></p>
@@ -1808,7 +1792,16 @@ const seoCount = seoRevs.length;
 
     function buildHeroSlides(rpgs, ads) {
       const rpgList = computeHeroRpgs(rpgs);
-      const adList = (ads || []).filter(a => a.active);
+      const heroAds = [];
+      (ads || []).forEach(a => {
+        if (!a.active) return;
+        (a.creatives || []).forEach(c => {
+          if (c.placement === 'hero' || c.placement === 'both') {
+            heroAds.push({ image: c.image, title: a.title, link: a.link });
+          }
+        });
+      });
+      const adList = heroAds;
       const slides = [];
       let adIdx = 0;
       rpgList.forEach((r, i) => {
@@ -1827,6 +1820,7 @@ const seoCount = seoRevs.length;
     let catAdsData = <%- JSON.stringify(ads || []) %>;
     let heroSlides = buildHeroSlides(<%- JSON.stringify(rpgs) %>, catAdsData);
     let heroInterval, heroIndex = 0, heroPausado = false, heroTouchX = 0, heroSwipeInit = false;
+    renderCatalogoAds();
 
     function iniciarHero() {
       pararHero();
@@ -1860,7 +1854,7 @@ const seoCount = seoRevs.length;
       const isAd = slide.type === 'ad';
       const adLink = document.getElementById('cat-ad-link');
       document.getElementById('cat-title').textContent = isAd ? slide.data.title : slide.data.name;
-      document.getElementById('cat-desc').textContent = isAd ? (slide.data.link || '') : slide.data.description;
+      document.getElementById('cat-desc').textContent = isAd ? '' : slide.data.description;
       document.getElementById('cat-owner').textContent = isAd ? 'Parceiro' : `${slide.data.owner} · ${slide.data.year}`;
       document.getElementById('cat-genre').textContent = isAd ? 'Anúncio' : slide.data.genre;
       document.getElementById('cat-year').textContent = isAd ? '' : (slide.data.year || '');
@@ -1927,7 +1921,7 @@ const seoCount = seoRevs.length;
               <div onclick="verPerfil('${r.username}')" class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold overflow-hidden shrink-0 cursor-pointer" style="background:var(--accent-dim);color:var(--accent);">
                 ${avatar ? `<img src="${avatar}" class="w-full h-full object-cover">` : initial}
               </div>
-              <span onclick="verPerfil('${r.username}')" class="text-[11px] font-semibold cursor-pointer hover:underline" style="color:var(--text-secondary);">${r.username}</span>
+              <span onclick="verPerfil('${r.username}')" class="text-[11px] font-semibold cursor-pointer hover:underline inline-flex items-center gap-1" style="color:var(--text-secondary);">${r.username}<span class="creator-badge hidden items-center gap-0.5 text-[7px] font-bold px-1 py-0.5 rounded-full" data-creator="${r.username}" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40;"><i class="fa-solid fa-award"></i>Criador</span></span>
               <span class="text-[10px] ml-auto" style="color:var(--star);">${'★'.repeat(Math.floor(r.rating))}${r.rating % 1 ? '½' : ''} ${r.rating}</span>
             </div>
             <p class="text-[11px] leading-relaxed" style="color:var(--text-muted);">${r.comment.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
@@ -1942,6 +1936,7 @@ const seoCount = seoRevs.length;
           const box = list.querySelector(`[data-reviews-list="${r.id}"]`);
           if (box) carregarRespostas(r.id, box);
         });
+        atualizarFeedSelo();
       } else {
         list.innerHTML = '<p class="text-xs text-center py-4" style="color:var(--text-muted);">Nenhuma crítica ainda. Seja o primeiro a avaliar!</p>';
       }
@@ -2354,17 +2349,79 @@ const seoCount = seoRevs.length;
 
     let adsData = <%- JSON.stringify(ads || []) %>;
 
-    async function abrirModalAnuncios() {
-      const modal = document.getElementById('modal-anuncios');
-      modal.classList.remove('modal-hidden');
-      document.getElementById('ad-error').classList.add('hidden');
+    function adLinhaHtml(c) {
+      const img = (c && c.image) || '';
+      return `
+        <div class="ad-creative-row rounded-xl p-2.5 border space-y-1.5" style="background: var(--bg-input); border-color: var(--border);" data-kind="${c && c.index !== undefined ? 'existing' : 'new'}" data-index="${c && c.index !== undefined ? c.index : ''}">
+          <div class="flex items-center gap-2">
+            <div class="ad-creative-img w-14 h-9 rounded-lg overflow-hidden flex items-center justify-center shrink-0 cursor-pointer" style="background: var(--bg-elevated); border: 1px solid var(--border);" onclick="adCriativoEscolherArquivo(this)">
+              ${img ? '<img src="' + img + '" class="w-full h-full object-cover">' : '<i class="fa-solid fa-image text-[10px]" style="color: var(--text-muted);"></i>'}
+            </div>
+            <input type="file" accept=".jpg,.jpeg,.png,.webp,.gif" class="ad-creative-file hidden" onchange="adCriativoArquivo(this)">
+            <div class="flex-1 min-w-0 grid grid-cols-2 gap-1.5">
+              <select class="ad-creative-placement text-[10px] rounded-lg px-2 py-1.5 focus:outline-none" style="background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text-primary);">
+                <option value="hero" ${(c && c.placement === 'hero') || !c ? 'selected' : ''}>Topo</option>
+                <option value="catalog" ${c && c.placement === 'catalog' ? 'selected' : ''}>Entre categorias</option>
+                <option value="both" ${c && c.placement === 'both' ? 'selected' : ''}>Ambos</option>
+              </select>
+              <select class="ad-creative-format text-[10px] rounded-lg px-2 py-1.5 focus:outline-none" style="background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text-primary);">
+                <option value="wide" ${(c && c.format === 'wide') || !c ? 'selected' : ''}>Faixa</option>
+                <option value="square" ${c && c.format === 'square' ? 'selected' : ''}>Quadrado</option>
+                <option value="poster" ${c && c.format === 'poster' ? 'selected' : ''}>Poster</option>
+              </select>
+              <input type="number" min="0" value="${c ? (c.slot ?? 0) : 0}" class="ad-creative-slot col-span-2 text-[10px] rounded-lg px-2 py-1.5 focus:outline-none" style="background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text-primary);" placeholder="Posição (0 = após o Top 10)">
+            </div>
+            <button type="button" onclick="removerLinhaCriativo(this)" class="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] transition active:scale-90 shrink-0" style="color: #ef4444; background: color-mix(in srgb, #ef4444 12%, transparent); border: 1px solid color-mix(in srgb, #ef4444 40%, transparent);" title="Remover">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <p class="ad-creative-filename text-[9px] truncate" style="color: var(--text-muted);">${img ? (img.split('/').pop() || 'imagem atual') : 'Nenhuma imagem selecionada'}</p>
+        </div>`;
+    }
+
+    function adicionarLinhaCriativo(c) {
+      document.getElementById('ad-creatives-list').insertAdjacentHTML('beforeend', adLinhaHtml(c));
+    }
+
+    function removerLinhaCriativo(btn) {
+      const row = btn.closest('.ad-creative-row');
+      if (row) row.remove();
+    }
+
+    function adCriativoEscolherArquivo(imgBox) {
+      const row = imgBox.closest('.ad-creative-row');
+      if (row) row.querySelector('.ad-creative-file').click();
+    }
+
+    function adCriativoArquivo(input) {
+      const row = input.closest('.ad-creative-row');
+      if (!row) return;
+      const imgBox = row.querySelector('.ad-creative-img');
+      const nameEl = row.querySelector('.ad-creative-filename');
+      if (input.files.length) {
+        nameEl.textContent = input.files[0].name;
+        imgBox.innerHTML = '<img src="' + URL.createObjectURL(input.files[0]) + '" class="w-full h-full object-cover">';
+      } else {
+        nameEl.textContent = 'Nenhuma imagem selecionada';
+        imgBox.innerHTML = '<i class="fa-solid fa-image text-[10px]" style="color: var(--text-muted);"></i>';
+      }
+    }
+
+    function resetFormAnuncios() {
+      adEditandoId = null;
       document.getElementById('ad-input-title').value = '';
-      document.getElementById('ad-input-image').value = '';
       document.getElementById('ad-input-link').value = '';
-      document.getElementById('ad-input-placement').value = 'hero';
-      document.getElementById('ad-input-format').value = 'wide';
-      document.getElementById('ad-input-slot').value = '0';
-      document.getElementById('ad-image-filename').textContent = 'Escolher imagem do anúncio';
+      document.getElementById('ad-input-active').checked = true;
+      document.getElementById('ad-creatives-list').innerHTML = '';
+      adicionarLinhaCriativo(null);
+      const saveBtn = document.getElementById('ad-save-btn');
+      if (saveBtn) saveBtn.innerHTML = '<i class="fa-solid fa-plus"></i> Adicionar anúncio';
+      document.getElementById('ad-error').classList.add('hidden');
+    }
+
+    async function abrirModalAnuncios() {
+      document.getElementById('modal-anuncios').classList.remove('modal-hidden');
+      resetFormAnuncios();
       try {
         const res = await fetch('/api/ads/all', { headers: { 'Authorization': 'Bearer ' + getToken() } });
         if (res.ok) {
@@ -2378,83 +2435,112 @@ const seoCount = seoRevs.length;
       document.getElementById('modal-anuncios').classList.add('modal-hidden');
     }
 
-    function atualizarAdFilename(input) {
-      document.getElementById('ad-image-filename').textContent = input.files.length > 0 ? input.files[0].name : 'Escolher imagem do anúncio';
-    }
-
     function renderAnuncios() {
       const list = document.getElementById('anuncios-list');
       if (!adsData.length) {
         list.innerHTML = '<p class="text-xs text-center py-6" style="color: var(--text-muted);">Nenhum anúncio cadastrado.</p>';
         return;
       }
-      list.innerHTML = adsData.map(a => `
-        <div class="anuncio-card rounded-2xl p-3 border flex items-center gap-3" style="background: color-mix(in srgb, var(--bg-card) 40%, transparent); border-color: var(--border);">
-          <img src="${a.image}" class="w-20 h-10 object-cover rounded-lg" alt="">
-          <div class="flex-1 min-w-0">
-            <p class="text-xs font-bold truncate" style="color: var(--text-primary);">${a.title}</p>
-            <p class="text-[10px] truncate" style="color: var(--text-muted);">${a.placement === 'hero' ? 'Topo (carrossel)' : a.placement === 'both' ? 'Topo + entre categorias' : 'Entre categorias'}${a.placement !== 'hero' ? ' · após a ' + a.slot + 'ª · ' + a.format : ''}${a.link ? ' · ' + a.link : ''}</p>
-            <span class="inline-block mt-1 px-2 py-0.5 rounded-full text-[8px] font-bold uppercase" style="${a.active ? 'background:#22c55e;color:#fff;' : 'background:var(--text-muted);color:var(--bg-primary);'}">${a.active ? 'Ativo' : 'Inativo'}</span>
+      list.innerHTML = adsData.map(a => {
+        const creatives = a.creatives || [];
+        const thumbs = creatives.slice(0, 3).map(c => '<img src="' + c.image + '" class="w-10 h-6 object-cover rounded border" style="border-color: var(--border);">').join('');
+        const info = creatives.map(c => (c.placement === 'hero' ? 'Topo' : c.placement === 'both' ? 'Topo+Catálogo' : 'Catálogo') + (c.placement !== 'hero' ? ' · ' + c.format + ' · após a ' + (c.slot ?? 0) + 'ª' : '')).join('  |  ') || 'Sem imagens';
+        return `
+        <div class="anuncio-card rounded-2xl p-3 border" style="background: color-mix(in srgb, var(--bg-card) 40%, transparent); border-color: var(--border);">
+          <div class="flex items-center gap-3">
+            <div class="flex gap-1 flex-wrap shrink-0 w-20">${thumbs || '<span class="text-[9px]" style="color: var(--text-muted);">sem img</span>'}</div>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs font-bold truncate" style="color: var(--text-primary);">${a.title}</p>
+              <p class="text-[10px] truncate" style="color: var(--text-muted);" title="${info.replace(/"/g, '&quot;')}">${info}</p>
+              <span class="inline-block mt-1 px-2 py-0.5 rounded-full text-[8px] font-bold uppercase" style="${a.active ? 'background:#22c55e;color:#fff;' : 'background:var(--text-muted);color:var(--bg-primary);'}">${a.active ? 'Ativo' : 'Inativo'}</span>
+            </div>
+            <div class="flex flex-col gap-1.5 shrink-0">
+              <button onclick="editarAnuncio('${a.id}')" class="w-8 h-8 rounded-xl flex items-center justify-center text-[10px] transition active:scale-90" style="color: var(--text-primary); background: color-mix(in srgb, var(--text-muted) 12%, transparent); border: 1px solid var(--border);" title="Editar">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              <button onclick="alternarAnuncio('${a.id}')" class="w-8 h-8 rounded-xl flex items-center justify-center text-[10px] transition active:scale-90" style="color: var(--text-primary); background: color-mix(in srgb, var(--text-muted) 12%, transparent); border: 1px solid var(--border);" title="${a.active ? 'Desativar' : 'Ativar'}">
+                <i class="fa-solid fa-${a.active ? 'toggle-on' : 'toggle-off'}"></i>
+              </button>
+              <button onclick="deletarAnuncio('${a.id}')" class="w-8 h-8 rounded-xl flex items-center justify-center text-[10px] transition active:scale-90 text-white" style="background: #ef4444;" title="Excluir">
+                <i class="fa-solid fa-trash-alt"></i>
+              </button>
+            </div>
           </div>
-          <div class="flex gap-1.5 shrink-0">
-            <button onclick="editarAnuncio('${a.id}', this)" class="w-8 h-8 rounded-xl flex items-center justify-center text-[10px] transition active:scale-90" style="color: var(--text-primary); background: color-mix(in srgb, var(--text-muted) 12%, transparent); border: 1px solid var(--border);" title="Editar">
-              <i class="fa-solid fa-pen"></i>
-            </button>
-            <button onclick="alternarAnuncio('${a.id}')" class="w-8 h-8 rounded-xl flex items-center justify-center text-[10px] transition active:scale-90" style="color: var(--text-primary); background: color-mix(in srgb, var(--text-muted) 12%, transparent); border: 1px solid var(--border);" title="${a.active ? 'Desativar' : 'Ativar'}">
-              <i class="fa-solid fa-${a.active ? 'toggle-on' : 'toggle-off'}"></i>
-            </button>
-            <button onclick="deletarAnuncio('${a.id}')" class="w-8 h-8 rounded-xl flex items-center justify-center text-[10px] transition active:scale-90 text-white" style="background: #ef4444;" title="Excluir">
-              <i class="fa-solid fa-trash-alt"></i>
-            </button>
-          </div>
-        </div>
-      `).join('');
+          ${a.link ? '<p class="mt-2 text-[9px] truncate" style="color: var(--text-muted);"><i class="fa-solid fa-link text-[8px] mr-1"></i>' + a.link + '</p>' : ''}
+        </div>`;
+      }).join('');
     }
 
     let adEditandoId = null;
 
-    function editarAnuncio(id, btn) {
+    function editarAnuncio(id) {
       const ad = adsData.find(a => a.id === id);
       if (!ad) return;
       adEditandoId = id;
-      document.getElementById('ad-input-title').value = ad.title;
+      document.getElementById('ad-input-title').value = ad.title || '';
       document.getElementById('ad-input-link').value = ad.link || '';
-      document.getElementById('ad-input-placement').value = ad.placement || 'hero';
-      document.getElementById('ad-input-format').value = ad.format || 'wide';
-      document.getElementById('ad-input-slot').value = ad.slot ?? 0;
-      document.getElementById('ad-input-image').value = '';
-      document.getElementById('ad-image-filename').textContent = 'Manter imagem atual (trocar?)';
+      document.getElementById('ad-input-active').checked = ad.active !== false;
+      const list = document.getElementById('ad-creatives-list');
+      list.innerHTML = '';
+      const creatives = ad.creatives || [];
+      if (!creatives.length) adicionarLinhaCriativo(null);
+      else creatives.forEach((c, i) => adicionarLinhaCriativo({ ...c, index: i }));
       const saveBtn = document.getElementById('ad-save-btn');
       if (saveBtn) saveBtn.innerHTML = '<i class="fa-solid fa-save"></i> Salvar alterações';
       document.getElementById('ad-error').classList.add('hidden');
       saveBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
-    async function criarAnuncio() {
+    async function salvarAnuncio() {
       const errEl = document.getElementById('ad-error');
       errEl.classList.add('hidden');
       const title = document.getElementById('ad-input-title').value.trim();
-      const link = document.getElementById('ad-input-link').value.trim();
-      const placement = document.getElementById('ad-input-placement').value;
-      const format = document.getElementById('ad-input-format').value;
-      const slot = parseInt(document.getElementById('ad-input-slot').value || '0', 10);
-      const fileInput = document.getElementById('ad-input-image');
-      const file = fileInput.files[0];
       if (!title) {
         errEl.textContent = 'Informe o nome do anunciante.';
         errEl.classList.remove('hidden');
         return;
       }
+      const rows = Array.from(document.querySelectorAll('#ad-creatives-list .ad-creative-row'));
+      if (!rows.length) {
+        errEl.textContent = 'Adicione ao menos uma imagem ao anúncio.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+      const active = document.getElementById('ad-input-active').checked;
       const form = new FormData();
       form.append('title', title);
+      const link = document.getElementById('ad-input-link').value.trim();
       if (link) form.append('link', link);
-      form.append('placement', placement);
-      form.append('slot', String(slot));
-      form.append('format', format);
-      const resSaveBtn = document.getElementById('ad-save-btn');
+      form.append('active', active ? 'true' : 'false');
+
       try {
         if (adEditandoId) {
-          if (file) form.append('image', file);
+          const existingIndices = new Set();
+          const creativesMeta = [];
+          const addCreatives = [];
+          rows.forEach(row => {
+            const kind = row.dataset.kind;
+            const placement = row.querySelector('.ad-creative-placement').value;
+            const format = row.querySelector('.ad-creative-format').value;
+            const slot = parseInt(row.querySelector('.ad-creative-slot').value || '0', 10);
+            if (kind === 'existing') {
+              existingIndices.add(parseInt(row.dataset.index, 10));
+              creativesMeta.push({ index: parseInt(row.dataset.index, 10), placement, slot, format });
+            } else {
+              const file = row.querySelector('.ad-creative-file').files[0];
+              if (file) {
+                form.append('images', file);
+                addCreatives.push({ placement, slot, format });
+              }
+            }
+          });
+          const ad = adsData.find(a => a.id === adEditandoId);
+          const originalCount = (ad && ad.creatives ? ad.creatives : []).length;
+          const removeCreatives = [];
+          for (let i = 0; i < originalCount; i++) if (!existingIndices.has(i)) removeCreatives.push(i);
+          form.append('removeCreatives', JSON.stringify(removeCreatives));
+          form.append('creativesMeta', JSON.stringify(creativesMeta));
+          form.append('addCreatives', JSON.stringify(addCreatives));
           const res = await fetch(`/api/ads/${adEditandoId}`, {
             method: 'PATCH',
             headers: { 'Authorization': 'Bearer ' + getToken() },
@@ -2464,8 +2550,25 @@ const seoCount = seoRevs.length;
           if (!res.ok) { errEl.textContent = data.error || 'Erro ao salvar.'; errEl.classList.remove('hidden'); return; }
           adsData = adsData.map(a => a.id === adEditandoId ? data : a);
         } else {
-          if (!file) { errEl.textContent = 'Escolha uma imagem para o anúncio.'; errEl.classList.remove('hidden'); return; }
-          form.append('image', file);
+          const creatives = [];
+          let hasFile = false;
+          rows.forEach(row => {
+            const file = row.querySelector('.ad-creative-file').files[0];
+            if (!file) return;
+            hasFile = true;
+            form.append('images', file);
+            creatives.push({
+              placement: row.querySelector('.ad-creative-placement').value,
+              slot: parseInt(row.querySelector('.ad-creative-slot').value || '0', 10),
+              format: row.querySelector('.ad-creative-format').value
+            });
+          });
+          if (!hasFile) {
+            errEl.textContent = 'Escolha ao menos uma imagem para o anúncio.';
+            errEl.classList.remove('hidden');
+            return;
+          }
+          form.append('creatives', JSON.stringify(creatives));
           const res = await fetch('/api/ads', {
             method: 'POST',
             headers: { 'Authorization': 'Bearer ' + getToken() },
@@ -2475,16 +2578,7 @@ const seoCount = seoRevs.length;
           if (!res.ok) { errEl.textContent = data.error || 'Erro ao criar anúncio.'; errEl.classList.remove('hidden'); return; }
           adsData = [data, ...adsData];
         }
-        adEditandoId = null;
-        document.getElementById('ad-input-title').value = '';
-        document.getElementById('ad-input-image').value = '';
-        document.getElementById('ad-input-link').value = '';
-        document.getElementById('ad-input-placement').value = 'hero';
-        document.getElementById('ad-input-format').value = 'wide';
-        document.getElementById('ad-input-slot').value = '0';
-        document.getElementById('ad-image-filename').textContent = 'Escolher imagem do anúncio';
-        const saveBtn = document.getElementById('ad-save-btn');
-        if (saveBtn) saveBtn.innerHTML = '<i class="fa-solid fa-plus"></i> Adicionar anúncio';
+        resetFormAnuncios();
         renderAnuncios();
         await refreshAds();
       } catch { errEl.textContent = 'Erro de conexão.'; errEl.classList.remove('hidden'); }
@@ -2526,6 +2620,7 @@ const seoCount = seoRevs.length;
         if (res.ok) {
           catAdsData = await res.json();
           atualizarHero();
+          if (typeof renderCatalogoAds === 'function') renderCatalogoAds();
         }
       } catch {}
     }
@@ -2663,6 +2758,11 @@ const seoCount = seoRevs.length;
 
     function atualizarFeedSelo() {
       document.querySelectorAll('.creator-badge').forEach(b => {
+        const username = b.getAttribute('data-creator');
+        const u = catUsersData.find(x => x.username === username);
+        b.style.display = u && (u.creatorOf || []).length > 0 ? 'inline-flex' : 'none';
+      });
+      document.querySelectorAll('.rpg-criador-badge').forEach(b => {
         const rpgName = b.getAttribute('data-rpg');
         b.style.display = isCreatorOfUser(rpgName) ? 'inline-flex' : 'none';
       });
@@ -2744,7 +2844,8 @@ const seoCount = seoRevs.length;
         btnUser.classList.add('hidden');
         btnLogin.classList.remove('hidden');
         if (adminSection) adminSection.classList.add('hidden');
-        document.querySelectorAll('.creator-badge').forEach(b => { b.style.display = 'none'; });
+        document.querySelectorAll('.rpg-criador-badge').forEach(b => { b.style.display = 'none'; });
+        atualizarFeedSelo();
       }
     }
 
@@ -2847,6 +2948,48 @@ const seoCount = seoRevs.length;
       });
     }
 
+    function adCreativeHtml(c) {
+      const ar = c.format === 'square' ? '1 / 1' : c.format === 'poster' ? '2 / 3' : '21 / 9';
+      const layout = c.format === 'square' ? 'max-width:14rem;margin:0 auto;' : c.format === 'poster' ? 'max-width:11rem;margin:0 auto;' : '';
+      const title = (c.title || '').replace(/"/g, '&quot;');
+      const link = c.link || '';
+      const onclick = link ? " onclick=\"window.open('" + link.replace(/'/g, "\\'") + "','_blank')\"" : ' onclick="event.stopPropagation();"';
+      return `<div class="cat-ad-block" style="position:relative;overflow:hidden;border-radius:0.75rem;border:1px solid var(--border);cursor:${link ? 'pointer' : 'default'};${layout}"${onclick}>
+        <div style="aspect-ratio:${ar};">
+          <img src="${c.image}" class="w-full h-full object-cover" alt="">
+        </div>
+        <div style="position:absolute;right:6px;bottom:6px;">
+          <span style="font-size:8px;font-weight:700;color:rgba(255,255,255,0.95);background:rgba(0,0,0,0.55);padding:2px 7px;border-radius:6px;backdrop-filter:blur(4px);letter-spacing:0.3px;">${title}</span>
+        </div>
+      </div>`;
+    }
+
+    function renderCatalogoAds() {
+      const container = document.getElementById('catalog-grid-container');
+      if (!container) return;
+      container.querySelectorAll('.cat-ad-block').forEach(el => el.remove());
+      const sections = [...container.querySelectorAll('.cat-section')];
+      const creatives = [];
+      (catAdsData || []).forEach(a => {
+        if (!a.active) return;
+        (a.creatives || []).forEach(c => {
+          if (c.placement === 'catalog' || c.placement === 'both') {
+            creatives.push({ ...c, title: a.title, link: a.link });
+          }
+        });
+      });
+      if (!creatives.length) return;
+      creatives.sort((x, y) => (x.slot ?? 0) - (y.slot ?? 0));
+      const last = sections.length;
+      creatives.forEach(c => {
+        const pos = Math.min(c.slot ?? 0, last);
+        const ref = sections[pos];
+        const tmp = document.createElement('div');
+        tmp.innerHTML = adCreativeHtml(c).trim();
+        while (tmp.firstChild) container.insertBefore(tmp.firstChild, ref || null);
+      });
+    }
+
     function renderCatalogo() {
       const container = document.getElementById('catalog-grid-container');
       const generos = [...new Set(catRpgData.map(r => r.genre))].sort((a, b) => a.localeCompare(b));
@@ -2886,6 +3029,7 @@ const seoCount = seoRevs.length;
           </div>
         </div>`;
       }).join('');
+      renderCatalogoAds();
     }
 
     async function refreshData() {
@@ -3187,7 +3331,7 @@ const seoCount = seoRevs.length;
           const max = Math.max(...data.daily.map(d => d.count), 1);
           const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
           document.getElementById('mon-daily').innerHTML = data.daily.map(d => {
-            const h = Math.max(Math.round((d.count / max) * 100), d.count ? 4 : 2);
+            const h = Math.min(Math.max(Math.round((d.count / max) * 100), d.count ? 4 : 2), 78);
             const dt = new Date(d.day + 'T00:00:00');
             return `
             <div class="flex-1 flex flex-col items-center justify-end gap-1 h-full min-w-0">
@@ -3414,16 +3558,16 @@ const seoCount = seoRevs.length;
           <div class="flex-1 min-w-0">
             <span class="text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wide uppercase font-title" style="background: var(--accent-dim); color: var(--accent);">${r.rpg.genre}</span>
             <h3 class="font-title font-bold text-sm truncate mt-0.5 cursor-pointer hover:underline" style="color: var(--text-primary);" onclick="abrirDetalheRpg('${r.rpg.name.replace(/'/g, "\\'")}')">${r.rpg.name}</h3>
-            <p class="text-[10px] truncate flex items-center gap-1" style="color: var(--text-muted);">Por: <span class="rpg-owner">${r.rpg.owner}</span>
-              <span class="creator-badge hidden items-center gap-0.5 text-[8px] font-bold px-1 py-0.5 rounded-full" data-rpg="${r.rpg.name}" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40;"><i class="fa-solid fa-award"></i>Criador</span>
-            </p>
+            <p class="text-[10px] truncate flex items-center gap-1" style="color: var(--text-muted);">Por: <span class="rpg-owner">${r.rpg.owner}</span></p>
           </div>
         </div>
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-2.5">
             <div onclick="verPerfil('${r.username}')" class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm overflow-hidden shrink-0 cursor-pointer" style="background: var(--accent-dim); border: 1px solid var(--border-accent); color: var(--accent);">${avatarHtml}</div>
             <div>
-              <h4 onclick="verPerfil('${r.username}')" class="font-bold text-xs cursor-pointer hover:underline" style="color: var(--text-secondary);">${r.username}</h4>
+              <h4 onclick="verPerfil('${r.username}')" class="font-bold text-xs cursor-pointer hover:underline inline-flex items-center gap-1" style="color: var(--text-secondary);">${r.username}
+                <span class="creator-badge hidden items-center gap-0.5 text-[7px] font-bold px-1 py-0.5 rounded-full" data-creator="${r.username}" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40;"><i class="fa-solid fa-award"></i>Criador</span>
+              </h4>
               <span class="text-[9px]" style="color: var(--text-muted);">${r.timeAgo}</span>
             </div>
           </div>
