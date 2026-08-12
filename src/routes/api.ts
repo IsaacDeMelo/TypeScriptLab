@@ -38,6 +38,10 @@ router.get('/rpgs', async (_req: Request, res: Response) => {
   res.json(await getRpgs())
 })
 
+router.get('/rpgs/ratings', async (_req: Request, res: Response) => {
+  res.json(await getRpgRatings())
+})
+
 router.get('/rpgs/:name', async (req: Request, res: Response) => {
   const rpg = await getRpgByName(String(req.params.name))
   if (!rpg) { res.status(404).json({ error: 'RPG não encontrado.' }); return }
@@ -304,10 +308,6 @@ router.delete('/rpgs/:name', async (req: Request, res: Response) => {
   const ok = await deleteRpg(String(req.params.name))
   if (!ok) { res.status(404).json({ error: 'Sistema não encontrado.' }); return }
   res.json({ message: 'Sistema excluído.' })
-})
-
-router.get('/rpgs/ratings', async (_req: Request, res: Response) => {
-  res.json(await getRpgRatings())
 })
 
 router.get('/reviews/feed', async (req: Request, res: Response) => {

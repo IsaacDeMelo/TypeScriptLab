@@ -1294,7 +1294,7 @@ const seoCount = seoRevs.length;
         <div class="p-4 space-y-2">
           <p class="text-[10px] leading-relaxed mb-3" style="color: var(--text-muted);">Dê o selo de criador a um usuário e marque de quais RPGs ele é criador. Criadores podem publicar eventos e responder avaliações.</p>
           <div class="rounded-2xl p-3 space-y-2" style="background: var(--bg-elevated); border: 1px solid var(--border);">
-            <select id="creator-user-select" class="w-full rounded-xl px-3 py-2 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);">
+            <select id="creator-user-select" onchange="atualizarCreatorRpgsBox()" class="w-full rounded-xl px-3 py-2 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);">
               <option value="">Selecione um usuário...</option>
             </select>
             <div id="creator-rpgs-box" class="hidden max-h-40 overflow-y-auto p-2 rounded-xl space-y-1" style="background: var(--bg-input); border: 1px solid var(--border);">
@@ -1823,6 +1823,7 @@ const seoCount = seoRevs.length;
     let heroSlides = buildHeroSlides(<%- JSON.stringify(rpgs) %>, catAdsData);
     let heroInterval, heroIndex = 0, heroPausado = false, heroTouchX = 0, heroSwipeInit = false;
     renderCatalogoAds();
+    setInterval(() => { atualizarUsersData(); }, 30000);
 
     function iniciarHero() {
       pararHero();
@@ -1961,6 +1962,7 @@ const seoCount = seoRevs.length;
         document.title = rpg.name + ' — Avaliações e Críticas | Rpflix';
       }
       rpgModalOpen = true;
+      modalRpgAtual = nome;
       document.getElementById('detalhe-banner').style.backgroundImage = `url('${rpg.banner}')`;
       document.getElementById('detalhe-name').textContent = rpg.name;
       document.getElementById('detalhe-owner').textContent = rpg.owner;
@@ -2220,6 +2222,7 @@ const seoCount = seoRevs.length;
 
     function fecharDetalheRpg(fromPopstate) {
       rpgModalOpen = false;
+      modalRpgAtual = null;
       const modal = document.getElementById('modal-detalhe');
       modal.classList.remove('detalhe-aberto');
       setTimeout(() => modal.classList.add('modal-hidden'), 300);
@@ -2689,6 +2692,9 @@ const seoCount = seoRevs.length;
       const select = document.getElementById('creator-user-select');
       select.innerHTML = '<option value="">Selecione um usuário...</option>' +
         catUsersData.map(u => `<option value="${u.username.replace(/"/g, '&quot;')}">${u.username}</option>`).join('');
+      select.value = '';
+      const box = document.getElementById('creator-rpgs-box');
+      if (box) { box.classList.add('hidden'); box.innerHTML = ''; }
       renderCriadoresList();
     }
 
@@ -2750,15 +2756,46 @@ const seoCount = seoRevs.length;
         if (!res.ok) { errEl.textContent = data.error || 'Erro ao salvar.'; errEl.classList.remove('hidden'); return; }
         const user = catUsersData.find(u => u.username === username);
         if (user) user.creatorOf = data.creatorOf || [];
+        if (getUser() && getUser().username === username) {
+          const me = getUser();
+          me.creatorOf = data.creatorOf || [];
+          localStorage.setItem(USER_KEY, JSON.stringify(me));
+        }
         renderCriadoresList();
-        atualizarFeedSelo();
+        await atualizarUsersData();
+        if (modalRpgAtual) {
+          const list = document.getElementById('detalhe-reviews-list');
+          if (list) renderReviewsNoDetalhe(modalRpgAtual, list);
+        }
       } catch { errEl.textContent = 'Erro de conexão.'; errEl.classList.remove('hidden'); }
+    }
+
+    async function atualizarUsersData() {
+      try {
+        const res = await fetch('/api/auth/users');
+        if (!res.ok) return;
+        catUsersData = await res.json();
+        atualizarFeedSelo();
+        const me = getUser();
+        if (me) {
+          const mu = catUsersData.find(x => x.username === me.username);
+          const painelBtn = document.getElementById('perfil-painel-btn');
+          if (painelBtn) painelBtn.classList.toggle('hidden', !(mu && (mu.creatorOf || []).some(rn => catRpgData.some(r => r.name === rn))));
+        }
+      } catch {}
     }
 
     function isCreatorOfUser(rpgName) {
       const user = getUser();
       if (!user) return false;
       if (user.role === 'admin') return true;
+      const u = catUsersData.find(x => x.username === user.username);
+      return u && (u.creatorOf || []).includes(rpgName);
+    }
+
+    function ehCriadorDeRpg(rpgName) {
+      const user = getUser();
+      if (!user) return false;
       const u = catUsersData.find(x => x.username === user.username);
       return u && (u.creatorOf || []).includes(rpgName);
     }
@@ -2771,7 +2808,7 @@ const seoCount = seoRevs.length;
       });
       document.querySelectorAll('.rpg-criador-badge').forEach(b => {
         const rpgName = b.getAttribute('data-rpg');
-        b.style.display = isCreatorOfUser(rpgName) ? 'inline-flex' : 'none';
+        b.style.display = ehCriadorDeRpg(rpgName) ? 'inline-flex' : 'none';
       });
       const btn = document.getElementById('btn-postar-evento');
       if (btn) {
@@ -2871,6 +2908,7 @@ const seoCount = seoRevs.length;
     }
 
     let rpgModalOpen = false;
+    let modalRpgAtual = null;
 
     window.addEventListener('popstate', function() {
       const path = window.location.pathname;
