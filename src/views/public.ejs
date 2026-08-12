@@ -2962,8 +2962,8 @@ const seoCount = seoRevs.length;
       const link = c.link || '';
       const desc = (c.desc || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
       const onclick = link ? " onclick=\"window.open('" + link.replace(/'/g, "\\'") + "','_blank')\"" : ' onclick="event.stopPropagation();"';
-      return `<div class="cat-ad-block" style="overflow:hidden;border-radius:0.75rem;border:1px solid var(--border);cursor:${link ? 'pointer' : 'default'};${layout}"${onclick}>
-        <div style="position:relative;">
+      return `<div class="cat-ad-block" style="cursor:${link ? 'pointer' : 'default'};${layout}"${onclick}>
+        <div style="position:relative;overflow:hidden;border-radius:0.75rem;border:1px solid var(--border);">
           <div style="aspect-ratio:${ar};">
             <img src="${c.image}" class="w-full h-full object-cover" alt="">
           </div>
@@ -2971,7 +2971,7 @@ const seoCount = seoRevs.length;
             <span style="font-size:8px;font-weight:700;color:rgba(255,255,255,0.95);background:rgba(0,0,0,0.55);padding:2px 7px;border-radius:6px;backdrop-filter:blur(4px);letter-spacing:0.3px;">${title}</span>
           </div>
         </div>
-        ${desc ? '<p style="font-size:9px;margin-top:4px;padding:0 2px;color:var(--text-muted);">' + desc + '</p>' : ''}
+        ${desc ? '<p style="font-size:11px;margin-top:5px;padding:0 2px;color:var(--text-muted);">' + desc + '</p>' : ''}
       </div>`;
     }
 
