@@ -385,7 +385,7 @@ router.post('/ads', upload.array('images', 10), async (req: Request, res: Respon
   const token = authHeader.replace('Bearer ', '')
   const user = await getUserByToken(token)
   if (!user || user.role !== 'admin') { res.status(403).json({ error: 'Apenas administradores.' }); return }
-  const { title, link } = req.body
+  const { title, link, description } = req.body
   if (!title) { res.status(400).json({ error: 'Campo obrigatório: title.' }); return }
   const files = (req.files as Express.Multer.File[]) || []
   if (!files.length) { res.status(400).json({ error: 'Envie ao menos uma imagem para o anúncio.' }); return }
@@ -406,7 +406,7 @@ router.post('/ads', upload.array('images', 10), async (req: Request, res: Respon
       format: m.format === 'square' || m.format === 'poster' ? m.format : 'wide',
     })
   }
-  const ad = await addAd({ title, link, active: req.body.active === 'false' ? false : true, creatives })
+  const ad = await addAd({ title, link, description, active: req.body.active === 'false' ? false : true, creatives })
   res.status(201).json(ad)
 })
 
@@ -416,9 +416,10 @@ router.patch('/ads/:id', upload.array('images', 10), async (req: Request, res: R
   const token = authHeader.replace('Bearer ', '')
   const user = await getUserByToken(token)
   if (!user || user.role !== 'admin') { res.status(403).json({ error: 'Apenas administradores.' }); return }
-  const update: { title?: string; link?: string; active?: boolean; creatives?: Array<{ image: string; placement: 'hero' | 'catalog' | 'both'; slot: number; format: 'wide' | 'square' | 'poster' }> } = {}
+  const update: { title?: string; description?: string; link?: string; active?: boolean; creatives?: Array<{ image: string; placement: 'hero' | 'catalog' | 'both'; slot: number; format: 'wide' | 'square' | 'poster' }> } = {}
   if (req.body.title !== undefined) update.title = req.body.title
   if (req.body.link !== undefined) update.link = req.body.link
+  if (req.body.description !== undefined) update.description = req.body.description
   if (req.body.active !== undefined) update.active = req.body.active === true || req.body.active === 'true'
   const files = (req.files as Express.Multer.File[]) || []
   if (files.length || req.body.removeCreatives !== undefined || req.body.creativesMeta !== undefined || req.body.addCreatives !== undefined) {

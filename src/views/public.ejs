@@ -1234,6 +1234,7 @@ const seoCount = seoRevs.length;
             <p class="text-[10px] font-bold uppercase tracking-wider" style="color: var(--text-muted);">Novo anúncio</p>
             <input id="ad-input-title" type="text" class="w-full rounded-xl px-3 py-2 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);" placeholder="Nome do anunciante (fica no canto da imagem)">
             <input id="ad-input-link" type="text" class="w-full rounded-xl px-3 py-2 text-xs focus:outline-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);" placeholder="Link externo (abre ao clicar no anúncio)">
+            <textarea id="ad-input-desc" rows="2" class="w-full rounded-xl px-3 py-2 text-xs focus:outline-none resize-none" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary);" placeholder="Descrição curta (letras pequenas abaixo do anúncio)"></textarea>
             <div>
               <p class="text-[9px] font-bold uppercase tracking-wider mb-1.5" style="color: var(--text-muted);">Imagens do anúncio</p>
               <div id="ad-creatives-list" class="space-y-2"></div>
@@ -1794,12 +1795,13 @@ const seoCount = seoRevs.length;
       const rpgList = computeHeroRpgs(rpgs);
       const heroAds = [];
       (ads || []).forEach(a => {
-        if (!a.active) return;
-        (a.creatives || []).forEach(c => {
-          if (c.placement === 'hero' || c.placement === 'both') {
-            heroAds.push({ image: c.image, title: a.title, link: a.link });
-          }
-        });
+        if (a.active) {
+          (a.creatives || []).forEach(c => {
+            if (c.placement === 'hero' || c.placement === 'both') {
+              heroAds.push({ image: c.image, title: a.title, link: a.link, desc: a.description });
+            }
+          });
+        }
       });
       const adList = heroAds;
       const slides = [];
@@ -1855,7 +1857,7 @@ const seoCount = seoRevs.length;
       const adLink = document.getElementById('cat-ad-link');
       document.getElementById('cat-title').textContent = isAd ? slide.data.title : slide.data.name;
       document.getElementById('cat-desc').textContent = isAd ? '' : slide.data.description;
-      document.getElementById('cat-owner').textContent = isAd ? 'Parceiro' : `${slide.data.owner} · ${slide.data.year}`;
+      document.getElementById('cat-owner').textContent = isAd ? (slide.data.desc || 'Parceiro') : `${slide.data.owner} · ${slide.data.year}`;
       document.getElementById('cat-genre').textContent = isAd ? 'Anúncio' : slide.data.genre;
       document.getElementById('cat-year').textContent = isAd ? '' : (slide.data.year || '');
       const limitedBadge = document.getElementById('cat-limited-badge');
@@ -2411,6 +2413,7 @@ const seoCount = seoRevs.length;
       adEditandoId = null;
       document.getElementById('ad-input-title').value = '';
       document.getElementById('ad-input-link').value = '';
+      document.getElementById('ad-input-desc').value = '';
       document.getElementById('ad-input-active').checked = true;
       document.getElementById('ad-creatives-list').innerHTML = '';
       adicionarLinhaCriativo(null);
@@ -2467,6 +2470,7 @@ const seoCount = seoRevs.length;
             </div>
           </div>
           ${a.link ? '<p class="mt-2 text-[9px] truncate" style="color: var(--text-muted);"><i class="fa-solid fa-link text-[8px] mr-1"></i>' + a.link + '</p>' : ''}
+          ${a.description ? '<p class="mt-1 text-[9px] truncate" style="color: var(--text-muted);"><i class="fa-solid fa-align-left text-[8px] mr-1"></i>' + a.description.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</p>' : ''}
         </div>`;
       }).join('');
     }
@@ -2479,6 +2483,7 @@ const seoCount = seoRevs.length;
       adEditandoId = id;
       document.getElementById('ad-input-title').value = ad.title || '';
       document.getElementById('ad-input-link').value = ad.link || '';
+      document.getElementById('ad-input-desc').value = ad.description || '';
       document.getElementById('ad-input-active').checked = ad.active !== false;
       const list = document.getElementById('ad-creatives-list');
       list.innerHTML = '';
@@ -2511,6 +2516,8 @@ const seoCount = seoRevs.length;
       form.append('title', title);
       const link = document.getElementById('ad-input-link').value.trim();
       if (link) form.append('link', link);
+      const description = document.getElementById('ad-input-desc').value.trim();
+      if (description) form.append('description', description);
       form.append('active', active ? 'true' : 'false');
 
       try {
@@ -2953,14 +2960,18 @@ const seoCount = seoRevs.length;
       const layout = c.format === 'square' ? 'max-width:14rem;margin:0 auto;' : c.format === 'poster' ? 'max-width:11rem;margin:0 auto;' : '';
       const title = (c.title || '').replace(/"/g, '&quot;');
       const link = c.link || '';
+      const desc = (c.desc || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
       const onclick = link ? " onclick=\"window.open('" + link.replace(/'/g, "\\'") + "','_blank')\"" : ' onclick="event.stopPropagation();"';
-      return `<div class="cat-ad-block" style="position:relative;overflow:hidden;border-radius:0.75rem;border:1px solid var(--border);cursor:${link ? 'pointer' : 'default'};${layout}"${onclick}>
-        <div style="aspect-ratio:${ar};">
-          <img src="${c.image}" class="w-full h-full object-cover" alt="">
+      return `<div class="cat-ad-block" style="overflow:hidden;border-radius:0.75rem;border:1px solid var(--border);cursor:${link ? 'pointer' : 'default'};${layout}"${onclick}>
+        <div style="position:relative;">
+          <div style="aspect-ratio:${ar};">
+            <img src="${c.image}" class="w-full h-full object-cover" alt="">
+          </div>
+          <div style="position:absolute;right:6px;bottom:6px;">
+            <span style="font-size:8px;font-weight:700;color:rgba(255,255,255,0.95);background:rgba(0,0,0,0.55);padding:2px 7px;border-radius:6px;backdrop-filter:blur(4px);letter-spacing:0.3px;">${title}</span>
+          </div>
         </div>
-        <div style="position:absolute;right:6px;bottom:6px;">
-          <span style="font-size:8px;font-weight:700;color:rgba(255,255,255,0.95);background:rgba(0,0,0,0.55);padding:2px 7px;border-radius:6px;backdrop-filter:blur(4px);letter-spacing:0.3px;">${title}</span>
-        </div>
+        ${desc ? '<p style="font-size:9px;margin-top:4px;padding:0 2px;color:var(--text-muted);">' + desc + '</p>' : ''}
       </div>`;
     }
 
@@ -2974,7 +2985,7 @@ const seoCount = seoRevs.length;
         if (!a.active) return;
         (a.creatives || []).forEach(c => {
           if (c.placement === 'catalog' || c.placement === 'both') {
-            creatives.push({ ...c, title: a.title, link: a.link });
+            creatives.push({ ...c, title: a.title, link: a.link, desc: a.description });
           }
         });
       });

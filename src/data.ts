@@ -339,6 +339,7 @@ export interface AdCreative {
 export interface Ad {
   id: string
   title: string
+  description?: string
   link?: string
   active: boolean
   creatives: AdCreative[]
@@ -359,6 +360,7 @@ function adFromDoc(doc: any): Ad {
   return {
     id: String(o._id),
     title: o.title,
+    description: o.description,
     link: o.link,
     active: o.active ?? true,
     creatives,
@@ -376,12 +378,12 @@ export async function getAllAds(): Promise<Ad[]> {
   return docs.map(adFromDoc)
 }
 
-export async function addAd(data: { title: string; link?: string; active?: boolean; creatives: AdCreative[] }): Promise<Ad> {
+export async function addAd(data: { title: string; description?: string; link?: string; active?: boolean; creatives: AdCreative[] }): Promise<Ad> {
   const doc = await AdModel.create(data)
   return adFromDoc(doc)
 }
 
-export async function updateAd(id: string, data: { title?: string; link?: string; active?: boolean; creatives?: AdCreative[] }): Promise<Ad | undefined> {
+export async function updateAd(id: string, data: { title?: string; description?: string; link?: string; active?: boolean; creatives?: AdCreative[] }): Promise<Ad | undefined> {
   const doc = await AdModel.findByIdAndUpdate(id, data, { new: true })
   return doc ? adFromDoc(doc) : undefined
 }

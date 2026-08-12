@@ -12,6 +12,7 @@ export interface IAdCreative {
 
 export interface IAd {
   title: string
+  description?: string
   link?: string
   active: boolean
   creatives: IAdCreative[]
@@ -27,6 +28,7 @@ const adCreativeSchema = new Schema<IAdCreative>({
 
 const adSchema = new Schema<IAd>({
   title: { type: String, required: true },
+  description: String,
   link: String,
   active: { type: Boolean, default: true },
   creatives: { type: [adCreativeSchema], default: [] },
